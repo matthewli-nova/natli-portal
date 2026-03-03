@@ -4,7 +4,6 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { EventsList } from './components/events/EventsList';
 import { InvitationManager } from './components/invitations/InvitationManager';
 import { RegistrationLinkManager } from './components/registration-links/RegistrationLinkManager';
-import { StyleGuide } from './components/StyleGuide';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -25,14 +24,6 @@ import {
   useSidebar,
 } from './components/ui/sidebar';
 import { Avatar, AvatarFallback } from './components/ui/avatar';
-import { Button } from './components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription,
-} from './components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,9 +40,7 @@ import {
   TooltipTrigger,
 } from './components/ui/tooltip';
 import { Skeleton } from './components/ui/skeleton';
-import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen, Palette } from 'lucide-react';
-import { LeposLogo } from './components/LeposLogo';
-import { LeposIcon } from './components/LeposIcon';
+import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { PortalHeader } from './components/PortalHeader';
 import { PageHeader } from './components/PageHeader';
 import { PagePlaceholder } from './components/PagePlaceholder';
@@ -121,9 +110,14 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
-                className="w-full h-[31px] flex items-center"
+                className="w-full h-[31px] flex items-center gap-2"
               >
-                <LeposLogo size="md" variant="light" className="w-auto h-full" />
+                <img
+                  src="https://avatars.slack-edge.com/2026-02-01/10412965046197_5784d6adc887705ae15e_512.png"
+                  alt="Nat Lee"
+                  className="h-[31px] w-[31px] rounded-md object-cover"
+                />
+                <span className="text-white font-semibold text-base whitespace-nowrap">Nat Lee</span>
               </motion.div>
             ) : (
               <motion.div
@@ -134,7 +128,11 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                 transition={{ duration: 0.2 }}
                 className="w-full h-[31px] flex justify-center items-center"
               >
-                <LeposIcon size="md" className="w-auto h-full" />
+                <img
+                  src="https://avatars.slack-edge.com/2026-02-01/10412965046197_5784d6adc887705ae15e_512.png"
+                  alt="Nat Lee"
+                  className="h-[31px] w-[31px] rounded-md object-cover"
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -314,10 +312,10 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
               className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white group-data-[collapsible=icon]:justify-center"
             >
               <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                <AvatarFallback className="bg-lepos-cyan text-lepos-dark text-xs">JD</AvatarFallback>
+                <AvatarFallback className="bg-lepos-cyan text-lepos-dark text-xs">ML</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate font-semibold text-white">John Doe</span>
+                <span className="truncate font-semibold text-white">Matthew Li</span>
                 <span className="truncate text-xs text-sidebar-foreground/70">Admin</span>
               </div>
             </SidebarMenuButton>
@@ -513,26 +511,6 @@ export default function App() {
           )}
         </main>
         
-        {/* DSL Button - Fixed to bottom left of the inset area, or viewport */}
-        <div className="fixed bottom-[70px] left-4 z-50">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="lg" className="fixed top-[-20px] left-[-20px] z-50 rounded-full shadow-lg h-12 w-12 p-0 opacity-0">
-                <Palette className="h-6 w-6" />
-                <span className="sr-only">Open Design System Library</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[95vw] sm:max-w-[95vw] w-full h-[90vh] overflow-hidden p-0">
-               <div className="h-full overflow-y-auto">
-                 <div className="sr-only">
-                   <DialogTitle>Design System Library</DialogTitle>
-                   <DialogDescription>Browse the component library and design guidelines.</DialogDescription>
-                 </div>
-                 <StyleGuide />
-               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
       </SidebarInset>
       <Toaster />
     </SidebarProvider>
