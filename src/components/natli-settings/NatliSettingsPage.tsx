@@ -118,18 +118,18 @@ function SettingCard({ item }: { item: SettingCardData }) {
   const Icon = item.icon;
 
   return (
-    <Card className="group relative flex flex-col p-5 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
+    <Card className="group relative flex flex-col p-5 hover:shadow-md transition-shadow cursor-pointer border-border">
       <div className="flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-50">
-          <Icon className="h-5 w-5 text-indigo-600" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent">
+          <Icon className="h-5 w-5 text-[var(--lepos-dark-brand)]" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">{item.title}</h3>
-          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{item.description}</p>
+          <h3 className="text-sm font-semibold text-foreground mb-1">{item.title}</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{item.description}</p>
         </div>
       </div>
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 group-hover:text-indigo-700 transition-colors">
+      <div className="mt-4 pt-3 border-t border-border">
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--lepos-cyan-text)] group-hover:text-[var(--lepos-cyan-dark)] transition-colors">
           Configure
           <ArrowRight className="h-3.5 w-3.5" />
         </span>
@@ -146,16 +146,16 @@ export function NatliSettingsPage() {
     : settingsCards.filter(card => card.category.includes(activeTab as SettingCategory));
 
   return (
-    <div className="flex-1 space-y-6 min-w-0 w-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-gray-100">
+    <div className="flex-1 space-y-4 min-w-0 w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="core">Core AI Setup</TabsTrigger>
           <TabsTrigger value="integration">Integrations</TabsTrigger>
           <TabsTrigger value="security">Security & Privacy</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="mt-4">
+        <TabsContent value={activeTab} className="space-y-4 w-full min-w-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCards.map((item) => (
               <SettingCard key={item.id} item={item} />
