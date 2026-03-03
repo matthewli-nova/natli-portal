@@ -6,8 +6,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
-import { ScopeSwitcher } from "./ScopeSwitcher";
-
 interface PortalHeaderProps {
   breadcrumbs: { label: string; href?: string; active?: boolean }[];
 }
@@ -38,9 +36,6 @@ export function PortalHeader({ breadcrumbs }: PortalHeaderProps) {
           {items}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="flex items-center gap-4">
-        <ScopeSwitcher align="end" />
-      </div>
     </header>
   );
 }
