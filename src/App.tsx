@@ -4,6 +4,7 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { EventsList } from './components/events/EventsList';
 import { InvitationManager } from './components/invitations/InvitationManager';
 import { RegistrationLinkManager } from './components/registration-links/RegistrationLinkManager';
+import { NatliSettingsPage } from './components/natli-settings/NatliSettingsPage';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -515,7 +516,9 @@ export default function App() {
                 actions={null}
               />
               <div className="grid grid-cols-1 w-full min-w-0">
-                {platform === 'natli' ? (
+                {platform === 'natli' && activeItem === 'natli-settings' ? (
+                  <NatliSettingsPage />
+                ) : platform === 'natli' ? (
                   <PagePlaceholder />
                 ) : activeItem === 'dashboard' ? (
                   <Dashboard />
