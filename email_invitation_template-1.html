@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>You're Invited — {{event_name}}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">
+    /* Reset */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+    /* Dark mode overrides */
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .card-bg { background-color: #16213e !important; }
+      .text-dark { color: #e0e0e0 !important; }
+      .text-muted { color: #a0a0a0 !important; }
+    }
+    /* Mobile */
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; max-width: 100% !important; }
+      .fluid { width: 100% !important; max-width: 100% !important; height: auto !important; }
+      .stack-column { display: block !important; width: 100% !important; max-width: 100% !important; }
+      .mobile-padding { padding-left: 20px !important; padding-right: 20px !important; }
+      .mobile-center { text-align: center !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f0f4f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+
+  <!-- Preview text (hidden) -->
+  <div style="display:none; font-size:1px; color:#f0f4f8; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
+    {{salutation}} {{guest_name}}, you're invited to {{event_name}}. Confirm your attendance today.
+  </div>
+
+  <!-- Outer wrapper -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f0f4f8;" class="email-bg">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+
+        <!-- Email container (600px max) -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="max-width:600px; width:100%;">
+
+          <!-- ========== TOP BAR ========== -->
+          <tr>
+            <td style="background-color:#00B5AD; border-radius:12px 12px 0 0; padding:12px 32px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="left" style="color:#ffffff; font-size:11px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase;">
+                    Event Invitation
+                  </td>
+                  <td align="right" style="color:rgba(255,255,255,0.8); font-size:11px;">
+                    {{event_date}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== LOGO HEADER ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:28px 32px 16px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <!-- Organizer logo (left) — falls back to Lepōs logo -->
+                  <td align="left" valign="middle" width="50%">
+                    <!-- {{organizer_logo_url}} — replace src with actual logo -->
+                    <img src="https://lepos.ai/logo-dark.png" alt="{{organizer_name}}" width="120" style="display:block; width:120px; max-width:120px; height:auto;" />
+                  </td>
+                  <!-- Powered by Lepōs (right) -->
+                  <td align="right" valign="middle" width="50%">
+                    <span style="font-size:10px; color:#999999; vertical-align:middle;">Powered by</span>
+                    <img src="https://lepos.ai/logo-dark.png" alt="Lepōs" width="48" style="display:inline-block; width:48px; height:auto; vertical-align:middle; margin-left:4px;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== BANNER IMAGE ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px;" class="card-bg mobile-padding">
+              <!-- {{banner_url}} — replace src with event banner -->
+              <img src="https://placehold.co/536x200/00B5AD/ffffff?text={{event_name}}" alt="{{event_name}}" width="536" style="display:block; width:100%; max-width:536px; height:auto; border-radius:8px; object-fit:cover;" class="fluid" />
+            </td>
+          </tr>
+
+          <!-- ========== GREETING & EVENT INFO ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:28px 32px 8px 32px;" class="card-bg mobile-padding">
+              <!-- Greeting -->
+              <p style="margin:0 0 6px 0; font-size:14px; color:#00B5AD; font-weight:600; letter-spacing:0.3px; text-transform:uppercase;">
+                You're Invited
+              </p>
+              <h1 style="margin:0 0 16px 0; font-size:26px; line-height:1.25; color:#1a1a2e; font-weight:700;" class="text-dark">
+                Hello {{salutation}} {{guest_name}},
+              </h1>
+              <p style="margin:0 0 24px 0; font-size:15px; line-height:1.6; color:#444444;" class="text-muted">
+                We're pleased to invite you to <strong style="color:#1a1a2e;">{{event_name}}</strong>. 
+                Your attendance has been personally requested and we've reserved your spot.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ========== EVENT DETAILS CARD ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f8fafb; border-radius:8px; border:1px solid #e8ecf0;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <!-- Date -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:14px;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/calendar--v1.png" alt="" width="20" height="20" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:14px;">
+                          <p style="margin:0; font-size:11px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Date</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{event_date}}</p>
+                        </td>
+                      </tr>
+                      <!-- Time -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:14px;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/clock--v1.png" alt="" width="20" height="20" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:14px;">
+                          <p style="margin:0; font-size:11px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Time</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{event_time}}</p>
+                        </td>
+                      </tr>
+                      <!-- Venue -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:0;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/marker--v1.png" alt="" width="20" height="20" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:0;">
+                          <p style="margin:0; font-size:11px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Venue</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{venue_name}}</p>
+                          <p style="margin:2px 0 0 0; font-size:13px; color:#666666;">{{venue_address}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== PRE-ASSIGNED TICKETS ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <p style="margin:0 0 10px 0; font-size:12px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                Your Reserved Tickets
+              </p>
+              <!-- Ticket badges — each ticket rendered as a row -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <!-- REPEAT: one row per pre-assigned ticket type -->
+                <tr>
+                  <td style="padding-bottom:8px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color:#f0faf9; border-radius:6px; border-left:4px solid {{ticket_colour_hex}};">
+                      <tr>
+                        <td style="padding:10px 16px;">
+                          <p style="margin:0; font-size:14px; color:#1a1a2e; font-weight:600;" class="text-dark">{{ticket_type_name}}</p>
+                          <p style="margin:2px 0 0 0; font-size:12px; color:#666666;">{{ticket_scope_label}} · {{ticket_session_info}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- END REPEAT -->
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== RSVP DEADLINE (optional) ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#fffbe6; border-radius:6px; border:1px solid #ffe58f;">
+                <tr>
+                  <td style="padding:12px 16px;">
+                    <p style="margin:0; font-size:13px; color:#876800; line-height:1.5;">
+                      ⏰ <strong>RSVP Deadline:</strong> Please confirm your attendance before <strong>{{rsvp_deadline}}</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== CTA BUTTON ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 32px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <!-- Bulletproof button (VML for Outlook) -->
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{rsvp_link}}" style="height:52px;v-text-anchor:middle;width:320px;" arcsize="12%" strokecolor="#009E96" fillcolor="#00B5AD">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;">Confirm My Attendance</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="{{rsvp_link}}" target="_blank" style="display:inline-block; background-color:#00B5AD; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; padding:16px 48px; border-radius:8px; border:1px solid #009E96; letter-spacing:0.3px; mso-hide:all;">
+                      Confirm My Attendance
+                    </a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top:12px;">
+                    <p style="margin:0; font-size:12px; color:#999999; line-height:1.5;">
+                      Or copy this link: <a href="{{rsvp_link}}" style="color:#00B5AD; text-decoration:underline; word-break:break-all;">{{rsvp_link}}</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== ADDITIONAL MESSAGE (optional) ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 28px 32px;" class="card-bg mobile-padding">
+              <p style="margin:0; font-size:14px; line-height:1.6; color:#444444;" class="text-muted">
+                {{custom_message}}
+              </p>
+              <p style="margin:16px 0 0 0; font-size:14px; line-height:1.6; color:#444444;" class="text-muted">
+                If you have any questions, please contact us at <a href="mailto:{{organizer_email}}" style="color:#00B5AD; text-decoration:none;">{{organizer_email}}</a>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ========== DIVIDER ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="border-top:1px solid #e8ecf0; height:1px; font-size:1px; line-height:1px;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== FOOTER ========== -->
+          <tr>
+            <td style="background-color:#ffffff; border-radius:0 0 12px 12px; padding:24px 32px 28px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <img src="https://lepos.ai/logo-dark.png" alt="Lepōs" width="72" style="display:block; width:72px; height:auto; margin-bottom:12px;" />
+                    <p style="margin:0 0 4px 0; font-size:12px; color:#999999; line-height:1.5;">
+                      Powered by <strong style="color:#666666;">Lepōs</strong> — The One Behind Greatest Events
+                    </p>
+                    <p style="margin:0 0 4px 0; font-size:11px; color:#bbbbbb; line-height:1.5;">
+                      Nebulae Technology Limited
+                    </p>
+                    <p style="margin:0 0 4px 0; font-size:11px; color:#bbbbbb; line-height:1.5;">
+                      Unit 601, The Mills, 45 Pak Tin Par Street, Tsuen Wan, Hong Kong
+                    </p>
+                    <p style="margin:0; font-size:11px; color:#bbbbbb; line-height:1.5;">
+                      <a href="https://www.lepos.ai" style="color:#00B5AD; text-decoration:none;">www.lepos.ai</a>
+                      &nbsp;·&nbsp;
+                      <a href="mailto:sales@lepos.ai" style="color:#00B5AD; text-decoration:none;">sales@lepos.ai</a>
+                      &nbsp;·&nbsp;
+                      +852 3180 7863
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== BOTTOM SPACER ========== -->
+          <tr>
+            <td style="padding:16px 32px;" class="mobile-padding">
+              <p style="margin:0; font-size:11px; color:#aaaaaa; text-align:center; line-height:1.5;">
+                This invitation was sent to <strong>{{guest_email}}</strong> on behalf of {{organizer_name}}.
+                <br>If you received this email by mistake, please disregard it.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Email container -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Outer wrapper -->
+
+</body>
+</html>
