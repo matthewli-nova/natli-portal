@@ -463,7 +463,12 @@ export default function App() {
                 actions={null}
               />
               <div className="grid grid-cols-1 w-full min-w-0">
-                {activeItem === 'dashboard' ? (
+                {platform === 'natli' ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-2">Welcome to Nat Li Switch</h2>
+                    <p className="text-gray-500">Select a menu item to get started.</p>
+                  </div>
+                ) : activeItem === 'dashboard' ? (
                   <Dashboard />
                 ) : activeItem === 'invitations' ? (
                   <InvitationManager />
