@@ -49,7 +49,7 @@ import {
   TooltipTrigger,
 } from './components/ui/tooltip';
 import { Skeleton } from './components/ui/skeleton';
-import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen, Palette, MessageCircle, Users, Code } from 'lucide-react';
+import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen, Palette } from 'lucide-react';
 import { LeposLogo } from './components/LeposLogo';
 import { LeposIcon } from './components/LeposIcon';
 import { PortalHeader } from './components/PortalHeader';
@@ -66,13 +66,11 @@ interface AppSidebarProps {
   openMenus: string[];
   toggleMenu: (id: string) => void;
   isLoading?: boolean;
-  platform: 'lepos' | 'natli';
-  setPlatform: (p: 'lepos' | 'natli') => void;
-  mode: 'chat' | 'cowork' | 'code';
-  setMode: (m: 'chat' | 'cowork' | 'code') => void;
+  platform: 'natli' | 'template';
+  setPlatform: (p: 'natli' | 'template') => void;
 }
 
-function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoading = false, platform, setPlatform, mode, setMode }: AppSidebarProps) {
+function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoading = false, platform, setPlatform }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const isExpanded = state === "expanded";
 
@@ -143,22 +141,10 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
         </div>
       </SidebarHeader>
 
-      {/* Platform Switch & Mode Tabs */}
+      {/* Platform Switch: Nat Li | Template */}
       {isExpanded && (
-        <div className="px-3 py-2 border-b border-sidebar-border space-y-2">
-          {/* Lepōs | Nat Li switch */}
+        <div className="px-3 py-2 border-b border-sidebar-border">
           <div className="flex items-center bg-white/10 rounded-lg p-0.5">
-            <button
-              onClick={() => setPlatform('lepos')}
-              className={cn(
-                "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
-                platform === 'lepos'
-                  ? "bg-lepos-cyan text-[#023F59] shadow-sm"
-                  : "text-white/60 hover:text-white"
-              )}
-            >
-              Lepōs
-            </button>
             <button
               onClick={() => setPlatform('natli')}
               className={cn(
@@ -170,35 +156,28 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
             >
               Nat Li
             </button>
-          </div>
-
-          {/* Chat | Cowork | Code tabs */}
-          <div className="flex items-center bg-white/10 rounded-lg p-0.5">
-            {([
-              { key: 'chat', label: 'Chat', icon: MessageCircle },
-              { key: 'cowork', label: 'Cowork', icon: Users },
-              { key: 'code', label: 'Code', icon: Code },
-            ] as const).map(({ key, label, icon: ModeIcon }) => (
-              <button
-                key={key}
-                onClick={() => setMode(key)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 rounded-md transition-all",
-                  mode === key
-                    ? "bg-lepos-cyan text-[#023F59] shadow-sm"
-                    : "text-white/60 hover:text-white"
-                )}
-              >
-                <ModeIcon className="w-3 h-3" />
-                {label}
-              </button>
-            ))}
+            <button
+              onClick={() => setPlatform('template')}
+              className={cn(
+                "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
+                platform === 'template'
+                  ? "bg-lepos-cyan text-[#023F59] shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
+            >
+              Template
+            </button>
           </div>
         </div>
       )}
 
       <SidebarContent>
         <SidebarGroup className="pt-[9px] flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+          {platform === 'natli' ? (
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+              <span className="text-white/40 text-xs">No menu items yet</span>
+            </div>
+          ) : (
           <SidebarMenu>
             {isLoading ? (
               // Loading Skeleton Loop for Top Level
@@ -323,6 +302,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
               })
             )}
           </SidebarMenu>
+          )}
         </SidebarGroup>
       </SidebarContent>
 
@@ -394,8 +374,7 @@ export default function App() {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<B2BEvent | null>(null);
-  const [platform, setPlatform] = useState<'lepos' | 'natli'>('lepos');
-  const [mode, setMode] = useState<'chat' | 'cowork' | 'code'>('cowork');
+  const [platform, setPlatform] = useState<'natli' | 'template'>('natli');
 
   // Initial Sidebar Load Simulation
   useEffect(() => {
@@ -469,8 +448,6 @@ export default function App() {
         isLoading={isSidebarLoading}
         platform={platform}
         setPlatform={setPlatform}
-        mode={mode}
-        setMode={setMode}
       />
       <SidebarInset>
         <PortalHeader 
