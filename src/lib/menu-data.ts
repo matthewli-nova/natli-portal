@@ -7,7 +7,62 @@ import {
   Calculator,
   ChartNoAxesCombined,
   Settings,
+  Building2,
+  Bot,
+  Search,
+  ListTodo,
+  Calendar,
+  Clock,
+  FolderOpen,
 } from 'lucide-react';
+
+export const natliMenuItems = [
+  {
+    id: 'natli-dashboard',
+    label: 'Dashboard',
+    icon: Gauge,
+  },
+  {
+    id: 'natli-office',
+    label: 'Office',
+    icon: Building2,
+  },
+  {
+    id: 'natli-agent',
+    label: 'Agent',
+    icon: Bot,
+  },
+  {
+    id: 'natli-research',
+    label: 'Research',
+    icon: Search,
+  },
+  {
+    id: 'natli-task',
+    label: 'Task',
+    icon: ListTodo,
+  },
+  {
+    id: 'natli-calendar',
+    label: 'Calendar',
+    icon: Calendar,
+  },
+  {
+    id: 'natli-scheduler',
+    label: 'Scheduler',
+    icon: Clock,
+  },
+  {
+    id: 'natli-file',
+    label: 'File',
+    icon: FolderOpen,
+  },
+  {
+    id: 'natli-settings',
+    label: 'Setting',
+    icon: Settings,
+  },
+];
 
 export const menuItems = [
   {
