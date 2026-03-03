@@ -58,7 +58,7 @@ import { PagePlaceholder } from './components/PagePlaceholder';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { type B2BEvent } from './components/data/b2b-events';
-import { menuItems } from './lib/menu-data';
+import { menuItems, natliMenuItems } from './lib/menu-data';
 
 interface AppSidebarProps {
   activeItem: string;
@@ -66,9 +66,11 @@ interface AppSidebarProps {
   openMenus: string[];
   toggleMenu: (id: string) => void;
   isLoading?: boolean;
+  platform: 'natli' | 'template';
+  setPlatform: (p: 'natli' | 'template') => void;
 }
 
-function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoading = false }: AppSidebarProps) {
+function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoading = false, platform, setPlatform }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const isExpanded = state === "expanded";
 
@@ -139,8 +141,79 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
         </div>
       </SidebarHeader>
 
+      {/* Platform Switch: Nat Li | Template */}
+      {isExpanded && (
+        <div className="px-3 py-2 border-b border-sidebar-border">
+          <div className="flex items-center bg-white/10 rounded-lg p-0.5">
+            <button
+              onClick={() => setPlatform('natli')}
+              className={cn(
+                "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
+                platform === 'natli'
+                  ? "bg-lepos-cyan text-[#023F59] shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
+            >
+              Nat Li
+            </button>
+            <button
+              onClick={() => setPlatform('template')}
+              className={cn(
+                "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
+                platform === 'template'
+                  ? "bg-lepos-cyan text-[#023F59] shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
+            >
+              Template
+            </button>
+          </div>
+        </div>
+      )}
+
       <SidebarContent>
         <SidebarGroup className="pt-[9px] flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+          {platform === 'natli' ? (
+            <SidebarMenu>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, index) => (
+                  <SidebarMenuItem key={index}>
+                    <SidebarMenuButton
+                      className="pointer-events-none transition-none"
+                      isActive={false}
+                    >
+                      <Skeleton className="w-4 h-4 shrink-0 rounded-sm bg-white/10" />
+                      {isExpanded && (
+                        <Skeleton className="h-4 w-24 ml-2 rounded-sm bg-white/10" />
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              ) : (
+                natliMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeItem === item.id;
+
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => setActiveItem(item.id)}
+                        className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {isExpanded && (
+                          <span className="truncate overflow-hidden">
+                            {item.label}
+                          </span>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              )}
+            </SidebarMenu>
+          ) : (
           <SidebarMenu>
             {isLoading ? (
               // Loading Skeleton Loop for Top Level
@@ -152,7 +225,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                   >
                     {/* Icon Skeleton */}
                     <Skeleton className="w-4 h-4 shrink-0 rounded-sm bg-white/10" />
-                    
+
                     {/* Text Skeleton (only if expanded) */}
                     {isExpanded && (
                       <Skeleton className="h-4 w-24 ml-2 rounded-sm bg-white/10" />
@@ -265,6 +338,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
               })
             )}
           </SidebarMenu>
+          )}
         </SidebarGroup>
       </SidebarContent>
 
@@ -330,19 +404,27 @@ function PageContentSkeleton() {
 }
 
 export default function App() {
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const [activeItem, setActiveItem] = useState('natli-dashboard');
   const [openMenus, setOpenMenus] = useState<string[]>(['products']);
   const [isSidebarLoading, setIsSidebarLoading] = useState(true);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<B2BEvent | null>(null);
+  const [platform, setPlatform] = useState<'natli' | 'template'>('natli');
+
+  const handlePlatformSwitch = useCallback((p: 'natli' | 'template') => {
+    setPlatform(p);
+    setActiveItem(p === 'natli' ? 'natli-dashboard' : 'dashboard');
+    setIsPageLoading(true);
+    setTimeout(() => setIsPageLoading(false), 800);
+  }, []);
 
   // Initial Sidebar Load Simulation
   useEffect(() => {
     setIsSidebarLoading(true);
     const timer = setTimeout(() => {
       setIsSidebarLoading(false);
-    }, 2000); 
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -357,7 +439,7 @@ export default function App() {
     setActiveItem(id);
     setIsPageLoading(true);
     setShowEventForm(false); // Reset form state when navigating
-    
+
     // Simulate API call for page data
     setTimeout(() => {
       setIsPageLoading(false);
@@ -366,10 +448,21 @@ export default function App() {
 
   // Find the current page info based on activeItem
   const activePageInfo = useMemo(() => {
+    // Check Nat Li menu items
+    const natliItem = natliMenuItems.find(item => item.id === activeItem);
+    if (natliItem) {
+      return {
+        title: natliItem.label,
+        breadcrumbs: [
+          { label: natliItem.label, active: true }
+        ]
+      };
+    }
+
     // Check top level
     const topItem = menuItems.find(item => item.id === activeItem);
     if (topItem) {
-      return { 
+      return {
         title: topItem.label,
         breadcrumbs: [
           { label: topItem.label, active: true }
@@ -385,7 +478,7 @@ export default function App() {
           return {
             title: subItem.label,
             breadcrumbs: [
-              { label: item.label, href: '#' }, 
+              { label: item.label, href: '#' },
               { label: subItem.label, active: true }
             ]
           };
@@ -393,7 +486,7 @@ export default function App() {
       }
     }
 
-    return { 
+    return {
       title: 'Dashboard',
       breadcrumbs: [{ label: 'Dashboard', active: true }]
     };
@@ -401,28 +494,32 @@ export default function App() {
 
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar 
-        activeItem={activeItem} 
-        setActiveItem={handleNavigate} 
-        openMenus={openMenus} 
+      <AppSidebar
+        activeItem={activeItem}
+        setActiveItem={handleNavigate}
+        openMenus={openMenus}
         toggleMenu={toggleMenu}
         isLoading={isSidebarLoading}
+        platform={platform}
+        setPlatform={handlePlatformSwitch}
       />
       <SidebarInset>
-        <PortalHeader 
-          breadcrumbs={activePageInfo.breadcrumbs} 
+        <PortalHeader
+          breadcrumbs={activePageInfo.breadcrumbs}
         />
         <main className="flex-1 p-6 relative min-w-0 w-full overflow-y-auto">
           {isPageLoading ? (
             <PageContentSkeleton />
           ) : (
             <div className="flex flex-col w-full min-w-0 max-w-[1136px] 2xl:max-w-[1400px] mx-auto">
-              <PageHeader 
-                title={activePageInfo.title} 
+              <PageHeader
+                title={activePageInfo.title}
                 actions={null}
               />
               <div className="grid grid-cols-1 w-full min-w-0">
-                {activeItem === 'dashboard' ? (
+                {platform === 'natli' ? (
+                  <PagePlaceholder />
+                ) : activeItem === 'dashboard' ? (
                   <Dashboard />
                 ) : activeItem === 'invitations' ? (
                   <InvitationManager />
@@ -439,7 +536,7 @@ export default function App() {
                       }}
                     />
                   ) : showEventForm ? (
-                    <CreateEventForm 
+                    <CreateEventForm
                       onCancel={() => setShowEventForm(false)}
                       onSubmit={() => {
                         setShowEventForm(false);
@@ -448,7 +545,7 @@ export default function App() {
                       }}
                     />
                   ) : (
-                    <EventsList 
+                    <EventsList
                       onCreateEvent={() => {
                         setShowEventForm(true);
                         setSelectedEvent(null);
@@ -466,7 +563,7 @@ export default function App() {
             </div>
           )}
         </main>
-        
+
         {/* DSL Button - Fixed to bottom left of the inset area, or viewport */}
         <div className="fixed bottom-[70px] left-4 z-50">
           <Dialog>
