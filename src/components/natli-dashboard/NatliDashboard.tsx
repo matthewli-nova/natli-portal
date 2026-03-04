@@ -715,7 +715,7 @@ export function NatliDashboard() {
         {/* ─── Schedule Tab ──────────────────────────────────── */}
         <TabsContent value="schedule" className="space-y-4">
           <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Scheduler…</div>}>
-            <LazyNatliSchedulerPage />
+            <LazyNatliSchedulerPage embedded={true} />
           </Suspense>
         </TabsContent>
 

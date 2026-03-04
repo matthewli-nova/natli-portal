@@ -203,7 +203,7 @@ function categorizeJobs(jobs: CronJob[]): JobGroup[] {
 
 // ─── Main Component ──────────────────────────────────────────
 
-export function NatliSchedulerPage() {
+export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -270,32 +270,34 @@ export function NatliSchedulerPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {jobs.length} cron jobs · Auto-refreshes every 60s
-        </p>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="bg-[#023F59] text-white hover:bg-[#022F44]"
-            onClick={() => setShowAddModal(true)}
-          >
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            Add Job
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+      {/* Header — hidden when embedded in Dashboard */}
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {jobs.length} cron jobs · Auto-refreshes every 60s
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="bg-[#023F59] text-white hover:bg-[#022F44]"
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              Add Job
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* [A] Status Strip — 4 KPI cards */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
