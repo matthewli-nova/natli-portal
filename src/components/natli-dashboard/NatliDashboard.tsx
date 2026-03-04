@@ -11,6 +11,7 @@ import { CronSummaryCard } from '../natli-scheduler/NatliSchedulerPage';
 const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
 const LazySessionsTab = lazy(() => import('./sessions/SessionsTab').then(m => ({ default: m.SessionsTab })));
 const LazyModelTab = lazy(() => import('./model/ModelTab').then(m => ({ default: m.ModelTab })));
+import { MemoryTab } from './memory/MemoryTab';
 
 import {
   Activity,
@@ -593,125 +594,8 @@ export function NatliDashboard() {
         </TabsContent>
 
         {/* ─── Memory & Knowledge Tab ────────────────────────── */}
-        <TabsContent value="memory" className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-              <span className="text-lg font-bold text-[#21262A]">🧠 Memory & Knowledge</span>
-            </div>
-
-            {/* MEMORY.md Health Card */}
-            <Card className="border-[#023F59]/20">
-              <CardContent className="pt-5 pb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-semibold text-[#21262A]">MEMORY.md Health</span>
-                  </div>
-                  {(health?.memoryMdLines ?? 0) >= 145 && (
-                    <Badge className="bg-red-100 text-red-700 border-0 text-[10px] font-bold">NEAR CAP</Badge>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">
-                        {health?.memoryMdLines ?? 0} / {health?.memoryMdCap ?? 150} lines used
-                      </span>
-                      <span className="font-semibold text-[#21262A]">
-                        {health?.memoryMdCap ? Math.round(((health?.memoryMdLines ?? 0) / health.memoryMdCap) * 100) : 0}%
-                      </span>
-                    </div>
-                    <Progress
-                      value={health?.memoryMdCap ? ((health?.memoryMdLines ?? 0) / health.memoryMdCap) * 100 : 0}
-                      className={`h-2.5 ${
-                        (health?.memoryMdLines ?? 0) >= 145
-                          ? '[&>div]:bg-red-500'
-                          : (health?.memoryMdLines ?? 0) >= 120
-                          ? '[&>div]:bg-amber-500'
-                          : '[&>div]:bg-emerald-500'
-                      }`}
-                    />
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Badge className="bg-red-100 text-red-700 border-0 text-xs">P0: {health?.p0Sections ?? 0} sections</Badge>
-                    <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">P1: {health?.p1Sections ?? 0} sections</Badge>
-                    <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">P2: {health?.p2Sections ?? 0} sections</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Knowledge Base Grid — 4 stat cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <KPICard title="Chunks Indexed" value={health?.memoryChunks ?? 0} icon={<Hash className="w-4 h-4 text-[#31D7DB]" />} description="memory chunks" />
-              <KPICard title="Files Indexed" value={health?.memoryFiles ?? 0} icon={<FileText className="w-4 h-4 text-[#31D7DB]" />} description="source files" />
-              <KPICard title="Cache Entries" value={health?.cacheEntries ?? 0} icon={<Database className="w-4 h-4 text-[#31D7DB]" />} description="embedding cache" />
-              <KPICard title="SQLite DB" value={`${health?.memoryDbSizeMb ?? 0}`} icon={<HardDrive className="w-4 h-4 text-[#31D7DB]" />} description="MB" />
-            </div>
-
-            {/* Memory System Status */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4 flex items-center gap-3">
-                  <Search className="w-5 h-5 text-[#31D7DB]" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-[#21262A]">Vector Search</p>
-                    <p className="text-xs text-muted-foreground">768 dims · nomic-embed-text</p>
-                  </div>
-                  <Badge className={`text-xs font-bold border-0 ${health?.vectorEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    {health?.vectorEnabled ? '✅ Ready' : '❌ Offline'}
-                  </Badge>
-                </CardContent>
-              </Card>
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4 flex items-center gap-3">
-                  <BookOpen className="w-5 h-5 text-[#31D7DB]" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-[#21262A]">Full-text Search</p>
-                    <p className="text-xs text-muted-foreground">FTS5 index</p>
-                  </div>
-                  <Badge className={`text-xs font-bold border-0 ${health?.ftsEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    {health?.ftsEnabled ? '✅ Ready' : '❌ Offline'}
-                  </Badge>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Daily Log Stats + Last Sync */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FileText className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-medium text-[#21262A]">Daily Logs</span>
-                  </div>
-                  <p className="text-2xl font-bold text-[#107DAC]">{health?.memoryDailyLogs ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">files</p>
-                </CardContent>
-              </Card>
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Archive className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-medium text-[#21262A]">Archive</span>
-                  </div>
-                  <p className="text-2xl font-bold text-[#107DAC]">{health?.memoryArchiveCount ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">files</p>
-                </CardContent>
-              </Card>
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Clock className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-medium text-[#21262A]">Last Sync</span>
-                  </div>
-                  <p className="text-sm font-mono text-[#107DAC]">
-                    {health?.lastMemorySyncTime ? new Date(health.lastMemorySyncTime).toLocaleString() : '—'}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+        <TabsContent value="memory" className="space-y-4">
+          <MemoryTab health={health} />
         </TabsContent>
 
         {/* ─── Schedule Tab ──────────────────────────────────── */}
