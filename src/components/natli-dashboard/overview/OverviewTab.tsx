@@ -233,7 +233,7 @@ function KPIStrip({
   crons: CronJob[];
   modelConfig: ModelConfig | null;
 }) {
-  const activeSessions = sessions.filter(s => s.isActive || s.ageMs < 3_600_000).length;
+  const activeSessions = sessions.filter(s => s.isActive).length;
   const totalSessions = health?.totalSessions ?? sessions.length;
 
   const openTasks = tasks.filter(t => {

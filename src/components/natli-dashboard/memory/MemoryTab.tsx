@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Progress } from '../../ui/progress';
@@ -364,7 +364,7 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   const [savedLines, setSavedLines] = useState<number | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     fetch('/api/memory/file')
       .then(r => r.json() as Promise<{ ok: boolean; content?: string; error?: string }>)
       .then(d => {
@@ -373,7 +373,7 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
       })
       .catch(() => setError('Network error'))
       .finally(() => setLoading(false));
-  });
+  }, []);
 
   const handleCopy = () => {
     const src = editing ? editContent : (content ?? '');

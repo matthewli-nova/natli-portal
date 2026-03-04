@@ -140,7 +140,7 @@ export function NatliDashboard() {
       fetchApi<ModelConfig>('/api/config/model'),
     ]);
     setHealth(h);
-    setCrons(Array.isArray(c) ? c : c?.crons ?? []);
+    setCrons(Array.isArray(c) ? c : (c as any)?.jobs ?? (c as any)?.crons ?? []);
     setTasks(t?.tasks ?? []);
     setMemory(m);
     setSessions(Array.isArray(s) ? s : s?.sessions ?? []);
@@ -185,10 +185,12 @@ export function NatliDashboard() {
   if (loading) return <DashboardSkeleton />;
 
   const activeSessions = sessions.filter(s => {
+    if ((s as any).isActive) return true;
+    if ((s as any).ageMs != null) return (s as any).ageMs < 300_000;
     if (s.status === 'active') return true;
     if (s.last_active) {
       const diff = Date.now() - new Date(s.last_active).getTime();
-      return diff < 60 * 60 * 1000;
+      return diff < 300_000;
     }
     return false;
   }).length;
@@ -378,7 +380,7 @@ export function NatliDashboard() {
                     {[
                       { label: 'Gateway :18789', ok: health?.gatewayReachable },
                       { label: 'Ollama :11434', ok: health?.services?.ollama, sub: health?.ollamaModel },
-                      { label: 'Slack', ok: true },
+                      { label: 'Slack', ok: health?.services?.openclaw, sub: 'via gateway' },
                     ].map(({ label, ok, sub }) => (
                       <div key={label} className="flex items-center justify-between text-sm">
                         <div>
