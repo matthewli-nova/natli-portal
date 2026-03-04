@@ -1708,6 +1708,80 @@ app.get('/api/skills/stats', async (_req, res) => {
   }
 });
 
+// ─── Session Transcript ──────────────────────────────────────────────────────
+
+app.get('/api/sessions/:sessionId/transcript', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const agentId = (req.query.agentId as string) || 'main';
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const OPENCLAW_DIR = '/Users/natlee/.openclaw';
+    const jsonlPath = path.join(OPENCLAW_DIR, 'agents', agentId, 'sessions', `${sessionId}.jsonl`);
+
+    const fileExists = await fs.access(jsonlPath).then(() => true).catch(() => false);
+    if (!fileExists) {
+      return res.status(404).json({ error: 'Transcript not found', messages: [] });
+    }
+
+    const content = await fs.readFile(jsonlPath, 'utf8');
+    const lines = content.trim().split('\n').filter(Boolean);
+
+    const messages: Array<{
+      id: string;
+      role: 'user' | 'assistant';
+      content: string;
+      timestamp: string;
+      hasToolCalls: boolean;
+    }> = [];
+
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        if (entry.type !== 'message') continue;
+
+        const { message } = entry;
+        if (!message) continue;
+
+        const role = message.role as string;
+        if (role === 'toolResult' || role === 'tool') continue;
+        if (role !== 'user' && role !== 'assistant') continue;
+
+        const msgContent = message.content;
+        let textContent = '';
+        let hasToolCalls = false;
+
+        if (typeof msgContent === 'string') {
+          textContent = msgContent;
+        } else if (Array.isArray(msgContent)) {
+          const textParts = msgContent
+            .filter((c: Record<string, unknown>) => c.type === 'text')
+            .map((c: Record<string, unknown>) => c.text as string)
+            .filter(Boolean);
+          textContent = textParts.join('\n');
+          hasToolCalls = msgContent.some((c: Record<string, unknown>) => c.type === 'tool_use');
+        }
+
+        if (!textContent.trim()) continue;
+
+        messages.push({
+          id: entry.id || String(messages.length),
+          role: role as 'user' | 'assistant',
+          content: textContent.trim(),
+          timestamp: entry.timestamp || '',
+          hasToolCalls,
+        });
+      } catch { /* skip malformed lines */ }
+    }
+
+    const lastMessages = messages.slice(-limit);
+    res.json({ messages: lastMessages, total: messages.length, sessionId, agentId });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: msg, messages: [] });
+  }
+});
+
 // ─── Chat — Send message to Nat Lee via openclaw agent CLI ───────────────────
 
 function execCommandWithTimeout(cmd: string, timeoutMs: number): Promise<string> {

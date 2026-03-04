@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Activity, Cpu, Bot, MessageSquare, Clock, Zap } from 'lucide-react';
 import { ModelIcon, getModelShortName } from '../../../lib/model-icons';
+import { SessionDrawer } from './SessionDrawer';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ export function SessionsTab() {
   const [loading, setLoading] = useState(true);
   const [modelSort, setModelSort] = useState<SortMode>('sessions');
   const [typeSort, setTypeSort] = useState<SortMode>('sessions');
+  const [selectedSession, setSelectedSession] = useState<EnrichedSession | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -273,7 +275,7 @@ export function SessionsTab() {
               </thead>
               <tbody>
                 {recentSessions.map((s) => (
-                  <tr key={s.key} className="border-b border-[#023F59]/5 hover:bg-[#023F59]/[0.02] transition-colors">
+                  <tr key={s.key} className="border-b border-[#023F59]/5 hover:bg-[#F0F7FF] transition-colors cursor-pointer" onClick={() => setSelectedSession(s)}>
                     <td className="px-4 py-2">
                       <StatusDot isActive={s.isActive} isRecent={s.isRecent} />
                     </td>
@@ -324,6 +326,9 @@ export function SessionsTab() {
           })}
         </CardContent>
       </Card>
+
+      {/* Session Drill-down Drawer */}
+      <SessionDrawer session={selectedSession} onClose={() => setSelectedSession(null)} />
     </div>
   );
 }
