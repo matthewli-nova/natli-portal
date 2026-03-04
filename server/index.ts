@@ -1828,6 +1828,31 @@ app.post('/api/chat/send', async (req, res) => {
   }
 });
 
+// ─── Memory Search ────────────────────────────────────────────────────────────
+app.get('/api/search/memory', async (req, res) => {
+  try {
+    const q = (req.query.q as string || '').toLowerCase().trim();
+    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    const content = await fs.readFile(memPath, 'utf8');
+
+    const sections = content.split(/^## /m).filter(Boolean);
+
+    const results = sections
+      .filter(s => !q || s.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map(s => {
+        const lines = s.trim().split('\n');
+        const title = lines[0].replace(/^\[P[012]\]\s*/, '').trim();
+        const snippet = lines.slice(1).join(' ').trim().slice(0, 100);
+        return { title, snippet };
+      });
+
+    res.json({ results });
+  } catch {
+    res.json({ results: [] });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, '0.0.0.0', () => {

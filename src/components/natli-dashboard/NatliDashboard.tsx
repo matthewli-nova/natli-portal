@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { QuickChatPanel } from './chat/QuickChatPanel';
+import { GlobalSearch } from './search/GlobalSearch';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -216,6 +217,14 @@ export function NatliDashboard() {
         <p className="text-sm text-muted-foreground">
           Live monitoring for Nat Lee AI operations
         </p>
+
+        {/* Global Search — Cmd+K */}
+        <GlobalSearch
+          onNavigate={(tab) => setActiveTab(tab)}
+          sessions={sessions as Array<Record<string, unknown>>}
+          cronJobs={crons as unknown as Array<Record<string, unknown>>}
+        />
+
         <div className="flex items-center gap-3">
           {lastUpdated && (
             <span className="text-xs text-muted-foreground">Last updated: {lastUpdated}</span>
