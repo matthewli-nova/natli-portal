@@ -178,6 +178,8 @@ const AVAILABLE_MODELS = [
   { id: 'openrouter/x-ai/grok-3', alias: 'grok3', label: 'Grok 3' },
   { id: 'moonshot/kimi-latest', alias: 'kimi', label: 'Kimi Latest' },
   { id: 'moonshot/kimi-k2-thinking-turbo', alias: 'kimi-thinking', label: 'Kimi K2 Thinking' },
+  { id: 'openrouter/minimax/minimax-m2.5', alias: 'minimax', label: 'MiniMax M2.5' },
+  { id: 'openrouter/minimax/minimax-m1', alias: 'minimax-m1', label: 'MiniMax M1' },
 ];
 
 app.get('/api/config/model', async (_req, res) => {
