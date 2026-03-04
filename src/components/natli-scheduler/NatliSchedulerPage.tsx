@@ -317,35 +317,41 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
       )}
 
       {/* [A] Status Strip — 4 KPI cards */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        <StatusCard
-          title="Total Jobs"
-          value={String(jobs.length)}
-          icon={<Timer className="w-4 h-4 text-[#31D7DB]" />}
-          sub={`${jobs.filter(j => j.enabled).length} enabled`}
-        />
-        <StatusCard
-          title="System Status"
-          value={failedJobs.length === 0 ? '✅ All OK' : `🔴 ${failedJobs.length} Failed`}
-          icon={failedJobs.length === 0 ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
-          sub={failedJobs.length === 0 ? 'No errors' : failedJobs.map(j => j.name).join(', ')}
-          variant={failedJobs.length > 0 ? 'error' : 'success'}
-        />
-        <StatusCard
-          title="Next Firing"
-          value={nextFiring[0] ? nextFiring[0].name.replace(/_/g, ' ') : '—'}
-          icon={<Zap className="w-4 h-4 text-[#31D7DB]" />}
-          sub={nextFiring[0]?.state.nextRunAtMs ? `in ${formatCountdown(nextFiring[0].state.nextRunAtMs - now)}` : '—'}
-          variant="cyan"
-        />
-        <StatusCard
-          title="Last Failure"
-          value={lastFailure ? lastFailure.name.replace(/_/g, ' ') : 'None'}
-          icon={lastFailure ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-          sub={lastFailure?.state.lastRunAtMs ? formatRelativeTime(lastFailure.state.lastRunAtMs) : 'No recent failures'}
-          variant={lastFailure ? 'error' : 'success'}
-        />
-      </div>
+      {(() => {
+        const totalEstDaily = Object.values(tokenSummary).reduce((s, v) => s + (v.estDailyTokens || 0), 0);
+        const hasTokenData = Object.keys(tokenSummary).length > 0;
+        return (
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <StatusCard
+              title="Total Jobs"
+              value={String(jobs.length)}
+              icon={<Timer className="w-4 h-4 text-[#31D7DB]" />}
+              sub={`${jobs.filter(j => j.enabled).length} enabled`}
+            />
+            <StatusCard
+              title="Est. Token Spend / Day"
+              value={hasTokenData ? formatTokensShort(totalEstDaily) : '…'}
+              icon={<Zap className="w-4 h-4 text-[#31D7DB]" />}
+              sub={hasTokenData ? 'across all scheduled jobs' : 'loading…'}
+              variant="cyan"
+            />
+            <StatusCard
+              title="System Status"
+              value={failedJobs.length === 0 ? '✅ All OK' : `🔴 ${failedJobs.length} Failed`}
+              icon={failedJobs.length === 0 ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+              sub={failedJobs.length === 0 ? 'No errors' : failedJobs.map(j => j.name).join(', ')}
+              variant={failedJobs.length > 0 ? 'error' : 'success'}
+            />
+            <StatusCard
+              title="Last Failure"
+              value={lastFailure ? lastFailure.name.replace(/_/g, ' ') : 'None'}
+              icon={lastFailure ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+              sub={lastFailure?.state.lastRunAtMs ? formatRelativeTime(lastFailure.state.lastRunAtMs) : 'No recent failures'}
+              variant={lastFailure ? 'error' : 'success'}
+            />
+          </div>
+        );
+      })()}
 
       {/* [B] Alert Banner */}
       {failedJobs.length > 0 && !alertDismissed && (
@@ -698,39 +704,32 @@ function NextFiringCard({ job, now, onRunNow, running }: {
   job: CronJob; now: number; onRunNow: () => void; running: boolean;
 }) {
   const countdown = (job.state.nextRunAtMs || 0) - now;
-  const [hovered, setHovered] = useState(false);
 
   return (
-    <Card
-      className="border-[#023F59]/20 hover:border-[#31D7DB]/50 transition-colors cursor-default"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <CardContent className="pt-4 pb-3">
+    <Card className="border-[#023F59]/20 hover:border-[#31D7DB]/50 transition-colors">
+      <CardContent className="pt-4 pb-3 flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Next</span>
-          <Badge className="bg-[#107DAC]/15 text-[#107DAC] border-0 text-[10px]">
+          <Badge className="bg-[#107DAC]/15 text-[#107DAC] border-0 text-[10px] shrink-0">
             {job.scheduleDescription}
           </Badge>
         </div>
         <p className="font-semibold text-[#21262A] text-sm truncate">{job.name.replace(/_/g, ' ')}</p>
         <p className="text-2xl font-bold text-[#107DAC] mt-1">{formatCountdown(Math.max(0, countdown))}</p>
-        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-1">
           <span>{job.sessionTarget}</span>
           {job.payload.model && <span>· {formatModelShort(job.payload.model)}</span>}
         </div>
-        {hovered && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 w-full border-[#023F59]/20 hover:bg-[#023F59] hover:text-white text-xs"
-            onClick={onRunNow}
-            disabled={running}
-          >
-            {running ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
-            {running ? 'Running…' : '▶ Run Now'}
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full border-[#023F59]/20 hover:bg-[#023F59] hover:text-white text-xs"
+          onClick={onRunNow}
+          disabled={running}
+        >
+          {running ? <RefreshCw className="w-3 h-3 mr-1.5 animate-spin" /> : <Play className="w-3 h-3 mr-1.5" />}
+          {running ? 'Running…' : '▶ Run Now'}
+        </Button>
       </CardContent>
     </Card>
   );
