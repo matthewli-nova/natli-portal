@@ -684,6 +684,35 @@ app.get('/api/memory/stats', async (_req, res) => {
   }
 });
 
+// Memory — Force Reindex
+app.post('/api/memory/reindex', async (_req, res) => {
+  try {
+    const { stdout, stderr } = await execAsync(
+      'openclaw memory index --force',
+      { env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH}` } }
+    );
+    res.json({ ok: true, output: stdout || stderr });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+// Memory — Run Janitor
+app.post('/api/memory/janitor', async (_req, res) => {
+  try {
+    const janitorPath = '/Users/natlee/.openclaw/workspace/scripts/memory-janitor.py';
+    const { stdout, stderr } = await execAsync(
+      `python3 "${janitorPath}"`,
+      { env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH}` }, timeout: 60000 }
+    );
+    res.json({ ok: true, output: stdout || stderr });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
 // Agents
 app.get('/api/agents', async (_req, res) => {
   try {

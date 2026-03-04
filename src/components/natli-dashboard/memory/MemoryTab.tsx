@@ -95,12 +95,49 @@ export function MemoryTab({ health }: MemoryTabProps) {
   const cap = health?.memoryMdCap ?? 150;
   const status = capacityStatus(lines, cap);
 
-  const handleJanitor = () => showToast('🧹 Feature coming soon');
-  const handleReindex = () => showToast('🔄 Feature coming soon');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const handleJanitor = async () => {
+    setActionLoading('janitor');
+    try {
+      const res = await fetch('/api/memory/janitor', { method: 'POST' });
+      const data = await res.json() as { ok: boolean; output?: string; error?: string };
+      showToast(data.ok ? '🧹 Janitor complete — expired entries archived' : `❌ ${data.error}`);
+    } catch {
+      showToast('❌ Janitor failed — check server');
+    }
+    setActionLoading(null);
+  };
+
+  const handleReindex = async () => {
+    setActionLoading('reindex');
+    try {
+      const res = await fetch('/api/memory/reindex', { method: 'POST' });
+      const data = await res.json() as { ok: boolean; output?: string; error?: string };
+      showToast(data.ok ? '🔄 Reindex complete' : `❌ ${data.error}`);
+    } catch {
+      showToast('❌ Reindex failed — check server');
+    }
+    setActionLoading(null);
+  };
+
   const handleOpenMemory = () => {
-    navigator.clipboard?.writeText('/Users/natlee/.openclaw/workspace/MEMORY.md')
-      .then(() => showToast('📂 Path copied to clipboard'))
-      .catch(() => showToast('📂 /Users/natlee/.openclaw/workspace/MEMORY.md'));
+    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(memPath).then(() => showToast('📂 Path copied to clipboard'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = memPath;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('📂 Path copied to clipboard');
+      }
+    } catch {
+      showToast(`📂 ${memPath}`);
+    }
   };
 
   return (
@@ -278,17 +315,21 @@ export function MemoryTab({ health }: MemoryTabProps) {
               variant="outline"
               className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white text-sm"
               onClick={handleJanitor}
+              disabled={actionLoading === 'janitor'}
             >
-              <Trash2 className="w-4 h-4 mr-1.5" />
-              Run Janitor
+              {actionLoading === 'janitor'
+                ? <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />
+                : <Trash2 className="w-4 h-4 mr-1.5" />}
+              {actionLoading === 'janitor' ? 'Running…' : 'Run Janitor'}
             </Button>
             <Button
               variant="outline"
               className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white text-sm"
               onClick={handleReindex}
+              disabled={actionLoading === 'reindex'}
             >
-              <RefreshCw className="w-4 h-4 mr-1.5" />
-              Force Reindex
+              <RefreshCw className={`w-4 h-4 mr-1.5 ${actionLoading === 'reindex' ? 'animate-spin' : ''}`} />
+              {actionLoading === 'reindex' ? 'Reindexing…' : 'Force Reindex'}
             </Button>
             <Button
               variant="outline"
