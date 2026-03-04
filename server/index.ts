@@ -4,6 +4,7 @@ import { exec, spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import crypto from 'crypto';
 import multer from 'multer';
 
 const app = express();
@@ -41,6 +42,65 @@ function execCommand(cmd: string): Promise<string> {
     });
   });
 }
+
+// ─── SSE (Server-Sent Events) ────────────────────────────────────────────────
+
+const sseClients = new Set<express.Response>();
+
+function broadcastSSE(event: string, data: unknown) {
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClients) {
+    try { client.write(payload); } catch { sseClients.delete(client); }
+  }
+}
+
+app.get('/api/events', (_req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.write(`event: connected\ndata: ${JSON.stringify({ ts: Date.now() })}\n\n`);
+
+  sseClients.add(res);
+
+  const heartbeat = setInterval(() => {
+    try { res.write(`: heartbeat\n\n`); } catch { /* closed */ }
+  }, 25_000);
+
+  _req.on('close', () => {
+    clearInterval(heartbeat);
+    sseClients.delete(res);
+  });
+});
+
+// ─── SSE Background Poller ───────────────────────────────────────────────────
+
+let lastPulseHash = '';
+
+async function ssePulsePoller() {
+  try {
+    const [cronOut, sessionOut] = await Promise.all([
+      execCommand('openclaw cron list --json').catch(() => '[]'),
+      execCommand('openclaw session list --json').catch(() => '[]'),
+    ]);
+
+    const combined = cronOut + sessionOut;
+    const hash = crypto.createHash('md5').update(combined).digest('hex');
+
+    if (hash !== lastPulseHash) {
+      lastPulseHash = hash;
+      let crons: unknown[] = [];
+      let sessions: unknown[] = [];
+      try { const parsed = JSON.parse(cronOut); crons = parsed?.jobs ?? parsed ?? []; } catch {}
+      try { const parsed = JSON.parse(sessionOut); sessions = parsed?.sessions ?? parsed ?? []; } catch {}
+      broadcastSSE('pulse', { crons, sessions, ts: Date.now() });
+    }
+  } catch { /* silent */ }
+}
+
+setInterval(ssePulsePoller, 30_000);
 
 // Health
 // Format alert timestamp as ddmmyy hhmmss
@@ -263,7 +323,12 @@ app.get('/api/health', async (_req, res) => {
       memoryFiles, memoryChunks, memoryDirty, memoryDbPath,
       ollamaModel, cacheEntries, vectorEnabled, ftsEnabled,
       ...fsStatsResult,
-    });
+    };
+
+    res.json(responseData);
+
+    // Broadcast health to SSE clients
+    broadcastSSE('health', responseData);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     res.status(500).json({ error: message });
@@ -1810,15 +1875,51 @@ app.get('/api/assets/nat-lee-avatar', async (_req, res) => {
 });
 
 // ─── File Upload ─────────────────────────────────────────────────────────────
+// ─── HEIC → JPG conversion helper (uses macOS built-in sips) ─────────────────
+async function convertHeicToJpg(heicPath: string): Promise<string> {
+  const jpgPath = heicPath + '.jpg';
+  await new Promise<void>((resolve, reject) => {
+    exec(
+      `sips -s format jpeg "${heicPath}" --out "${jpgPath}"`,
+      { timeout: 30000 },
+      (error, _stdout, stderr) => {
+        if (error) reject(new Error(stderr || error.message));
+        else resolve();
+      }
+    );
+  });
+  return jpgPath;
+}
+
 app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
 
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    let filePath = req.file.path;
+    let originalName = req.file.originalname;
+    let ext = path.extname(originalName).toLowerCase();
+
+    // Convert HEIC → JPG before any processing
+    if (ext === '.heic') {
+      try {
+        const jpgPath = await convertHeicToJpg(filePath);
+        await fs.unlink(filePath).catch(() => {}); // remove original HEIC temp
+        filePath = jpgPath;
+        originalName = originalName.replace(/\.heic$/i, '.jpg');
+        ext = '.jpg';
+      } catch (convErr) {
+        // Conversion failed — proceed as generic file with a warning
+        console.error('HEIC conversion failed:', convErr);
+        originalName = req.file.originalname; // keep original name
+        ext = '.heic';
+      }
+    }
+
+    const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, '_');
     const destPath = path.join(UPLOAD_DIR, `${Date.now()}-${safeName}`);
 
-    await fs.copyFile(req.file.path, destPath);
+    await fs.copyFile(filePath, destPath);
+    await fs.unlink(filePath).catch(() => {}); // clean up temp
 
     let extractedText = '';
     let preview = '';
@@ -1826,18 +1927,18 @@ app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
     try {
       if (ext === '.pdf') {
         const pdfParse = require('pdf-parse');
-        const buf = await fs.readFile(req.file.path);
+        const buf = await fs.readFile(destPath);
         const data = await pdfParse(buf);
         extractedText = data.text;
         preview = extractedText.slice(0, 500);
       } else if (ext === '.docx' || ext === '.doc') {
         const mammoth = require('mammoth');
-        const result = await mammoth.extractRawText({ path: req.file.path });
+        const result = await mammoth.extractRawText({ path: destPath });
         extractedText = result.value;
         preview = extractedText.slice(0, 500);
       } else if (ext === '.xlsx' || ext === '.xls') {
         const XLSX = require('xlsx');
-        const wb = XLSX.readFile(req.file.path);
+        const wb = XLSX.readFile(destPath);
         const sheets = wb.SheetNames.map((name: string) => {
           const ws = wb.Sheets[name];
           return `[Sheet: ${name}]\n${XLSX.utils.sheet_to_csv(ws)}`;
@@ -1845,21 +1946,20 @@ app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
         extractedText = sheets.join('\n\n');
         preview = extractedText.slice(0, 500);
       } else if (ext === '.csv') {
-        extractedText = await fs.readFile(req.file.path, 'utf8');
+        extractedText = await fs.readFile(destPath, 'utf8');
         preview = extractedText.slice(0, 500);
       } else {
-        extractedText = `[Image file: ${req.file.originalname}]`;
+        // Image (PNG, JPG — or HEIC converted to JPG)
+        extractedText = `[Image file: ${originalName}]`;
         preview = extractedText;
       }
     } catch {
-      extractedText = `[File uploaded: ${req.file.originalname} — could not extract text]`;
+      extractedText = `[File uploaded: ${originalName} — could not extract text]`;
       preview = extractedText;
     }
 
-    await fs.unlink(req.file.path).catch(() => {});
-
     res.json({
-      filename: req.file.originalname,
+      filename: originalName,
       savedAs: path.basename(destPath),
       extractedText: extractedText.slice(0, 8000),
       preview,
@@ -1874,25 +1974,37 @@ app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
 // ─── Chat Send ───────────────────────────────────────────────────────────────
 app.post('/api/chat/send', async (req, res) => {
   try {
-    const { message } = req.body as { message: string };
+    const { message, model } = req.body as { message: string; model?: string };
     if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
 
     const escaped = message.replace(/"/g, '\\"').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    const modelFlag = model ? ` --model "${model}"` : '';
     const output = await execCommandWithTimeout(
-      `openclaw agent --message "${escaped}" --json`,
+      `openclaw agent --agent main --message "${escaped}"${modelFlag} --json`,
       120000
     );
 
-    let reply = 'Message sent to Nat Lee.';
+    let reply = '';
     try {
       const parsed = JSON.parse(output);
-      reply = parsed.reply || parsed.message || parsed.text || parsed.content || output.trim();
+      reply = parsed.result?.reply
+        || parsed.result?.message
+        || parsed.result?.text
+        || parsed.result?.content
+        || parsed.reply
+        || parsed.message
+        || parsed.text
+        || parsed.content
+        || '';
     } catch {
-      if (output.trim()) reply = output.trim();
+      reply = output.trim();
     }
 
-    if (!reply || reply === 'Message sent to Nat Lee.') {
-      reply = 'Message sent — Nat Lee is processing. Check Slack for the response.';
+    // Strip NO_REPLY sentinel — it's an internal instruction, never show it
+    reply = reply.replace(/^\s*NO_REPLY\s*$/m, '').trim();
+
+    if (!reply) {
+      reply = 'Done — Nat Lee processed your request. Check Slack for any delivered output.';
     }
 
     res.json({ reply, ts: Date.now() });
