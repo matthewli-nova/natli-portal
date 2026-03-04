@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -166,21 +166,41 @@ app.get('/api/agents', async (_req, res) => {
 
 const OPENCLAW_CONFIG_PATH = '/Users/natlee/.openclaw/openclaw.json';
 
-const AVAILABLE_MODELS = [
-  { id: 'anthropic/claude-opus-4-6', alias: 'opus', label: 'Claude Opus 4.6' },
-  { id: 'anthropic/claude-sonnet-4-6', alias: 'sonnet', label: 'Claude Sonnet 4.6' },
-  { id: 'anthropic/claude-haiku-4-5', alias: 'haiku', label: 'Claude Haiku 4.5' },
-  { id: 'openrouter/google/gemini-2.5-pro', alias: 'gemini-pro', label: 'Gemini 2.5 Pro' },
-  { id: 'openrouter/google/gemini-2.5-flash', alias: 'gemini-flash', label: 'Gemini 2.5 Flash' },
-  { id: 'openrouter/google/gemini-3-pro-preview', alias: 'gemini3-pro', label: 'Gemini 3 Pro' },
-  { id: 'openrouter/deepseek/deepseek-r1', alias: 'deepseek-r1', label: 'DeepSeek R1' },
-  { id: 'openrouter/x-ai/grok-4', alias: 'grok4', label: 'Grok 4' },
-  { id: 'openrouter/x-ai/grok-3', alias: 'grok3', label: 'Grok 3' },
-  { id: 'moonshot/kimi-latest', alias: 'kimi', label: 'Kimi Latest' },
-  { id: 'moonshot/kimi-k2-thinking-turbo', alias: 'kimi-thinking', label: 'Kimi K2 Thinking' },
-  { id: 'openrouter/minimax/minimax-m2.5', alias: 'minimax', label: 'MiniMax M2.5' },
-  { id: 'openrouter/minimax/minimax-m1', alias: 'minimax-m1', label: 'MiniMax M1' },
-];
+function generateModelLabel(modelId: string): string {
+  // Extract the last segment after all slashes (e.g. 'claude-sonnet-4-6', 'gemini-2.5-pro')
+  const parts = modelId.split('/');
+  const raw = parts[parts.length - 1];
+  // Clean up common suffixes and format nicely
+  return raw
+    .replace(/:free$/, '')
+    .replace(/-instruct$/, '')
+    .split('-')
+    .map(seg => {
+      // Keep version numbers as-is
+      if (/^\d/.test(seg)) return seg;
+      // Capitalize known abbreviations
+      if (seg.toLowerCase() === 'ai') return 'AI';
+      if (seg.toLowerCase() === 'pro') return 'Pro';
+      if (seg.toLowerCase() === 'flash') return 'Flash';
+      if (seg.toLowerCase() === 'turbo') return 'Turbo';
+      if (seg.toLowerCase() === 'latest') return 'Latest';
+      if (seg.toLowerCase() === 'preview') return 'Preview';
+      return seg.charAt(0).toUpperCase() + seg.slice(1);
+    })
+    .join(' ')
+    // Collapse version patterns: "4 6" → "4.6", "2 5" → "2.5", "3 3" → "3.3"
+    .replace(/(\d+)\s+(\d+)/g, '$1.$2');
+}
+
+async function getAvailableModels(): Promise<Array<{ id: string; alias: string; label: string }>> {
+  const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+  const modelsMap = data.agents?.defaults?.models ?? {};
+  return Object.entries(modelsMap).map(([id, val]) => ({
+    id,
+    alias: (val as Record<string, string>)?.alias ?? '',
+    label: generateModelLabel(id),
+  }));
+}
 
 app.get('/api/config/model', async (_req, res) => {
   try {
@@ -188,7 +208,18 @@ app.get('/api/config/model', async (_req, res) => {
     const modelDefaults = data.agents?.defaults?.model ?? {};
     const primary: string = modelDefaults.primary ?? '';
     const fallbacks: string[] = modelDefaults.fallbacks ?? [];
-    res.json({ primary, fallbacks, availableModels: AVAILABLE_MODELS });
+    const availableModels = await getAvailableModels();
+    res.json({ primary, fallbacks, availableModels });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.get('/api/config/model/available', async (_req, res) => {
+  try {
+    const availableModels = await getAvailableModels();
+    res.json({ models: availableModels });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     res.status(500).json({ error: message });
@@ -210,6 +241,21 @@ app.post('/api/config/model', async (req, res) => {
     data.agents.defaults.model.fallbacks = fallbacks;
     await fs.writeFile(OPENCLAW_CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
     res.json({ ok: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Restart gateway
+app.post('/api/config/restart', (_req, res) => {
+  try {
+    const child = spawn('openclaw', ['gateway', 'restart'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    res.json({ ok: true, message: 'Restart initiated' });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     res.status(500).json({ error: message });

@@ -108,6 +108,7 @@ export function NatliDashboard() {
   const [modelConfig, setModelConfig] = useState<ModelConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshingModel, setRefreshingModel] = useState(false);
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -133,6 +134,13 @@ export function NatliDashboard() {
   const handleRefresh = () => {
     setRefreshing(true);
     loadData();
+  };
+
+  const handleRefreshModel = async () => {
+    setRefreshingModel(true);
+    const mc = await fetchApi<ModelConfig>('/api/config/model');
+    setModelConfig(mc);
+    setRefreshingModel(false);
   };
 
   if (loading) return <DashboardSkeleton />;
@@ -204,9 +212,20 @@ export function NatliDashboard() {
                     </p>
                   )}
                 </div>
-                <Badge className="bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30">
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> Online
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefreshModel}
+                    disabled={refreshingModel}
+                    className="h-7 w-7 p-0 hover:bg-[#023F59]/10"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-[#107DAC] ${refreshingModel ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Badge className="bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30">
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Online
+                  </Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
