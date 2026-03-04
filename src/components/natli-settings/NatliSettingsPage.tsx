@@ -309,23 +309,28 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView('keys')}
-              className="border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
-            >
-              <KeyRound className="w-4 h-4 mr-1.5" />
-              Manage Keys
-            </Button>
-          </div>
-
-          {/* Current model banner */}
-          <div className="flex items-center gap-3 rounded-lg bg-[#023F59]/5 p-3">
-            <Check className="w-4 h-4 text-[#31D7DB]" />
-            <span className="text-sm text-muted-foreground">
-              Current primary: <span className="text-[#107DAC] font-medium">{resolveLabel(primary)}</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshModels}
+                disabled={refreshingModels}
+                className="border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
+                title="Refresh model list from system"
+              >
+                <RefreshCw className={`w-4 h-4 mr-1.5 ${refreshingModels ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setView('keys')}
+                className="border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
+              >
+                <KeyRound className="w-4 h-4 mr-1.5" />
+                Manage Keys
+              </Button>
+            </div>
           </div>
 
           {/* Model selectors */}
@@ -333,15 +338,6 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-[#21262A]">Primary Model</label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRefreshModels}
-                  disabled={refreshingModels}
-                  className="h-6 w-6 p-0 hover:bg-[#023F59]/10"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 text-[#107DAC] ${refreshingModels ? 'animate-spin' : ''}`} />
-                </Button>
               </div>
               <Select value={primary} onValueChange={setPrimary}>
                 <SelectTrigger className="border-[#023F59]/20 focus:ring-[#31D7DB]/30">
