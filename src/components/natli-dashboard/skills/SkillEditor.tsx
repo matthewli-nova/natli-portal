@@ -131,7 +131,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
             size="sm"
             onClick={handleSave}
             disabled={!isDirty || saveState === 'saving'}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 bg-[#023F59] text-white hover:bg-[#022F44]"
           >
             <Save className="w-3.5 h-3.5" />
             {saveState === 'saving' ? 'Saving...' : 'Save'}
@@ -140,7 +140,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
       </div>
 
       {/* ── Editor Tips ─────────────────────────────────────────────── */}
-      <div className="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/20 border-b text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+      <div className="px-4 py-1.5 bg-[#023F59]/5 border-b border-[#023F59]/10 text-xs text-[#107DAC] flex items-center gap-2">
         <span>✏️</span>
         <span>
           Editing <strong>{skill.name}</strong> SKILL.md — this is a custom skill.

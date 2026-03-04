@@ -73,7 +73,7 @@ export function AddSkillModal({ onClose, onCreated }: AddSkillModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-background border rounded-xl shadow-2xl w-full max-w-lg mx-4">
+      <div className="bg-background border border-[#023F59]/20 rounded-xl shadow-2xl w-full max-w-lg mx-4">
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-4 border-b">
@@ -127,7 +127,7 @@ export function AddSkillModal({ onClose, onCreated }: AddSkillModalProps) {
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="e.g. Automate Salesforce CRM — create leads, update opportunities, generate reports"
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm resize-none outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full rounded-md border border-[#023F59]/20 bg-background px-3 py-2 text-sm resize-none outline-none focus:ring-2 focus:ring-[#31D7DB]/30"
               rows={3}
             />
           </div>
@@ -144,7 +144,7 @@ export function AddSkillModal({ onClose, onCreated }: AddSkillModalProps) {
                   onClick={() => setCategory(cat)}
                   className={`text-xs py-1 px-3 rounded-full font-medium transition-colors ${
                     category === cat
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-[#023F59] text-white'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                 >
@@ -194,7 +194,7 @@ export function AddSkillModal({ onClose, onCreated }: AddSkillModalProps) {
             size="sm"
             onClick={handleCreate}
             disabled={!isValid || createState === 'creating' || createState === 'done'}
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-1.5 bg-[#023F59] text-white hover:bg-[#022F44]"
           >
             {createState === 'creating' && <span className="animate-spin">⏳</span>}
             {createState === 'done' && '✓'}

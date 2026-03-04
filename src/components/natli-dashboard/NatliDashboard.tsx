@@ -17,10 +17,8 @@ import {
 import {
   Activity,
   Clock,
-  Cpu,
   Database,
   HardDrive,
-  MemoryStick,
   Play,
   RefreshCw,
   Server,
@@ -31,11 +29,6 @@ import {
   ListTodo,
   Brain,
   FileText,
-  Zap,
-  ArrowDown,
-  ArrowUp,
-  Monitor,
-  Thermometer,
   Search,
   Hash,
   Archive,
@@ -917,17 +910,6 @@ function formatTimeAgo(iso: string): string {
   } catch { return '—'; }
 }
 
-function MiniBar({ label, value }: { label: string; value: number }) {
-  const color = value > 80 ? '[&>div]:bg-red-500' : value > 60 ? '[&>div]:bg-amber-500' : '[&>div]:bg-[#31D7DB]';
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground w-8">{label}</span>
-      <Progress value={value} className={`h-1.5 flex-1 ${color}`} />
-      <span className="text-xs font-mono text-[#21262A] w-8 text-right">{value}%</span>
-    </div>
-  );
-}
-
 // ─── Sub-Components ──────────────────────────────────────────
 
 function KPICard({ title, value, icon, description }: {
@@ -945,59 +927,6 @@ function KPICard({ title, value, icon, description }: {
       <CardContent>
         <div className="text-2xl font-bold text-[#107DAC]">{value}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function GaugeCard({ label, value, icon, subtitle }: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  subtitle?: string;
-}) {
-  const color = value > 80 ? 'text-red-500' : value > 60 ? 'text-amber-500' : 'text-[#107DAC]';
-  return (
-    <Card className="border-[#023F59]/20">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {icon}
-            <span className="text-sm font-medium text-[#21262A]">{label}</span>
-          </div>
-          <span className={`text-2xl font-bold ${color}`}>{value}%</span>
-        </div>
-        <Progress value={value} className="h-2 [&>div]:bg-[#31D7DB]" />
-        {subtitle && <p className="text-xs text-muted-foreground mt-2">{subtitle}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function TempIndicator({ label, value }: { label: string; value: number }) {
-  const color = value > 75 ? 'text-red-500' : value > 60 ? 'text-amber-500' : 'text-emerald-500';
-  return (
-    <div className="text-center">
-      <p className={`text-2xl font-bold ${color}`}>{value}<span className="text-sm font-normal">°C</span></p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
-function ServiceCard({ name, status, endpoint }: {
-  name: string;
-  status: 'online' | 'offline' | 'unknown';
-  endpoint?: string;
-}) {
-  return (
-    <Card className="border-[#023F59]/20">
-      <CardContent className="pt-6 flex items-center gap-3">
-        <Server className="w-5 h-5 text-[#31D7DB]" />
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm text-[#21262A]">{name}</p>
-          {endpoint && <p className="text-xs text-muted-foreground">{endpoint}</p>}
-        </div>
-        <StatusDot status={status} />
       </CardContent>
     </Card>
   );

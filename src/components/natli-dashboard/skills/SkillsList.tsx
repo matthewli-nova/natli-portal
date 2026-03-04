@@ -65,7 +65,7 @@ function SkillListRow({
       onClick={onClick}
       className={`w-full text-left rounded-lg px-3 py-2.5 transition-colors ${
         isSelected
-          ? 'bg-primary text-primary-foreground'
+          ? 'bg-[#023F59] text-white'
           : 'hover:bg-muted/60'
       }`}
     >
@@ -85,17 +85,17 @@ function SkillListRow({
             {/* Category badge instead of status */}
             <span className={`text-xs px-1.5 py-0 rounded-full font-medium ${
               isSelected
-                ? 'bg-primary-foreground/20 text-primary-foreground'
+                ? 'bg-white/20 text-white'
                 : CATEGORY_COLORS[skill.category]
             }`}>
               {skill.category === 'Infrastructure & Platform' ? 'Infra' : skill.category.split(' ')[0]}
             </span>
             {skill.status !== 'ready' && (
-              <span className={`text-xs ${isSelected ? 'text-primary-foreground/60' : 'text-amber-600'}`}>⚠</span>
+              <span className={`text-xs ${isSelected ? 'text-white/60' : 'text-amber-600'}`}>⚠</span>
             )}
             {skill.lastUsed && (
               <span className={`text-xs flex items-center gap-0.5 ${
-                isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                isSelected ? 'text-white/70' : 'text-muted-foreground'
               }`}>
                 <Clock className="w-2.5 h-2.5" />
                 {formatRelativeDate(skill.lastUsed)}
@@ -104,7 +104,7 @@ function SkillListRow({
           </div>
         </div>
         {skill.type === 'custom' && (
-          <span className={`text-xs flex-shrink-0 ${isSelected ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+          <span className={`text-xs flex-shrink-0 ${isSelected ? 'text-white/60' : 'text-muted-foreground'}`}>
             🔧
           </span>
         )}
@@ -129,8 +129,8 @@ function SkillGridCard({
       onClick={onClick}
       className={`text-left rounded-lg p-3 transition-colors border ${
         isSelected
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'hover:bg-muted/60 border-transparent hover:border-border'
+          ? 'bg-[#023F59] text-white border-[#023F59]'
+          : 'hover:bg-muted/60 border-transparent hover:border-[#023F59]/20'
       }`}
     >
       <div className={`text-2xl mb-1.5 ${skill.status !== 'ready' ? 'opacity-40 grayscale' : ''}`}>
@@ -139,7 +139,7 @@ function SkillGridCard({
       <div className="text-xs font-medium truncate mb-1">{skill.name}</div>
       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
         isSelected
-          ? 'bg-primary-foreground/20 text-primary-foreground'
+          ? 'bg-white/20 text-white'
           : CATEGORY_COLORS[skill.category]
       }`}>
         {skill.category === 'Infrastructure & Platform' ? 'Infra' : skill.category.split(' ')[0]}

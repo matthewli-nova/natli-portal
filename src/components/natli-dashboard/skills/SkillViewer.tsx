@@ -2,9 +2,9 @@
 // Renders SKILL.md content for a selected skill — shows metadata + markdown body
 
 import { useState, useEffect } from 'react';
-import { FileText, Tag, Calendar, Zap, ShieldCheck, ExternalLink } from 'lucide-react';
-import { type Skill, CATEGORY_COLORS, STATUS_COLORS, STATUS_LABELS } from './skills-data';
-import { Badge } from '../../ui/badge';
+import { FileText, Tag, Calendar, Zap, ShieldCheck } from 'lucide-react';
+import { type Skill } from './skills-data';
+
 
 interface SkillViewerProps {
   skill: Skill;
@@ -216,50 +216,4 @@ function InlineMarkdown({ text }: { text: string }) {
   );
 }
 
-// ── Mock Content (replace with API call in production) ────────────────────────
 
-function MOCK_SKILL_CONTENT(skill: Skill): string {
-  return `# ${skill.emoji} ${skill.name}
-
-**Version:** ${skill.version ?? '1.0'}
-**Type:** ${skill.type === 'custom' ? 'Custom Skill 🔧' : 'System Skill 🔒'}
-**Status:** ${STATUS_LABELS[skill.status]}
-**Category:** ${skill.category}
-**Path:** \`${skill.path}\`
-${skill.addedDate ? `**Added:** ${skill.addedDate}` : ''}
-${skill.lastUsed ? `**Last Used:** ${skill.lastUsed} (${skill.usageCount ?? 0} total uses)` : ''}
-
----
-
-## Overview
-
-${skill.description}
-
----
-
-## Tags
-
-${skill.tags.map(t => `\`${t}\``).join(' · ')}
-
----
-
-## Contract
-
-${skill.hasContract
-  ? `✅ This skill has a full contract specification with parameter tables, output specs, and examples.`
-  : `⚠️ No contract defined yet. Run skill-creator to add one.`
-}
-
----
-
-## How to Trigger
-
-This skill activates when Nat Lee detects requests related to:
-${skill.tags.slice(0, 4).map(t => `- ${t}`).join('\n')}
-
----
-
-> 💡 **Note:** This is a preview. Connect the backend API to load the live SKILL.md content from \`${skill.path}\`
-
-`;
-}

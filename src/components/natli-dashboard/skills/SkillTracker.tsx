@@ -60,7 +60,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
             accent: neverUsed.length > 5 ? 'text-amber-600' : 'text-muted-foreground',
           },
         ].map(kpi => (
-          <Card key={kpi.label}>
+          <Card key={kpi.label} className="border-[#023F59]/20">
             <CardHeader>
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <kpi.icon className="w-3.5 h-3.5" />
@@ -78,9 +78,9 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* ── Most Used Skills ──────────────────────────────────── */}
-        <Card>
+        <Card className="border-[#023F59]/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
               <Award className="w-4 h-4 text-amber-500" />
               Most Used
             </CardTitle>
@@ -116,10 +116,10 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
         </Card>
 
         {/* ── Recently Added ───────────────────────────────────── */}
-        <Card>
+        <Card className="border-[#023F59]/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-blue-500" />
+            <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[#107DAC]" />
               Recently Added
             </CardTitle>
           </CardHeader>
@@ -142,9 +142,9 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
         </Card>
 
         {/* ── Category Breakdown ───────────────────────────────── */}
-        <Card>
+        <Card className="border-[#023F59]/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Category Breakdown</CardTitle>
+            <CardTitle className="text-sm font-semibold text-[#21262A]">Category Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3">
@@ -158,7 +158,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary/60 rounded-full"
+                      className="h-full bg-[#023F59]/60 rounded-full"
                       style={{ width: `${(cat.count / stats.total) * 100}%` }}
                     />
                   </div>
@@ -169,9 +169,9 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
         </Card>
 
         {/* ── Never Used / Needs Attention ─────────────────────── */}
-        <Card>
+        <Card className="border-[#023F59]/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               Needs Attention
             </CardTitle>
