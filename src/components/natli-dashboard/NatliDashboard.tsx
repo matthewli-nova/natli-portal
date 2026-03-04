@@ -347,22 +347,22 @@ export function NatliDashboard() {
 
         {/* ─── System Tab ────────────────────────────────────── */}
         <TabsContent value="system" className="space-y-6">
-          {/* ════════════════════════════════════════════════════ */}
-          {/* SECTION 1: System Status                            */}
-          {/* ════════════════════════════════════════════════════ */}
+
+          {/* ── SECTION 1: OpenClaw Health ─────────────────── */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
               <span className="text-lg font-bold text-[#21262A]">
-                {health?.gatewayReachable && health?.gatewayServiceRunning ? '\u{1F7E2}' : health?.gatewayServiceRunning ? '\u{1F7E1}' : '\u{1F534}'} System Status
+                {health?.gatewayReachable ? '🟢' : '🔴'} OpenClaw Health
               </span>
             </div>
 
-            {/* Top Status Bar — pill badges */}
+            {/* Quick-glance pills */}
             <div className="flex flex-wrap gap-2">
               <Badge className={`px-3 py-1 text-xs font-semibold border-0 ${health?.gatewayReachable ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-                Gateway: {health?.gatewayReachable ? 'ONLINE' : 'OFFLINE'}
+                Gateway {health?.gatewayReachable ? 'ONLINE' : 'OFFLINE'}
               </Badge>
               <Badge className="px-3 py-1 text-xs font-semibold bg-[#31D7DB]/20 text-[#107DAC] border-0">
+                <Brain className="w-3 h-3 mr-1" />
                 {health?.primaryModel || '—'}
               </Badge>
               <Badge className="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 border-0">
@@ -375,9 +375,9 @@ export function NatliDashboard() {
               </Badge>
             </div>
 
-            {/* Status Grid — 2-column cards */}
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Card 1: Gateway */}
+            {/* 3 cards: Gateway | Model + Sessions | Services */}
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Gateway */}
               <Card className="border-[#023F59]/20">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center justify-between mb-3">
@@ -392,167 +392,56 @@ export function NatliDashboard() {
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                     <div className="text-muted-foreground">Version</div>
                     <div className="font-mono text-[#21262A]">{health?.gatewayVersion || '—'}</div>
-                    <div className="text-muted-foreground">Host</div>
-                    <div className="font-mono text-[#21262A] truncate">{health?.gatewayHost || '—'}</div>
-                    <div className="text-muted-foreground">Latency</div>
-                    <div className="font-mono text-[#21262A]">{health?.gatewayLatencyMs ?? 0} ms</div>
                     <div className="text-muted-foreground">PID</div>
                     <div className="font-mono text-[#21262A]">{health?.gatewayPid || '—'}</div>
-                    <div className="text-muted-foreground">Started</div>
-                    <div className="font-mono text-[#21262A] text-xs">{health?.gatewayStartTime || '—'}</div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Card 2: Current Model */}
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Brain className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-semibold text-[#21262A]">Current Model</span>
-                  </div>
-                  <p className="text-2xl font-bold text-[#107DAC]">
-                    {health?.primaryModel ? resolveModelLabel(health.primaryModel) : '—'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 font-mono">{health?.primaryModel || ''}</p>
-                </CardContent>
-              </Card>
-
-              {/* Card 3: Active Sessions */}
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Activity className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-semibold text-[#21262A]">Active Sessions</span>
-                  </div>
-                  <p className="text-3xl font-bold text-[#107DAC]">{health?.totalSessions ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">total sessions</p>
-                </CardContent>
-              </Card>
-
-              {/* Card 4: Mac mini Health (compact) */}
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Monitor className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-semibold text-[#21262A]">Mac mini Health</span>
-                  </div>
-                  <div className="space-y-2.5">
-                    <MiniBar label="CPU" value={health?.cpu ?? 0} />
-                    <MiniBar label="RAM" value={health?.memory ?? 0} />
-                    <MiniBar label="Disk" value={health?.disk ?? 0} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Card 5: Ollama Status */}
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Database className="w-4 h-4 text-[#31D7DB]" />
-                      <span className="text-sm font-semibold text-[#21262A]">Ollama</span>
-                    </div>
-                    <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${health?.services?.ollama ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                      {health?.services?.ollama ? 'Online' : 'Offline'}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                    <div className="text-muted-foreground">Model</div>
-                    <div className="font-mono text-[#21262A]">{health?.ollamaModel || '—'}</div>
-                    <div className="text-muted-foreground">Dims</div>
-                    <div className="font-mono text-[#21262A]">768</div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Card 6: Last Active */}
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Clock className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-semibold text-[#21262A]">Last Active</span>
-                  </div>
-                  <p className="text-2xl font-bold text-[#107DAC]">
-                    {health?.timestamp ? formatTimeAgo(health.timestamp) : '—'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {health?.timestamp ? new Date(health.timestamp).toLocaleTimeString() : ''}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* ════════════════════════════════════════════════════ */}
-          {/* OpenClaw Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-              <span className="text-lg font-bold text-[#21262A]">⚙️ OpenClaw Health</span>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {/* Gateway Service */}
-              <Card className="border-[#023F59]/20">
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Server className="w-4 h-4 text-[#31D7DB]" />
-                      <span className="text-sm font-semibold text-[#21262A]">Gateway Service</span>
-                    </div>
-                    <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${health?.gatewayServiceRunning ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                      {health?.gatewayServiceRunning ? 'Running' : 'Stopped'}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                    <div className="text-muted-foreground">Version</div>
-                    <div className="font-mono text-[#21262A]">{health?.gatewayVersion || '—'}</div>
-                    <div className="text-muted-foreground">PID</div>
-                    <div className="font-mono text-[#21262A]">{health?.gatewayPid || '—'}</div>
-                    <div className="text-muted-foreground">Latency</div>
-                    <div className="font-mono text-[#21262A]">{health?.gatewayLatencyMs ?? 0} ms</div>
                     <div className="text-muted-foreground">Uptime</div>
                     <div className="font-mono text-[#21262A]">{health?.gatewayStartTime ? formatUptime(health.gatewayStartTime) : '—'}</div>
+                    <div className="text-muted-foreground">Latency</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayLatencyMs ?? 0} ms</div>
                     <div className="text-muted-foreground">Host</div>
-                    <div className="font-mono text-[#21262A] truncate text-xs">{health?.gatewayHost || '—'}</div>
+                    <div className="font-mono text-[#21262A] truncate text-xs col-span-1">{health?.gatewayHost || '—'}</div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Active Model */}
+              {/* Model & Sessions */}
               <Card className="border-[#023F59]/20">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Brain className="w-4 h-4 text-[#31D7DB]" />
-                    <span className="text-sm font-semibold text-[#21262A]">Active Model</span>
+                    <span className="text-sm font-semibold text-[#21262A]">AI Model & Sessions</span>
                   </div>
                   <p className="text-xl font-bold text-[#107DAC] leading-tight">
                     {health?.primaryModel ? resolveModelLabel(health.primaryModel) : '—'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1 font-mono">{health?.primaryModel || ''}</p>
-                  <div className="mt-3 pt-3 border-t border-[#023F59]/10">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Sessions</span>
-                      <span className="font-bold text-[#107DAC]">{health?.totalSessions ?? 0}</span>
-                    </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-mono">{health?.primaryModel || ''}</p>
+                  <div className="mt-3 pt-3 border-t border-[#023F59]/10 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <div className="text-muted-foreground">Sessions</div>
+                    <div className="font-bold text-[#107DAC]">{health?.totalSessions ?? 0}</div>
+                    <div className="text-muted-foreground">Last active</div>
+                    <div className="font-mono text-[#21262A]">{health?.timestamp ? formatTimeAgo(health.timestamp) : '—'}</div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Channels & Services */}
+              {/* Services */}
               <Card className="border-[#023F59]/20">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Activity className="w-4 h-4 text-[#31D7DB]" />
                     <span className="text-sm font-semibold text-[#21262A]">Services</span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {[
                       { label: 'Gateway :18789', ok: health?.gatewayReachable },
-                      { label: 'Ollama :11434', ok: health?.services?.ollama },
-                      { label: 'Slack Channel', ok: true },
-                    ].map(({ label, ok }) => (
+                      { label: 'Ollama :11434', ok: health?.services?.ollama, sub: health?.ollamaModel },
+                      { label: 'Slack', ok: true },
+                    ].map(({ label, ok, sub }) => (
                       <div key={label} className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{label}</span>
+                        <div>
+                          <span className="text-[#21262A]">{label}</span>
+                          {sub && <span className="ml-1.5 text-xs text-muted-foreground font-mono">{sub}</span>}
+                        </div>
                         <Badge className={`text-[10px] font-bold px-2 py-0 border-0 ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                           {ok ? 'Online' : 'Offline'}
                         </Badge>
@@ -564,8 +453,124 @@ export function NatliDashboard() {
             </div>
           </div>
 
-          {/* ════════════════════════════════════════════════════ */}
-          {/* Alerts */}
+          {/* ── SECTION 2: Mac mini Hardware ───────────────── */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+              <span className="text-lg font-bold text-[#21262A]">🖥️ Mac mini Hardware</span>
+              {health?.socModel && (
+                <span className="text-sm text-muted-foreground">
+                  {health.socModel} · {health.coreCount} cores ({health.eCores}E + {health.pCores}P) ·{' '}
+                  <span className={health.thermalState === 'Normal' ? 'text-emerald-600' : 'text-amber-600'}>{health.thermalState}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Resource gauges — 4 across */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: 'CPU', value: health?.cpu ?? 0, sub: `${health?.cpuTemp ?? 0}°C · ${health?.cpuPowerW ?? 0}W` },
+                { label: 'Memory', value: health?.memory ?? 0, sub: `${health?.memUsedGb ?? 0} / ${health?.memTotalGb ?? 0} GB` },
+                { label: 'Disk', value: health?.disk ?? 0, sub: 'system volume' },
+                { label: 'GPU', value: health?.gpuPercent ?? 0, sub: `${health?.gpuFreqMhz ?? 0} MHz · ${health?.gpuTemp ?? 0}°C` },
+              ].map(({ label, value, sub }) => (
+                <Card key={label} className="border-[#023F59]/20">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex justify-between items-baseline mb-1.5">
+                      <span className="text-sm font-semibold text-[#21262A]">{label}</span>
+                      <span className={`text-lg font-bold ${value > 85 ? 'text-red-600' : value > 70 ? 'text-amber-600' : 'text-[#107DAC]'}`}>{value}%</span>
+                    </div>
+                    <Progress value={value} className={`h-2 mb-1.5 ${value > 85 ? '[&>div]:bg-red-500' : value > 70 ? '[&>div]:bg-amber-500' : '[&>div]:bg-[#31D7DB]'}`} />
+                    <p className="text-xs text-muted-foreground">{sub}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Network & Disk I/O */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Activity className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Network</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-emerald-600 font-bold">↓</span>
+                      <div>
+                        <p className="font-mono font-bold text-[#107DAC]">{health?.netInKbps ?? 0} KB/s</p>
+                        <p className="text-xs text-muted-foreground">Inbound</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-blue-500 font-bold">↑</span>
+                      <div>
+                        <p className="font-mono font-bold text-[#107DAC]">{health?.netOutKbps ?? 0} KB/s</p>
+                        <p className="text-xs text-muted-foreground">Outbound</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <HardDrive className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Disk I/O</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="font-mono font-bold text-[#107DAC]">{health?.diskReadKbps ?? 0} KB/s</p>
+                      <p className="text-xs text-muted-foreground">Read</p>
+                    </div>
+                    <div>
+                      <p className="font-mono font-bold text-[#107DAC]">{health?.diskWriteKbps ?? 0} KB/s</p>
+                      <p className="text-xs text-muted-foreground">Write</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Processes */}
+            {health?.topProcesses && health.topProcesses.length > 0 && (
+              <Card className="border-[#023F59]/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold text-[#21262A]">Top Processes</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#023F59]/10 text-xs text-muted-foreground">
+                          <th className="text-left py-1.5 pr-3 font-medium">PID</th>
+                          <th className="text-left py-1.5 pr-3 font-medium">Process</th>
+                          <th className="text-right py-1.5 pr-3 font-medium">CPU%</th>
+                          <th className="text-right py-1.5 pr-3 font-medium">Mem%</th>
+                          <th className="text-right py-1.5 font-medium">GPU ms/s</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {health.topProcesses.map((p: {pid:number;command:string;cpu_percent:number;memory_percent:number;gpu_ms_per_sec?:number}, i: number) => (
+                          <tr key={i} className={`border-b border-[#023F59]/5 ${p.cpu_percent > 10 ? 'bg-amber-50' : ''}`}>
+                            <td className="py-1.5 pr-3 font-mono text-xs text-muted-foreground">{p.pid}</td>
+                            <td className="py-1.5 pr-3 font-mono text-xs truncate max-w-[140px]">{p.command}</td>
+                            <td className={`py-1.5 pr-3 text-right font-mono text-xs font-semibold ${p.cpu_percent > 10 ? 'text-amber-700' : 'text-[#21262A]'}`}>
+                              {p.cpu_percent.toFixed(1)}
+                            </td>
+                            <td className="py-1.5 pr-3 text-right font-mono text-xs text-[#21262A]">{(p.memory_percent * 100).toFixed(1)}</td>
+                            <td className="py-1.5 text-right font-mono text-xs text-muted-foreground">{(p.gpu_ms_per_sec ?? 0).toFixed(0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* ── Alerts ──────────────────────────────────────── */}
           {health && health.alerts.length > 0 && (
             <Card className="border-red-200">
               <CardHeader className="pb-3">
@@ -577,22 +582,9 @@ export function NatliDashboard() {
               <CardContent>
                 <div className="space-y-2">
                   {health.alerts.map((alert, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-2 text-sm px-3 py-2 rounded-md border ${
-                        alert.level === 'critical'
-                          ? 'bg-red-50 border-red-200 text-red-700'
-                          : 'bg-amber-50 border-amber-200 text-amber-700'
-                      }`}
-                    >
-                      <Badge className={`text-[10px] uppercase font-bold px-1.5 py-0 ${
-                        alert.level === 'critical' ? 'bg-red-600 text-white border-0' : 'bg-amber-500 text-white border-0'
-                      }`}>
-                        {alert.level}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px] uppercase font-medium px-1.5 py-0 border-[#31D7DB] text-[#107DAC]">
-                        {alert.type}
-                      </Badge>
+                    <div key={i} className={`flex items-center gap-2 text-sm px-3 py-2 rounded-md border ${alert.level === 'critical' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
+                      <Badge className={`text-[10px] uppercase font-bold px-1.5 py-0 ${alert.level === 'critical' ? 'bg-red-600 text-white border-0' : 'bg-amber-500 text-white border-0'}`}>{alert.level}</Badge>
+                      <Badge variant="outline" className="text-[10px] uppercase font-medium px-1.5 py-0 border-[#31D7DB] text-[#107DAC]">{alert.type}</Badge>
                       <span className="text-xs text-muted-foreground shrink-0">{alert.timestamp}</span>
                       <span className="flex-1">{alert.message}</span>
                     </div>
