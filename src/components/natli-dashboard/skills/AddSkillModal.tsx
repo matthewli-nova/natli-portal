@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 import { X, Plus, Wand2 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
 import { type Skill, type SkillCategory, SKILL_CATEGORIES, generateSkillTemplate } from './skills-data';
 
 interface AddSkillModalProps {

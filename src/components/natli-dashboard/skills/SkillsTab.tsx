@@ -4,10 +4,10 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Plus, LayoutGrid, List, BookOpen, PenLine, BarChart3 } from 'lucide-react';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
+import { Input } from '../../ui/input';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../ui/tabs';
 import { SkillsList } from './SkillsList';
 import { SkillViewer } from './SkillViewer';
 import { SkillEditor } from './SkillEditor';
@@ -24,7 +24,7 @@ import {
   STATUS_LABELS,
   CATEGORY_COLORS,
 } from './skills-data';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent } from '../../ui/card';
 
 type ViewMode = 'grid' | 'list';
 type DetailMode = 'view' | 'edit';

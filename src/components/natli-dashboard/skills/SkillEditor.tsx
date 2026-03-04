@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Save, X, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '../../ui/button';
 import { type Skill } from './skills-data';
 
 interface SkillEditorProps {

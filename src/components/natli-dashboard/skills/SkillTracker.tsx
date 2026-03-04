@@ -2,7 +2,7 @@
 // Analytics view — usage stats, most used, recently added, never used, category breakdown
 
 import { TrendingUp, Clock, AlertCircle, Award, Package } from 'lucide-react';
-import { Card, CardContent, KPICard, KPICardContent, KPICardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { type Skill, type SkillCategory, CATEGORY_COLORS, STATUS_COLORS } from './skills-data';
 
 interface SkillTrackerProps {
@@ -45,18 +45,18 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
             accent: stats.neverUsed.length > 5 ? 'text-amber-600' : 'text-muted-foreground',
           },
         ].map(kpi => (
-          <KPICard key={kpi.label}>
-            <KPICardHeader>
+          <Card key={kpi.label}>
+            <CardHeader>
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <kpi.icon className="w-3.5 h-3.5" />
                 {kpi.label}
               </CardTitle>
-            </KPICardHeader>
-            <KPICardContent>
+            </CardHeader>
+            <CardContent>
               <div className="text-xl font-bold mb-0.5 truncate">{kpi.value}</div>
               <div className={`text-xs ${kpi.accent ?? 'text-muted-foreground'}`}>{kpi.sub}</div>
-            </KPICardContent>
-          </KPICard>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
@@ -64,12 +64,12 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Most Used Skills ──────────────────────────────────── */}
         <Card>
-          <KPICardHeader className="pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
               <Award className="w-4 h-4 text-amber-500" />
               Most Used
             </CardTitle>
-          </KPICardHeader>
+          </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
               {stats.mostUsed.map((skill, i) => (
@@ -102,12 +102,12 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Recently Added ───────────────────────────────────── */}
         <Card>
-          <KPICardHeader className="pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-blue-500" />
               Recently Added
             </CardTitle>
-          </KPICardHeader>
+          </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
               {stats.recentlyAdded.map(skill => (
@@ -126,9 +126,9 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Category Breakdown ───────────────────────────────── */}
         <Card>
-          <KPICardHeader className="pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Category Breakdown</CardTitle>
-          </KPICardHeader>
+          </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3">
               {categoryBreakdown.map(cat => (
@@ -153,12 +153,12 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Never Used / Needs Attention ─────────────────────── */}
         <Card>
-          <KPICardHeader className="pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               Needs Attention
             </CardTitle>
-          </KPICardHeader>
+          </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
               {/* Skills needing setup */}

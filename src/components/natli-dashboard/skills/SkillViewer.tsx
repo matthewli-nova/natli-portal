@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Tag, Calendar, Zap, ShieldCheck, ExternalLink } from 'lucide-react';
 import { type Skill, CATEGORY_COLORS, STATUS_COLORS, STATUS_LABELS } from './skills-data';
-import { Badge } from '../ui/badge';
+import { Badge } from '../../ui/badge';
 
 interface SkillViewerProps {
   skill: Skill;
