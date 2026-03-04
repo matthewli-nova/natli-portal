@@ -132,7 +132,7 @@ export function NatliDashboard() {
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatActive, setChatActive] = useState(false);
+  const [chatActive] = useState(false);
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -592,7 +592,7 @@ export function NatliDashboard() {
       <QuickChatPanel
         open={chatOpen}
         onClose={() => setChatOpen(false)}
-        onActiveChange={setChatActive}
+        activeTab={activeTab}
       />
     </div>
   );

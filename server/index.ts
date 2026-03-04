@@ -3,6 +3,8 @@ import cors from 'cors';
 import { exec, spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
+import multer from 'multer';
 
 const app = express();
 const PORT = 3001;
@@ -13,6 +15,20 @@ app.use(express.json());
 const CLICKUP_TOKEN = process.env.CLICKUP_TOKEN || 'pk_107639602_Q8PJNSBF1MGMW9QA0UROQ3B1OIYKPJP6';
 const CLICKUP_TASK_LIST = process.env.CLICKUP_TASK_LIST || '901815865909';
 const OPENCLAW_WORKSPACE = process.env.OPENCLAW_WORKSPACE || '/Users/natlee/.openclaw/workspace';
+
+// ─── File Upload Config ──────────────────────────────────────────────────────
+const UPLOAD_DIR = '/Users/natlee/.openclaw/workspace/uploads/chat';
+fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(() => {});
+
+const upload = multer({
+  dest: os.tmpdir(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.png', '.jpg', '.jpeg', '.heic'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, allowed.includes(ext));
+  }
+});
 
 function execCommand(cmd: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -1706,6 +1722,82 @@ function execCommandWithTimeout(cmd: string, timeoutMs: number): Promise<string>
   });
 }
 
+// ─── Nat Lee Avatar ──────────────────────────────────────────────────────────
+app.get('/api/assets/nat-lee-avatar', async (_req, res) => {
+  try {
+    const avatarPath = '/Users/natlee/.openclaw/workspace/assets/images/nat-lee-profile.jpg';
+    const data = await fs.readFile(avatarPath);
+    res.set('Content-Type', 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(data);
+  } catch {
+    res.status(404).json({ error: 'Avatar not found' });
+  }
+});
+
+// ─── File Upload ─────────────────────────────────────────────────────────────
+app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file provided' });
+
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const destPath = path.join(UPLOAD_DIR, `${Date.now()}-${safeName}`);
+
+    await fs.copyFile(req.file.path, destPath);
+
+    let extractedText = '';
+    let preview = '';
+
+    try {
+      if (ext === '.pdf') {
+        const pdfParse = require('pdf-parse');
+        const buf = await fs.readFile(req.file.path);
+        const data = await pdfParse(buf);
+        extractedText = data.text;
+        preview = extractedText.slice(0, 500);
+      } else if (ext === '.docx' || ext === '.doc') {
+        const mammoth = require('mammoth');
+        const result = await mammoth.extractRawText({ path: req.file.path });
+        extractedText = result.value;
+        preview = extractedText.slice(0, 500);
+      } else if (ext === '.xlsx' || ext === '.xls') {
+        const XLSX = require('xlsx');
+        const wb = XLSX.readFile(req.file.path);
+        const sheets = wb.SheetNames.map((name: string) => {
+          const ws = wb.Sheets[name];
+          return `[Sheet: ${name}]\n${XLSX.utils.sheet_to_csv(ws)}`;
+        });
+        extractedText = sheets.join('\n\n');
+        preview = extractedText.slice(0, 500);
+      } else if (ext === '.csv') {
+        extractedText = await fs.readFile(req.file.path, 'utf8');
+        preview = extractedText.slice(0, 500);
+      } else {
+        extractedText = `[Image file: ${req.file.originalname}]`;
+        preview = extractedText;
+      }
+    } catch {
+      extractedText = `[File uploaded: ${req.file.originalname} — could not extract text]`;
+      preview = extractedText;
+    }
+
+    await fs.unlink(req.file.path).catch(() => {});
+
+    res.json({
+      filename: req.file.originalname,
+      savedAs: path.basename(destPath),
+      extractedText: extractedText.slice(0, 8000),
+      preview,
+      size: req.file.size,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Upload failed';
+    res.status(500).json({ error: message });
+  }
+});
+
+// ─── Chat Send ───────────────────────────────────────────────────────────────
 app.post('/api/chat/send', async (req, res) => {
   try {
     const { message } = req.body as { message: string };
