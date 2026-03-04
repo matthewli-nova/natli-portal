@@ -10,6 +10,7 @@ import { CronSummaryCard } from '../natli-scheduler/NatliSchedulerPage';
 
 const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
 const LazySessionsTab = lazy(() => import('./sessions/SessionsTab').then(m => ({ default: m.SessionsTab })));
+const LazyModelTab = lazy(() => import('./model/ModelTab').then(m => ({ default: m.ModelTab })));
 
 import {
   Activity,
@@ -221,7 +222,7 @@ export function NatliDashboard() {
           <TabsTrigger value="skill" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
           <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
-          <TabsTrigger value="research" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Research</TabsTrigger>
+          <TabsTrigger value="model" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Model</TabsTrigger>
           <TabsTrigger value="sessions" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Sessions</TabsTrigger>
 
         </TabsList>
@@ -725,53 +726,11 @@ export function NatliDashboard() {
           <TaskTab tasks={tasks} />
         </TabsContent>
 
-        {/* ─── Research Tab ──────────────────────────────────── */}
-        <TabsContent value="research" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <KPICard
-              title="Sessions"
-              value={sessions.length}
-              icon={<Activity className="w-4 h-4 text-[#31D7DB]" />}
-              description="Total sessions"
-            />
-            <KPICard
-              title="Memory Files"
-              value={memory?.totalFiles ?? 0}
-              icon={<FileText className="w-4 h-4 text-[#31D7DB]" />}
-              description={`${memory?.dailyLogs ?? 0} daily logs`}
-            />
-            <KPICard
-              title="DB Size"
-              value={`${memory?.dbSizeMb ?? 0}`}
-              icon={<Database className="w-4 h-4 text-[#31D7DB]" />}
-              description="MB SQLite"
-            />
-            <KPICard
-              title="Archived"
-              value={memory?.archived ?? 0}
-              icon={<Brain className="w-4 h-4 text-[#31D7DB]" />}
-              description="Archived memories"
-            />
-          </div>
-
-          <Card className="border-[#023F59]/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-[#21262A]">Knowledge Base</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-                <div className="text-center space-y-2">
-                  <Brain className="w-8 h-8 mx-auto text-[#31D7DB] opacity-50" />
-                  <p>Knowledge growth chart will display here with time-series data</p>
-                  {memory?.lastUpdated && (
-                    <p className="text-xs">
-                      Last updated: {new Date(memory.lastUpdated).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* ─── Model Tab ──────────────────────────────────── */}
+        <TabsContent value="model" className="space-y-4">
+          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Model stats…</div>}>
+            <LazyModelTab />
+          </Suspense>
         </TabsContent>
 
 

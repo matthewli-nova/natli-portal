@@ -788,6 +788,162 @@ app.post('/api/config/model', async (req, res) => {
   }
 });
 
+// ─── Model Stats ─────────────────────────────────────────────
+
+const MODEL_PRICING: Record<string, { input: number; output: number; free?: boolean }> = {
+  'claude-opus-4-6':              { input: 15.0,  output: 75.0 },
+  'claude-sonnet-4-6':            { input: 3.0,   output: 15.0 },
+  'claude-haiku-4-5':             { input: 0.8,   output: 4.0  },
+  'claude-opus-4-5':              { input: 15.0,  output: 75.0 },
+  'claude-sonnet-4-5':            { input: 3.0,   output: 15.0 },
+  'gemini-3-pro-preview':         { input: 1.25,  output: 10.0 },
+  'google/gemini-2.5-pro':        { input: 1.25,  output: 10.0 },
+  'google/gemini-2.5-flash':      { input: 0.15,  output: 0.60 },
+  'google/gemini-3-pro-preview':  { input: 1.25,  output: 10.0 },
+  'deepseek/deepseek-r1':         { input: 0.55,  output: 2.19 },
+  'x-ai/grok-4':                  { input: 3.0,   output: 15.0 },
+  'x-ai/grok-3':                  { input: 3.0,   output: 9.0  },
+  'moonshot/kimi-latest':         { input: 0.14,  output: 0.56 },
+  'moonshot/kimi-k2-thinking-turbo': { input: 0.14, output: 0.56 },
+  'minimax/minimax-m2.5':         { input: 0.20,  output: 1.10 },
+  'minimax/minimax-m1':           { input: 0.30,  output: 1.10 },
+  'qwen/qwen3-coder:free':        { input: 0, output: 0, free: true },
+  'meta-llama/llama-3.3-70b-instruct:free': { input: 0, output: 0, free: true },
+  'google/gemma-3-27b-it:free':   { input: 0, output: 0, free: true },
+};
+
+function getModelPrice(modelId: string): { input: number; output: number; free?: boolean } {
+  if (MODEL_PRICING[modelId]) return MODEL_PRICING[modelId];
+  const short = modelId.split('/').slice(1).join('/');
+  if (short && MODEL_PRICING[short]) return MODEL_PRICING[short];
+  return { input: 3.0, output: 15.0 };
+}
+
+function estimateModelCost(tokens: number, modelId: string): number {
+  const p = getModelPrice(modelId);
+  return (tokens / 1_000_000) * (p.input * 0.8 + p.output * 0.2);
+}
+
+function getContextTokens(modelId: string): number {
+  const lower = modelId.toLowerCase();
+  if (lower.includes('claude')) return 200000;
+  if (lower.includes('gemini-2.5') || lower.includes('gemini-3')) return 1048576;
+  if (lower.includes('kimi')) return 131072;
+  if (lower.includes('grok-4')) return 256000;
+  if (lower.includes('grok-3')) return 131072;
+  if (lower.includes('deepseek-r1')) return 163840;
+  return 131072;
+}
+
+function getModelProvider(modelId: string): string {
+  if (modelId.startsWith('anthropic/') || modelId.startsWith('claude')) return 'anthropic';
+  if (modelId.startsWith('moonshot/')) return 'moonshot';
+  return 'openrouter';
+}
+
+function getSubProvider(modelId: string): string {
+  const parts = modelId.split('/');
+  if (parts.length >= 2) {
+    const prefix = parts[0].toLowerCase();
+    if (['google', 'x-ai', 'deepseek', 'meta-llama', 'qwen', 'minimax'].includes(prefix)) return prefix;
+  }
+  return '';
+}
+
+app.get('/api/model/stats', async (_req, res) => {
+  try {
+    // 1. Get model config
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    const modelDefaults = data.agents?.defaults?.model ?? {};
+    const primary: string = modelDefaults.primary ?? '';
+    const fallbacks: string[] = modelDefaults.fallbacks ?? [];
+    const modelsMap: Record<string, Record<string, string>> = data.agents?.defaults?.models ?? {};
+
+    // Build available models list
+    const availableModels = Object.entries(modelsMap).map(([id, val]) => {
+      const alias = val?.alias ?? '';
+      const pricing = getModelPrice(id);
+      const fallbackIdx = fallbacks.indexOf(id);
+      return {
+        id,
+        alias,
+        label: generateModelLabel(id),
+        provider: getModelProvider(id),
+        subProvider: getSubProvider(id),
+        isPrimary: id === primary,
+        isFallback: fallbackIdx >= 0,
+        fallbackOrder: fallbackIdx >= 0 ? fallbackIdx + 1 : undefined,
+        pricing: { input: pricing.input, output: pricing.output, free: !!pricing.free },
+        contextTokens: getContextTokens(id),
+      };
+    });
+
+    // 2. Get sessions data
+    let sessions: Array<Record<string, unknown>> = [];
+    try {
+      const output = await execCommand('openclaw sessions --json --all-agents');
+      const parsed = JSON.parse(output);
+      sessions = parsed.sessions || [];
+    } catch { /* empty sessions if command fails */ }
+
+    // 3. Compute token breakdown per model
+    const byModelMap: Record<string, { sessions: number; tokens: number }> = {};
+    for (const s of sessions) {
+      const model = String(s.model || 'unknown');
+      const tokens = Number(s.totalTokens || 0);
+      if (!byModelMap[model]) byModelMap[model] = { sessions: 0, tokens: 0 };
+      byModelMap[model].sessions++;
+      byModelMap[model].tokens += tokens;
+    }
+
+    const totalTokens = sessions.reduce((sum, s) => sum + Number(s.totalTokens || 0), 0);
+    const totalCostEstimate = Object.entries(byModelMap).reduce((sum, [modelId, d]) => {
+      return sum + estimateModelCost(d.tokens, modelId);
+    }, 0);
+
+    const byModel = Object.entries(byModelMap)
+      .map(([modelId, d]) => ({
+        modelId,
+        label: generateModelLabel(modelId),
+        provider: getModelProvider(modelId),
+        sessions: d.sessions,
+        tokens: d.tokens,
+        pct: totalTokens > 0 ? (d.tokens / totalTokens) * 100 : 0,
+        costEstimate: estimateModelCost(d.tokens, modelId),
+      }))
+      .sort((a, b) => b.tokens - a.tokens);
+
+    // 4. Top sessions by token usage
+    const topSessions = sessions
+      .map((s) => {
+        const key = String(s.key || '');
+        const { sessionType, label } = classifySession(key);
+        const model = String(s.model || 'unknown');
+        const tokens = Number(s.totalTokens || 0);
+        return {
+          label,
+          model,
+          tokens,
+          costEstimate: estimateModelCost(tokens, model),
+          ageMs: Number(s.ageMs || 0),
+          sessionType,
+        };
+      })
+      .sort((a, b) => b.tokens - a.tokens)
+      .slice(0, 10);
+
+    res.json({
+      config: { primary, fallbacks },
+      availableModels,
+      tokenStats: { total: totalTokens, totalCostEstimate, byModel },
+      topSessions,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
 // ─── API Keys Management ─────────────────────────────────────
 
 function maskKey(key: string): string {
