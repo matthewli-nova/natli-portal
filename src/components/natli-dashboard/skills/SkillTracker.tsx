@@ -92,17 +92,17 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                   <span className="text-muted-foreground text-xs w-4 font-mono">{i + 1}</span>
                   <span className="text-sm">{skill.emoji}</span>
                   <span className="text-sm font-medium flex-1 truncate">{skill.name}</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Usage bar */}
-                    <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full"
+                        className="h-full bg-[#023F59] rounded-full"
                         style={{
                           width: `${Math.min(100, ((skill.usageCount ?? 0) / (mostUsed[0]?.usageCount ?? 1)) * 100)}%`
                         }}
                       />
                     </div>
-                    <span className="text-xs text-muted-foreground w-12 text-right">
+                    <span className="text-xs text-muted-foreground w-16 text-right whitespace-nowrap">
                       {skill.usageCount ?? 0} uses
                     </span>
                   </div>
@@ -132,7 +132,9 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                     <p className="text-sm font-medium truncate">{skill.name}</p>
                     <p className="text-xs text-muted-foreground">{skill.category}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">{skill.addedDate}</span>
+                  <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                    {formatDateTime(skill.addedDate)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -240,6 +242,18 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDateTime(dateStr?: string): string {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr);
+    const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${date} ${time}`;
+  } catch {
+    return dateStr;
+  }
+}
 
 function getCategoryBreakdown(skills: Skill[]) {
   const map = new Map<string, { count: number; readyCount: number }>();

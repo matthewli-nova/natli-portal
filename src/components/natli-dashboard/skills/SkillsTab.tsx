@@ -2,15 +2,13 @@
 // Features: live /api/skills data, refresh button, resizable left/right splitter
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Search, Plus, LayoutGrid, List, BookOpen, PenLine, BarChart3, RefreshCw } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, BookOpen, PenLine, RefreshCw } from 'lucide-react';
 import { Input } from '../../ui/input';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../ui/tabs';
 import { SkillsList } from './SkillsList';
 import { SkillViewer } from './SkillViewer';
 import { SkillEditor } from './SkillEditor';
-import { SkillTracker } from './SkillTracker';
 import { AddSkillModal } from './AddSkillModal';
 import {
   ALL_SKILLS as STATIC_SKILLS,
@@ -25,7 +23,7 @@ import {
 } from './skills-data';
 import { Card, CardContent } from '../../ui/card';
 
-type ViewMode  = 'grid' | 'list';
+type ViewMode   = 'grid' | 'list';
 type DetailMode = 'view' | 'edit';
 
 interface LiveStats {
@@ -76,7 +74,6 @@ export function SkillsTab() {
   const [selectedSkill, setSelectedSkill]           = useState<Skill | null>(STATIC_SKILLS[0] ?? null);
   const [viewMode, setViewMode]                     = useState<ViewMode>('list');
   const [detailMode, setDetailMode]                 = useState<DetailMode>('view');
-  const [activeTab, setActiveTab]                   = useState<'skills' | 'tracker'>('skills');
   const [showAddModal, setShowAddModal]             = useState(false);
   const [liveStats, setLiveStats]                   = useState<LiveStats | null>(null);
   const [liveSkills, setLiveSkills]                 = useState<Skill[] | null>(null);
@@ -190,27 +187,20 @@ export function SkillsTab() {
         </div>
       </div>
 
-      {/* ── Tab Toggle: Skills | Tracker ──────────────────────────── */}
-      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'skills' | 'tracker')}>
-        <div className="flex items-center justify-between">
-          <TabsList className="bg-[#023F59]/5">
-            <TabsTrigger value="skills" className="flex items-center gap-1.5 data-[state=active]:bg-[#023F59] data-[state=active]:text-white">
-              <BookOpen className="w-3.5 h-3.5" />
-              Skills
-            </TabsTrigger>
-            <TabsTrigger value="tracker" className="flex items-center gap-1.5 data-[state=active]:bg-[#023F59] data-[state=active]:text-white">
-              <BarChart3 className="w-3.5 h-3.5" />
-              Tracker
-            </TabsTrigger>
-          </TabsList>
-          <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-[#023F59] text-white hover:bg-[#022F44] flex items-center gap-1.5">
-            <Plus className="w-4 h-4" />
-            New Skill
-          </Button>
+      {/* ── Header: title + New Skill ─────────────────────────────── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#21262A]">
+          <BookOpen className="w-4 h-4 text-[#107DAC]" />
+          Skill Browser
         </div>
+        <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-[#023F59] text-white hover:bg-[#022F44] flex items-center gap-1.5">
+          <Plus className="w-4 h-4" />
+          New Skill
+        </Button>
+      </div>
 
-        {/* ── Skills Tab ─────────────────────────────────────────── */}
-        <TabsContent value="skills" className="mt-3">
+      {/* ── Skill Browser ──────────────────────────────────────────── */}
+      <div className="mt-3">
           <div className="flex gap-0 h-[680px] border border-[#023F59]/20 rounded-lg overflow-hidden">
 
             {/* Left panel — independent scroll */}
@@ -313,13 +303,7 @@ export function SkillsTab() {
               )}
             </div>
           </div>
-        </TabsContent>
-
-        {/* ── Tracker Tab ─────────────────────────────────────────── */}
-        <TabsContent value="tracker" className="mt-3">
-          <SkillTracker stats={stats} skills={skills} />
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {showAddModal && (
         <AddSkillModal

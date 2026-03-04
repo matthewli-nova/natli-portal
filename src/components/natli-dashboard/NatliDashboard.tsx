@@ -229,10 +229,10 @@ export function NatliDashboard() {
           <TabsTrigger value="overview" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Overview</TabsTrigger>
           <TabsTrigger value="system" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">System Health</TabsTrigger>
           <TabsTrigger value="memory" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Memory & Knowledge</TabsTrigger>
+          <TabsTrigger value="skill" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
           <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
           <TabsTrigger value="research" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Research</TabsTrigger>
-          <TabsTrigger value="skill" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
 
 
         </TabsList>
