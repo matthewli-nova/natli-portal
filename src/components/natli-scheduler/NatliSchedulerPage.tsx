@@ -28,7 +28,6 @@ import {
   Calendar,
   Plus,
   Pencil,
-  ChevronDown,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
@@ -212,7 +211,7 @@ export function NatliSchedulerPage() {
   const [now, setNow] = useState(Date.now());
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [logDrawerJobId, setLogDrawerJobId] = useState<string | null>(null);
-  const [timelineZoom, setTimelineZoom] = useState<12 | 24>(24);
+  const [timelineZoom, setTimelineZoom] = useState<12 | 24 | 168 | 720>(24);
   const [runningJobId, setRunningJobId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
@@ -221,13 +220,13 @@ export function NatliSchedulerPage() {
   const loadData = useCallback(async () => {
     const [jobsRes, tlRes] = await Promise.all([
       fetchApi<{ jobs: CronJob[] }>('/api/cron/jobs'),
-      fetchApi<{ timeline: TimelineEntry[] }>('/api/cron/timeline'),
+      fetchApi<{ timeline: TimelineEntry[] }>(`/api/cron/timeline?hours=${timelineZoom * 2}`),
     ]);
     if (jobsRes) setJobs(jobsRes.jobs);
     if (tlRes) setTimeline(tlRes.timeline);
     setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [timelineZoom]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -491,11 +490,78 @@ function StatusCard({ title, value, icon, sub, variant }: {
 
 // ─── [C] Timeline ────────────────────────────────────────────
 
+type ZoomLevel = 12 | 24 | 168 | 720;
+
+const ZOOM_OPTIONS: { value: ZoomLevel; label: string }[] = [
+  { value: 12, label: '12h' },
+  { value: 24, label: '24h' },
+  { value: 168, label: '7d' },
+  { value: 720, label: '30d' },
+];
+
+function getTimelineLabels(startMs: number, endMs: number, zoom: ZoomLevel): { ms: number; label: string }[] {
+  const labels: { ms: number; label: string }[] = [];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  if (zoom <= 24) {
+    // Every 2h, format HH:00
+    const twoH = 2 * 3600000;
+    let lMs = Math.ceil(startMs / twoH) * twoH;
+    while (lMs <= endMs) {
+      const d = new Date(lMs);
+      labels.push({ ms: lMs, label: `${d.getHours().toString().padStart(2, '0')}:00` });
+      lMs += twoH;
+    }
+  } else if (zoom === 168) {
+    // Every 1 day, format "Mon 04"
+    const oneDay = 24 * 3600000;
+    const first = new Date(startMs);
+    first.setHours(0, 0, 0, 0);
+    let lMs = first.getTime();
+    if (lMs < startMs) lMs += oneDay;
+    while (lMs <= endMs) {
+      const d = new Date(lMs);
+      labels.push({ ms: lMs, label: `${dayNames[d.getDay()]} ${d.getDate().toString().padStart(2, '0')}` });
+      lMs += oneDay;
+    }
+  } else {
+    // 720 — every 7 days, format "Mar 01"
+    const oneWeek = 7 * 24 * 3600000;
+    const first = new Date(startMs);
+    first.setHours(0, 0, 0, 0);
+    // Round to next Monday
+    const dow = first.getDay();
+    const daysUntilMon = dow === 0 ? 1 : dow === 1 ? 0 : 8 - dow;
+    first.setDate(first.getDate() + daysUntilMon);
+    let lMs = first.getTime();
+    while (lMs <= endMs) {
+      const d = new Date(lMs);
+      labels.push({ ms: lMs, label: `${monthNames[d.getMonth()]} ${d.getDate().toString().padStart(2, '0')}` });
+      lMs += oneWeek;
+    }
+  }
+  return labels;
+}
+
+function getTimelineMinWidth(zoom: ZoomLevel): string {
+  if (zoom <= 24) return '600px';
+  if (zoom === 168) return '900px';
+  return '1400px';
+}
+
+function getTimelineTitle(zoom: ZoomLevel): string {
+  if (zoom === 12) return '12-Hour Timeline';
+  if (zoom === 24) return '24-Hour Timeline';
+  if (zoom === 168) return '7-Day Timeline';
+  return '30-Day Timeline';
+}
+
 function TimelineSection({ timeline, now, zoom, onZoomChange }: {
   timeline: TimelineEntry[];
   now: number;
-  zoom: 12 | 24;
-  onZoomChange: (z: 12 | 24) => void;
+  zoom: ZoomLevel;
+  onZoomChange: (z: ZoomLevel) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const halfWindow = (zoom / 2) * 60 * 60 * 1000;
@@ -503,32 +569,19 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
   const endMs = now + halfWindow;
   const totalMs = endMs - startMs;
   const filtered = timeline.filter(e => e.firedAtMs >= startMs && e.firedAtMs <= endMs);
-
-  // Generate time labels every 2h
-  const labels: { ms: number; label: string }[] = [];
-  const firstLabel = new Date(startMs);
-  firstLabel.setMinutes(0, 0, 0);
-  let lMs = firstLabel.getTime();
-  if (lMs < startMs) lMs += 2 * 3600000;
-  // Round to nearest 2h
-  const twoH = 2 * 3600000;
-  lMs = Math.ceil(lMs / twoH) * twoH;
-  while (lMs <= endMs) {
-    const d = new Date(lMs);
-    labels.push({ ms: lMs, label: `${d.getHours().toString().padStart(2, '0')}:00` });
-    lMs += twoH;
-  }
+  const labels = getTimelineLabels(startMs, endMs, zoom);
 
   const pct = (ms: number) => ((ms - startMs) / totalMs) * 100;
 
-  // Scroll to NOW on mount
+  // Scroll to NOW on mount / zoom change
   useEffect(() => {
     if (containerRef.current) {
       const el = containerRef.current;
       const nowPos = el.scrollWidth * ((now - startMs) / totalMs);
       el.scrollLeft = nowPos - el.clientWidth / 2;
     }
-  }, [now, startMs, totalMs]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom]);
 
   function dotColor(status: string): string {
     if (status === 'ok') return 'bg-emerald-500';
@@ -542,17 +595,17 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
     <Card className="border-[#023F59]/20">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">24-Hour Timeline</CardTitle>
+          <CardTitle className="text-sm font-semibold text-[#21262A]">{getTimelineTitle(zoom)}</CardTitle>
           <div className="flex gap-1">
-            {([12, 24] as const).map(z => (
+            {ZOOM_OPTIONS.map(z => (
               <Button
-                key={z}
-                variant={zoom === z ? 'default' : 'outline'}
+                key={z.value}
+                variant={zoom === z.value ? 'default' : 'outline'}
                 size="sm"
-                className={`h-6 px-2 text-xs ${zoom === z ? 'bg-[#023F59] text-white' : 'border-[#023F59]/20'}`}
-                onClick={() => onZoomChange(z)}
+                className={`h-6 px-2 text-xs ${zoom === z.value ? 'bg-[#023F59] text-white' : 'border-[#023F59]/20'}`}
+                onClick={() => onZoomChange(z.value)}
               >
-                {z}h
+                {z.label}
               </Button>
             ))}
           </div>
@@ -560,7 +613,7 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
       </CardHeader>
       <CardContent className="pt-0">
         <div ref={containerRef} className="relative overflow-x-auto pb-2" style={{ minHeight: 80 }}>
-          <div className="relative" style={{ minWidth: '600px', height: 60 }}>
+          <div className="relative" style={{ minWidth: getTimelineMinWidth(zoom), height: 60 }}>
             {/* Time labels */}
             {labels.map(l => (
               <div
@@ -594,7 +647,7 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
                   <p className="font-semibold">{entry.jobName.replace(/_/g, ' ')}</p>
-                  <p>{new Date(entry.firedAtMs).toLocaleTimeString()}</p>
+                  <p>{zoom <= 24 ? new Date(entry.firedAtMs).toLocaleTimeString() : new Date(entry.firedAtMs).toLocaleString()}</p>
                   <p className="capitalize">{entry.status}</p>
                 </TooltipContent>
               </Tooltip>

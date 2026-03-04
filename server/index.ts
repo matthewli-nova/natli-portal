@@ -354,15 +354,16 @@ app.patch('/api/cron/jobs/:id', async (req, res) => {
   }
 });
 
-// GET /api/cron/timeline — past+upcoming firings ±12h
-app.get('/api/cron/timeline', async (_req, res) => {
+// GET /api/cron/timeline — past+upcoming firings, accepts ?hours=N (default 24)
+app.get('/api/cron/timeline', async (req, res) => {
   try {
     const output = await execCommand('openclaw cron list --json');
     const data = JSON.parse(output);
     const now = Date.now();
-    const windowMs = 12 * 60 * 60 * 1000; // 12h
-    const startMs = now - windowMs;
-    const endMs = now + windowMs;
+    const hoursParam = parseInt(req.query.hours as string) || 24;
+    const halfWindowMs = (hoursParam / 2) * 60 * 60 * 1000;
+    const startMs = now - halfWindowMs;
+    const endMs = now + halfWindowMs;
     const timeline: Array<{ jobId: string; jobName: string; firedAtMs: number; status: string }> = [];
 
     for (const job of data.jobs || []) {
@@ -390,16 +391,18 @@ app.get('/api/cron/timeline', async (_req, res) => {
         });
       }
 
-      // For 'every' kind, compute additional firings within window
+      // For 'every' kind, compute firings within window by walking from anchor
       if (sched.kind === 'every') {
         const everyMs = sched.everyMs as number;
         const anchorMs = (sched.anchorMs as number) || (state.lastRunAtMs as number) || now;
-        if (everyMs > 0 && everyMs < windowMs * 2) {
+        if (everyMs > 0 && everyMs < halfWindowMs * 4) {
           // Find first firing at or after startMs
           const elapsed = startMs - anchorMs;
           const periods = Math.ceil(elapsed / everyMs);
           let t = anchorMs + periods * everyMs;
-          while (t <= endMs) {
+          // Cap iterations to avoid infinite loops for very small intervals
+          let maxIter = 2000;
+          while (t <= endMs && maxIter-- > 0) {
             const existing = timeline.find(e => e.jobId === job.id && Math.abs(e.firedAtMs - t) < 60000);
             if (!existing) {
               timeline.push({
@@ -411,6 +414,63 @@ app.get('/api/cron/timeline', async (_req, res) => {
             }
             t += everyMs;
           }
+        }
+      }
+
+      // For 'cron' kind, approximate past firings by backward walk from lastRunAtMs
+      // This helps weekly/monthly views show historical entries
+      if (sched.kind === 'cron' && state.lastRunAtMs) {
+        const lastRun = state.lastRunAtMs as number;
+        // Estimate interval from cron expression (rough heuristic)
+        const expr = (sched.expr as string) || '';
+        const parts = expr.split(' ');
+        let estimatedIntervalMs = 24 * 3600000; // default 1 day
+        if (parts.length >= 5) {
+          const [, hour, dom, , dow] = parts;
+          if (dom !== '*' && dom !== '?') {
+            estimatedIntervalMs = 30 * 24 * 3600000; // monthly
+          } else if (dow !== '*' && dow !== '?') {
+            // count days in dow
+            const dowParts = dow.split(',');
+            estimatedIntervalMs = Math.round((7 / dowParts.length) * 24 * 3600000);
+          } else if (hour !== '*') {
+            estimatedIntervalMs = 24 * 3600000; // daily
+          } else {
+            estimatedIntervalMs = 3600000; // hourly
+          }
+        }
+        // Walk backwards from lastRunAtMs
+        let t = lastRun - estimatedIntervalMs;
+        let steps = 0;
+        const maxSteps = Math.min(60, Math.ceil(halfWindowMs * 2 / estimatedIntervalMs) + 2);
+        while (t >= startMs && steps < maxSteps) {
+          const existing = timeline.find(e => e.jobId === job.id && Math.abs(e.firedAtMs - t) < 60000);
+          if (!existing && t <= now) {
+            timeline.push({
+              jobId: job.id,
+              jobName: job.name,
+              firedAtMs: t,
+              status: 'ok',
+            });
+          }
+          t -= estimatedIntervalMs;
+          steps++;
+        }
+        // Also walk forward from lastRunAtMs for future scheduled entries
+        t = lastRun + estimatedIntervalMs;
+        steps = 0;
+        while (t <= endMs && steps < maxSteps) {
+          const existing = timeline.find(e => e.jobId === job.id && Math.abs(e.firedAtMs - t) < 60000);
+          if (!existing && t > now) {
+            timeline.push({
+              jobId: job.id,
+              jobName: job.name,
+              firedAtMs: t,
+              status: 'scheduled',
+            });
+          }
+          t += estimatedIntervalMs;
+          steps++;
         }
       }
     }
