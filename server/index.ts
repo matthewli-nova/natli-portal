@@ -544,14 +544,90 @@ app.put('/api/cron/jobs/:id', async (req, res) => {
   }
 });
 
-// Sessions
+// Sessions (enriched)
+const CHANNEL_NAME_MAP: Record<string, string> = {
+  'c0aes69kg2d': '#nat-2_nat-portal',
+  'c0ae9smqt8d': '#nat-1_clawbot-system',
+  'c0aea7jbgkx': '#nat-4_deep_research',
+  'c0ae78n7gsf': '#nat-5_personal-assistant',
+  'c0ady6su1c7': '#nat-3',
+  'c0absgutgb1': '#team_openclaw',
+};
+
+function classifySession(key: string): { sessionType: string; label: string } {
+  if (/^agent:[^:]+:slack:channel:/.test(key)) {
+    const chanId = key.split(':').pop() || '';
+    const name = CHANNEL_NAME_MAP[chanId] || `#${chanId}`;
+    return { sessionType: 'slack-channel', label: name };
+  }
+  if (/^agent:[^:]+:slack:dm:/.test(key)) {
+    const dmId = key.split(':').pop() || '';
+    return { sessionType: 'slack-dm', label: `DM: ${dmId}` };
+  }
+  if (/^agent:[^:]+:subagent:/.test(key)) {
+    const parts = key.split(':');
+    const agentId = parts[1] || 'unknown';
+    return { sessionType: 'subagent', label: `Sub-agent: ${agentId}` };
+  }
+  if (/^agent:[^:]+:cron:/.test(key)) {
+    const cronName = key.split(':').slice(3).join(':') || 'unknown';
+    return { sessionType: 'cron', label: `Cron: ${cronName}` };
+  }
+  if (/^agent:[^:]+:main$/.test(key)) {
+    const agentId = key.split(':')[1] || 'main';
+    return { sessionType: 'main', label: `Main: ${agentId}` };
+  }
+  return { sessionType: 'other', label: key };
+}
+
 app.get('/api/sessions', async (_req, res) => {
   try {
     const output = await execCommand('openclaw sessions --json --all-agents');
-    res.json(JSON.parse(output));
+    const parsed = JSON.parse(output);
+    const rawSessions: Array<Record<string, unknown>> = parsed.sessions || [];
+
+    const sessions = rawSessions.map((s) => {
+      const key = String(s.key || '');
+      const ageMs = Number(s.ageMs || 0);
+      const { sessionType, label } = classifySession(key);
+      return {
+        ...s,
+        sessionType,
+        label,
+        isActive: ageMs < 300000,
+        isRecent: ageMs < 3600000,
+      };
+    });
+
+    // Stats
+    const totalTokens = sessions.reduce((sum, s) => sum + Number(s.totalTokens || 0), 0);
+    const active = sessions.filter((s) => s.isActive).length;
+    const recentHour = sessions.filter((s) => s.isRecent).length;
+
+    const byModel: Record<string, number> = {};
+    const byType: Record<string, number> = {};
+    const byAgent: Record<string, { count: number; tokens: number }> = {};
+
+    for (const s of sessions) {
+      const model = String(s.model || 'unknown');
+      byModel[model] = (byModel[model] || 0) + 1;
+
+      const st = String(s.sessionType);
+      byType[st] = (byType[st] || 0) + 1;
+
+      const agent = String(s.agentId || 'unknown');
+      if (!byAgent[agent]) byAgent[agent] = { count: 0, tokens: 0 };
+      byAgent[agent].count++;
+      byAgent[agent].tokens += Number(s.totalTokens || 0);
+    }
+
+    res.json({
+      sessions,
+      stats: { total: sessions.length, active, recentHour, totalTokens, byModel, byType, byAgent },
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    res.status(500).json({ error: message, sessions: [] });
+    res.status(500).json({ error: message, sessions: [], stats: {} });
   }
 });
 

@@ -9,6 +9,7 @@ import { Separator } from '../ui/separator';
 import { CronSummaryCard } from '../natli-scheduler/NatliSchedulerPage';
 
 const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
+const LazySessionsTab = lazy(() => import('./sessions/SessionsTab').then(m => ({ default: m.SessionsTab })));
 
 import {
   Activity,
@@ -221,7 +222,7 @@ export function NatliDashboard() {
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
           <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
           <TabsTrigger value="research" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Research</TabsTrigger>
-
+          <TabsTrigger value="sessions" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Sessions</TabsTrigger>
 
         </TabsList>
 
@@ -778,6 +779,13 @@ export function NatliDashboard() {
         <TabsContent value="skill" className="space-y-4">
           <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Skill tracker…</div>}>
             <LiveSkillTracker />
+          </Suspense>
+        </TabsContent>
+
+        {/* ─── Sessions Tab ──────────────────────────────────── */}
+        <TabsContent value="sessions" className="space-y-4">
+          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Sessions…</div>}>
+            <LazySessionsTab />
           </Suspense>
         </TabsContent>
 
