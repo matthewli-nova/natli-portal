@@ -4,6 +4,8 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Skeleton } from '../ui/skeleton';
+import { Input } from '../ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import {
   Tooltip,
   TooltipContent,
@@ -13,8 +15,6 @@ import {
   Timer,
   Play,
   FileText,
-  ChevronDown,
-  ChevronRight,
   X,
   RefreshCw,
   Clock,
@@ -26,6 +26,9 @@ import {
   Shield,
   Brain,
   Calendar,
+  Plus,
+  Pencil,
+  ChevronDown,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
@@ -209,9 +212,11 @@ export function NatliSchedulerPage() {
   const [now, setNow] = useState(Date.now());
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [logDrawerJobId, setLogDrawerJobId] = useState<string | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [timelineZoom, setTimelineZoom] = useState<12 | 24>(24);
   const [runningJobId, setRunningJobId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingJob, setEditingJob] = useState<CronJob | null>(null);
+  const [activeGroup, setActiveGroup] = useState<string>('daily');
 
   const loadData = useCallback(async () => {
     const [jobsRes, tlRes] = await Promise.all([
@@ -251,14 +256,6 @@ export function NatliSchedulerPage() {
     loadData();
   };
 
-  const toggleGroup = (id: string) => {
-    setCollapsedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
   // Computed values
   const failedJobs = jobs.filter(j => j.state.consecutiveErrors > 0);
   const nextFiring = jobs
@@ -268,6 +265,7 @@ export function NatliSchedulerPage() {
     .filter(j => j.state.lastStatus === 'error' || j.state.consecutiveErrors > 0)
     .sort((a, b) => (b.state.lastRunAtMs || 0) - (a.state.lastRunAtMs || 0))[0];
   const jobGroups = useMemo(() => categorizeJobs(jobs), [jobs]);
+  const activeGroupData = jobGroups.find(g => g.id === activeGroup) ?? jobGroups[0];
 
   if (loading) return <SchedulerSkeleton />;
 
@@ -278,16 +276,26 @@ export function NatliSchedulerPage() {
         <p className="text-sm text-muted-foreground">
           {jobs.length} cron jobs · Auto-refreshes every 60s
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="bg-[#023F59] text-white hover:bg-[#022F44]"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Add Job
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* [A] Status Strip — 4 KPI cards */}
@@ -367,56 +375,81 @@ export function NatliSchedulerPage() {
         ))}
       </div>
 
-      {/* [E] Jobs Table */}
-      {jobGroups.map(group => (
-        <Card key={group.id} className="border-[#023F59]/20">
-          <CardHeader
-            className="pb-2 cursor-pointer select-none"
-            onClick={() => toggleGroup(group.id)}
-          >
-            <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
-              {collapsedGroups.has(group.id) ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              <span>{group.label}</span>
-              <Badge className="bg-[#023F59]/10 text-[#023F59] border-0 text-xs ml-1">
-                {group.jobs.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          {!collapsedGroups.has(group.id) && (
-            <CardContent className="pt-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#023F59]/10 text-xs text-muted-foreground">
-                      <th className="text-left py-2 pr-3 font-medium w-8">Status</th>
-                      <th className="text-left py-2 pr-3 font-medium">Job Name</th>
-                      <th className="text-left py-2 pr-3 font-medium">Schedule</th>
-                      <th className="text-left py-2 pr-3 font-medium">Last Run</th>
-                      <th className="text-left py-2 pr-3 font-medium">Next Run</th>
-                      <th className="text-left py-2 pr-3 font-medium">Target</th>
-                      <th className="text-left py-2 pr-3 font-medium">Model</th>
-                      <th className="text-right py-2 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.jobs.map(job => (
-                      <JobRow
-                        key={job.id}
-                        job={job}
-                        now={now}
-                        onRunNow={() => handleRunNow(job.id)}
-                        onToggle={() => handleToggle(job)}
-                        onViewLogs={() => setLogDrawerJobId(job.id)}
-                        running={runningJobId === job.id}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
+      {/* [E] Jobs Table — single card with tabs per group */}
+      <Card className="border-[#023F59]/20">
+        <CardHeader className="pb-0">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-[#21262A]">All Jobs</CardTitle>
+            <Badge className="bg-[#023F59]/10 text-[#023F59] border-0 text-xs">{jobs.length} total</Badge>
+          </div>
+          <Tabs value={activeGroup} onValueChange={setActiveGroup} className="mt-3">
+            <TabsList className="bg-[#023F59]/5 h-auto flex-wrap gap-0.5">
+              {jobGroups.map(g => (
+                <TabsTrigger
+                  key={g.id}
+                  value={g.id}
+                  className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white px-3 py-1.5"
+                >
+                  {g.icon}
+                  {g.label.split(' ').slice(1).join(' ')}
+                  <span className="ml-1 text-[10px] opacity-70">({g.jobs.length})</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent className="pt-3">
+          {activeGroupData && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#023F59]/5 text-xs text-muted-foreground">
+                    <th className="text-left py-2 px-3 font-medium rounded-l">Status</th>
+                    <th className="text-left py-2 px-3 font-medium">Job Name</th>
+                    <th className="text-left py-2 px-3 font-medium">Schedule</th>
+                    <th className="text-left py-2 px-3 font-medium">Last Run</th>
+                    <th className="text-left py-2 px-3 font-medium">Next Run</th>
+                    <th className="text-left py-2 px-3 font-medium">Target</th>
+                    <th className="text-left py-2 px-3 font-medium">Model</th>
+                    <th className="text-right py-2 px-3 font-medium rounded-r">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeGroupData.jobs.map(job => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      now={now}
+                      onRunNow={() => handleRunNow(job.id)}
+                      onToggle={() => handleToggle(job)}
+                      onViewLogs={() => setLogDrawerJobId(job.id)}
+                      onEdit={() => setEditingJob(job)}
+                      running={runningJobId === job.id}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </Card>
-      ))}
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
+      {showAddModal && (
+        <JobFormModal
+          mode="add"
+          onClose={() => setShowAddModal(false)}
+          onSaved={() => { setShowAddModal(false); loadData(); }}
+        />
+      )}
+      {editingJob && (
+        <JobFormModal
+          mode="edit"
+          job={editingJob}
+          onClose={() => setEditingJob(null)}
+          onSaved={() => { setEditingJob(null); loadData(); }}
+        />
+      )}
 
       {/* [F] Log Drawer */}
       {logDrawerJobId && (
@@ -627,8 +660,8 @@ function NextFiringCard({ job, now, onRunNow, running }: {
 
 // ─── [E] Job Row ─────────────────────────────────────────────
 
-function JobRow({ job, now, onRunNow, onToggle, onViewLogs, running }: {
-  job: CronJob; now: number; onRunNow: () => void; onToggle: () => void; onViewLogs: () => void; running: boolean;
+function JobRow({ job, now, onRunNow, onToggle, onViewLogs, onEdit, running }: {
+  job: CronJob; now: number; onRunNow: () => void; onToggle: () => void; onViewLogs: () => void; onEdit: () => void; running: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -684,6 +717,19 @@ function JobRow({ job, now, onRunNow, onToggle, onViewLogs, running }: {
               </Button>
             </TooltipTrigger>
             <TooltipContent>View Logs</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 hover:text-[#023F59]"
+                onClick={onEdit}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit Job</TooltipContent>
           </Tooltip>
           <Switch
             checked={job.enabled}
@@ -798,6 +844,210 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
         </div>
       </div>
     </>
+  );
+}
+
+// ─── Job Form Modal (Add & Edit) ────────────────────────────
+
+const MODEL_OPTIONS = [
+  { value: 'anthropic/claude-sonnet-4-6', label: 'Sonnet 4.6 (default)' },
+  { value: 'anthropic/claude-opus-4-6', label: 'Opus 4.6' },
+  { value: 'openrouter/google/gemini-2.5-flash', label: 'Gemini Flash' },
+  { value: 'openrouter/google/gemini-2.5-pro', label: 'Gemini Pro' },
+  { value: 'moonshot/kimi-k2-thinking-turbo', label: 'Kimi Thinking' },
+];
+
+function JobFormModal({ mode, job, onClose, onSaved }: {
+  mode: 'add' | 'edit';
+  job?: CronJob;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(job?.name ?? '');
+  const [scheduleKind, setScheduleKind] = useState<'every' | 'cron'>(
+    job?.schedule?.kind === 'cron' ? 'cron' : 'every'
+  );
+  const [every, setEvery] = useState(() => {
+    if (!job?.schedule?.everyMs) return '1h';
+    const ms = job.schedule.everyMs;
+    if (ms % 3600000 === 0) return `${ms / 3600000}h`;
+    if (ms % 60000 === 0) return `${ms / 60000}m`;
+    return `${ms}ms`;
+  });
+  const [cronExpr, setCronExpr] = useState(job?.schedule?.expr ?? '0 6 * * 1-5');
+  const [message, setMessage] = useState(job?.payload?.message ?? '');
+  const [model, setModel] = useState(job?.payload?.model ?? 'anthropic/claude-sonnet-4-6');
+  const [sessionTarget, setSessionTarget] = useState(job?.sessionTarget ?? 'isolated');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Close on backdrop click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (e.target === overlayRef.current) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  const handleSave = async () => {
+    if (!name.trim()) { setError('Job name is required'); return; }
+    if (!message.trim()) { setError('Message/prompt is required'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const payload = { name: name.trim(), scheduleKind, every, cronExpr, message: message.trim(), model, sessionTarget };
+      const url = mode === 'add' ? '/api/cron/jobs' : `/api/cron/jobs/${job!.id}`;
+      const method = mode === 'add' ? 'POST' : 'PUT';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error ?? 'Failed');
+      onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unknown error');
+    }
+    setSaving(false);
+  };
+
+  const isEdit = mode === 'edit';
+
+  return (
+    <div ref={overlayRef} className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#023F59]/10">
+          <h2 className="font-semibold text-[#21262A]">
+            {isEdit ? `Edit: ${job?.name?.replace(/_/g, ' ')}` : 'Add New Cron Job'}
+          </h2>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5">
+          {/* Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Job Name</label>
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. daily_report_check"
+              className="border-[#023F59]/20 focus:ring-[#107DAC]"
+            />
+            <p className="text-[10px] text-muted-foreground">Use snake_case, no spaces</p>
+          </div>
+
+          {/* Schedule */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Schedule</label>
+            <div className="flex gap-2">
+              {(['every', 'cron'] as const).map(k => (
+                <button
+                  key={k}
+                  onClick={() => setScheduleKind(k)}
+                  className={`flex-1 py-1.5 text-xs rounded-md font-medium transition-colors ${scheduleKind === k ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                >
+                  {k === 'every' ? 'Every (interval)' : 'Cron expression'}
+                </button>
+              ))}
+            </div>
+            {scheduleKind === 'every' ? (
+              <div className="space-y-1">
+                <Input
+                  value={every}
+                  onChange={e => setEvery(e.target.value)}
+                  placeholder="e.g. 4h, 30m, 1h"
+                  className="border-[#023F59]/20"
+                />
+                <p className="text-[10px] text-muted-foreground">Examples: 15m · 1h · 4h · 24h</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <Input
+                  value={cronExpr}
+                  onChange={e => setCronExpr(e.target.value)}
+                  placeholder="e.g. 0 6 * * 1-5"
+                  className="font-mono border-[#023F59]/20"
+                />
+                <p className="text-[10px] text-muted-foreground">5-field cron · min hour day month weekday · Examples: 0 6 * * 1-5 (Mon–Fri 06:00)</p>
+              </div>
+            )}
+          </div>
+
+          {/* Session Target */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Session Target</label>
+            <div className="flex gap-2">
+              {(['isolated', 'main'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setSessionTarget(t)}
+                  className={`flex-1 py-1.5 text-xs rounded-md font-medium transition-colors ${sessionTarget === t ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                >
+                  {t === 'isolated' ? '🔒 Isolated (recommended)' : '🏠 Main session'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Model */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Model</label>
+            <select
+              value={model}
+              onChange={e => setModel(e.target.value)}
+              className="w-full text-sm border border-[#023F59]/20 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-[#107DAC]"
+            >
+              {MODEL_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Message */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">
+              Agent Prompt / Message
+            </label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              rows={5}
+              placeholder="Describe what the agent should do when this job runs…"
+              className="w-full text-sm border border-[#023F59]/20 rounded-md px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-[#107DAC] placeholder:text-muted-foreground"
+            />
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              ⚠ {error}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[#023F59]/10">
+          <Button variant="outline" size="sm" onClick={onClose} className="border-[#023F59]/20">
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            className="bg-[#023F59] text-white hover:bg-[#022F44]"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
+            {isEdit ? 'Save Changes' : 'Create Job'}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 

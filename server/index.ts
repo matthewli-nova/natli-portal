@@ -423,6 +423,67 @@ app.get('/api/cron/timeline', async (_req, res) => {
   }
 });
 
+// POST /api/cron/jobs — create new job
+app.post('/api/cron/jobs', async (req, res) => {
+  try {
+    const { name, scheduleKind, every, cronExpr, message, model, sessionTarget, announce } = req.body as {
+      name: string;
+      scheduleKind: 'every' | 'cron';
+      every?: string;
+      cronExpr?: string;
+      message: string;
+      model?: string;
+      sessionTarget?: string;
+      announce?: boolean;
+    };
+    if (!name || !message) return res.status(400).json({ error: 'name and message are required' });
+
+    const parts: string[] = ['openclaw cron add'];
+    parts.push(`--name "${name}"`);
+    if (scheduleKind === 'every' && every) parts.push(`--every "${every}"`);
+    if (scheduleKind === 'cron' && cronExpr) parts.push(`--cron "${cronExpr}"`);
+    parts.push(`--message "${message.replace(/"/g, '\\"')}"`);
+    if (model) parts.push(`--model "${model}"`);
+    parts.push(`--session "${sessionTarget || 'isolated'}"`);
+    if (announce) parts.push('--announce');
+    parts.push('--json');
+
+    const output = await execCommand(parts.join(' '));
+    res.json({ ok: true, result: JSON.parse(output) });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+// PUT /api/cron/jobs/:id — edit job (name, schedule, message, model)
+app.put('/api/cron/jobs/:id', async (req, res) => {
+  try {
+    const { name, scheduleKind, every, cronExpr, message, model, sessionTarget } = req.body as {
+      name?: string;
+      scheduleKind?: 'every' | 'cron';
+      every?: string;
+      cronExpr?: string;
+      message?: string;
+      model?: string;
+      sessionTarget?: string;
+    };
+    const parts: string[] = [`openclaw cron edit ${req.params.id}`];
+    if (name) parts.push(`--name "${name}"`);
+    if (scheduleKind === 'every' && every) parts.push(`--every "${every}"`);
+    if (scheduleKind === 'cron' && cronExpr) parts.push(`--cron "${cronExpr}"`);
+    if (message) parts.push(`--message "${message.replace(/"/g, '\\"')}"`);
+    if (model) parts.push(`--model "${model}"`);
+    if (sessionTarget) parts.push(`--session "${sessionTarget}"`);
+
+    const output = await execCommand(parts.join(' '));
+    res.json({ ok: true, output });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
 // Sessions
 app.get('/api/sessions', async (_req, res) => {
   try {
