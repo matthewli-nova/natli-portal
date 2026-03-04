@@ -173,15 +173,17 @@ export function SessionsTab() {
 
       {/* [A] KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KPICard title="Total Sessions" value={String(stats.total)} />
+        <KPICard title="Total Sessions" value={String(stats.total)} icon={<MessageSquare className="w-4 h-4" />} description="all time" />
         <KPICard
           title="Active Now"
           value={String(stats.active)}
           dot={stats.active > 0 ? 'emerald' : undefined}
           valueColor={stats.active > 0 ? 'text-emerald-600' : undefined}
+          icon={<Activity className="w-4 h-4" />}
+          description="last 5 minutes"
         />
-        <KPICard title="Tokens Used" value={formatTokens(stats.totalTokens)} valueColor="text-[#107DAC]" />
-        <KPICard title="Sub-agents Run" value={String(subagentCount)} />
+        <KPICard title="Tokens Used" value={formatTokens(stats.totalTokens)} valueColor="text-[#107DAC]" icon={<Zap className="w-4 h-4" />} description="total across all sessions" />
+        <KPICard title="Sub-agents Run" value={String(subagentCount)} icon={<Bot className="w-4 h-4" />} description="spawned sessions" />
       </div>
 
       {/* [B] Two-column: Model Usage + Session Type */}
@@ -349,17 +351,22 @@ function SortToggle({ value, onChange }: { value: SortMode; onChange: (v: SortMo
   );
 }
 
-function KPICard({ title, value, dot, valueColor }: {
+function KPICard({ title, value, dot, valueColor, icon, description }: {
   title: string; value: string; dot?: 'emerald'; valueColor?: string;
+  icon?: React.ReactNode; description?: string;
 }) {
   return (
     <Card className="border-[#023F59]/20">
-      <CardContent className="p-4">
-        <div className="text-xs text-muted-foreground mb-1">{title}</div>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
+        {icon && <span className="text-[#31D7DB]">{icon}</span>}
+      </CardHeader>
+      <CardContent>
         <div className={`text-2xl font-bold ${valueColor || 'text-[#107DAC]'} flex items-center gap-2`}>
-          {dot === 'emerald' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />}
+          {dot === 'emerald' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
           {value}
         </div>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </CardContent>
     </Card>
   );

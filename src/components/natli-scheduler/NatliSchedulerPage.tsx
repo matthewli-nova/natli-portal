@@ -487,17 +487,19 @@ function StatusCard({ title, value, icon, sub, variant }: {
 }) {
   return (
     <Card className={`border-[#023F59]/20 ${variant === 'error' ? 'border-red-200 bg-red-50/30' : ''}`}>
-      <CardContent className="pt-4 pb-3">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
+        <span className={variant === 'error' ? 'text-red-500' : variant === 'success' ? 'text-emerald-500' : 'text-[#31D7DB]'}>
           {icon}
-        </div>
+        </span>
+      </CardHeader>
+      <CardContent>
         <p className={`text-2xl font-bold truncate ${
           variant === 'error' ? 'text-red-600' : variant === 'success' ? 'text-emerald-600' : 'text-[#107DAC]'
         }`}>
           {value}
         </p>
-        <p className="text-xs text-muted-foreground truncate">{sub}</p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">{sub}</p>
       </CardContent>
     </Card>
   );
