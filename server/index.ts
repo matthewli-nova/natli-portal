@@ -1692,6 +1692,50 @@ app.get('/api/skills/stats', async (_req, res) => {
   }
 });
 
+// ─── Chat — Send message to Nat Lee via openclaw agent CLI ───────────────────
+
+function execCommandWithTimeout(cmd: string, timeoutMs: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec(cmd, { timeout: timeoutMs, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(stderr || error.message));
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  });
+}
+
+app.post('/api/chat/send', async (req, res) => {
+  try {
+    const { message } = req.body as { message: string };
+    if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
+
+    const escaped = message.replace(/"/g, '\\"').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    const output = await execCommandWithTimeout(
+      `openclaw agent --message "${escaped}" --json`,
+      120000
+    );
+
+    let reply = 'Message sent to Nat Lee.';
+    try {
+      const parsed = JSON.parse(output);
+      reply = parsed.reply || parsed.message || parsed.text || parsed.content || output.trim();
+    } catch {
+      if (output.trim()) reply = output.trim();
+    }
+
+    if (!reply || reply === 'Message sent to Nat Lee.') {
+      reply = 'Message sent — Nat Lee is processing. Check Slack for the response.';
+    }
+
+    res.json({ reply, ts: Date.now() });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, '0.0.0.0', () => {

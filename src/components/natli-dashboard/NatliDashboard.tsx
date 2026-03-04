@@ -14,6 +14,7 @@ import { MemoryTab } from './memory/MemoryTab';
 
 import {
   Activity,
+  Bot,
   Clock,
   Database,
   HardDrive,
@@ -29,6 +30,7 @@ import {
   Power,
 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { QuickChatPanel } from './chat/QuickChatPanel';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -129,6 +131,8 @@ export function NatliDashboard() {
   const [gatewayRestarting, setGatewayRestarting] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatActive, setChatActive] = useState(false);
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -235,6 +239,14 @@ export function NatliDashboard() {
           >
             <Power className={`w-3.5 h-3.5 mr-1.5 ${gatewayRestarting ? 'animate-pulse' : ''}`} />
             {gatewayRestarting ? 'Restarting…' : 'Restart Gateway'}
+          </Button>
+          <Button
+            onClick={() => setChatOpen(true)}
+            className="h-8 w-8 p-0 rounded-full bg-[#023F59] hover:bg-[#107DAC] text-white shadow-md relative"
+            title="Quick Chat with Nat Lee"
+          >
+            <Bot className="w-4 h-4" />
+            {chatActive && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />}
           </Button>
         </div>
 
@@ -576,6 +588,12 @@ export function NatliDashboard() {
         </TabsContent>
 
       </Tabs>
+
+      <QuickChatPanel
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        onActiveChange={setChatActive}
+      />
     </div>
   );
 }
