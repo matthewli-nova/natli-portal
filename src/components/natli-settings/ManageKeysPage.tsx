@@ -56,7 +56,20 @@ function KeyCard({
       const res = await fetch(`/api/config/keys/${entry.provider}/value`);
       if (!res.ok) throw new Error('Failed to fetch key');
       const { apiKey } = await res.json() as { apiKey: string };
-      await navigator.clipboard.writeText(apiKey);
+      // Use clipboard API if available (HTTPS/localhost), fallback for HTTP LAN access
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(apiKey);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = apiKey;
+        el.setAttribute('readonly', '');
+        el.style.cssText = 'position:absolute;left:-9999px;top:-9999px';
+        document.body.appendChild(el);
+        el.select();
+        el.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
       setCopied(true);
       toast.success('API key copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
