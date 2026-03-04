@@ -76,7 +76,7 @@ export function AddSkillModal({ onClose, onCreated }: AddSkillModalProps) {
       <div className="bg-background border border-[#023F59]/20 rounded-xl shadow-2xl w-full max-w-lg mx-4">
 
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-4 border-b">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10">
           <div className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             <h2 className="font-semibold text-sm">New Skill</h2>
@@ -186,8 +186,8 @@ export function AddSkillModal({ onClose, onCreated }: AddSkillModalProps) {
         </div>
 
         {/* ── Footer ─────────────────────────────────────────────── */}
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t">
-          <Button variant="outline" size="sm" onClick={onClose}>
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#023F59]/10">
+          <Button variant="outline" size="sm" onClick={onClose} className="border-[#023F59]/20">
             Cancel
           </Button>
           <Button

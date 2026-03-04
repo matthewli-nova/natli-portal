@@ -187,9 +187,11 @@ export function SessionsTab() {
       {/* [B] Two-column: Model Usage + Session Type */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="border-[#023F59]/20">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
+              <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+                <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
+              </div>
               <SortToggle value={modelSort} onChange={setModelSort} />
             </div>
           </CardHeader>
@@ -216,9 +218,11 @@ export function SessionsTab() {
         </Card>
 
         <Card className="border-[#023F59]/20">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-[#21262A]">Session Types</CardTitle>
+              <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+                <CardTitle className="text-sm font-semibold text-[#21262A]">Session Types</CardTitle>
+              </div>
               <SortToggle value={typeSort} onChange={setTypeSort} />
             </div>
           </CardHeader>
@@ -247,8 +251,10 @@ export function SessionsTab() {
 
       {/* [C] Live Activity Feed */}
       <Card className="border-[#023F59]/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">Live Activity Feed</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+            <CardTitle className="text-sm font-semibold text-[#21262A]">Live Activity Feed</CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -293,8 +299,10 @@ export function SessionsTab() {
 
       {/* [D] Agent Breakdown */}
       <Card className="border-[#023F59]/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">Agent Breakdown</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+            <CardTitle className="text-sm font-semibold text-[#21262A]">Agent Breakdown</CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {agentEntries.map(([agent, info]) => {
@@ -368,8 +376,8 @@ function AgentBadge({ agent }: { agent: string }) {
     main: 'bg-[#023F59] text-white',
     coder: 'bg-[#107DAC]/15 text-[#107DAC]',
     designer: 'bg-[#31D7DB]/15 text-[#023F59]',
-    marketing: 'bg-orange-100 text-orange-800',
-    strategy: 'bg-teal-100 text-teal-800',
+    marketing: 'bg-[#107DAC]/10 text-[#023F59]',
+    strategy: 'bg-[#31D7DB]/20 text-[#023F59]',
   };
   return (
     <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${colors[agent] || 'bg-gray-100 text-gray-700'}`}>

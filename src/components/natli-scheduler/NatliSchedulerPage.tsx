@@ -329,7 +329,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
         <StatusCard
           title="Next Firing"
           value={nextFiring[0] ? nextFiring[0].name.replace(/_/g, ' ') : '—'}
-          icon={<Zap className="w-4 h-4 text-[#107DAC]" />}
+          icon={<Zap className="w-4 h-4 text-[#31D7DB]" />}
           sub={nextFiring[0]?.state.nextRunAtMs ? `in ${formatCountdown(nextFiring[0].state.nextRunAtMs - now)}` : '—'}
           variant="cyan"
         />
@@ -344,14 +344,14 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
 
       {/* [B] Alert Banner */}
       {failedJobs.length > 0 && !alertDismissed && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-          <span className="text-red-600 font-semibold text-sm flex-1">
-            🔴 {failedJobs.length} job{failedJobs.length > 1 ? 's' : ''} failed · {failedJobs[0].name} · {failedJobs[0].state.lastRunAtMs ? formatRelativeTime(failedJobs[0].state.lastRunAtMs) : ''}
+        <div className="flex items-center gap-3 bg-amber-50 border border-[#023F59]/20 rounded-lg px-4 py-3">
+          <span className="text-amber-700 font-semibold text-sm flex-1">
+            ⚠ {failedJobs.length} job{failedJobs.length > 1 ? 's' : ''} failed · {failedJobs[0].name} · {failedJobs[0].state.lastRunAtMs ? formatRelativeTime(failedJobs[0].state.lastRunAtMs) : ''}
           </span>
           <Button
             variant="ghost"
             size="sm"
-            className="text-red-600 hover:bg-red-100 text-xs"
+            className="text-amber-700 hover:bg-amber-100 text-xs"
             onClick={() => setLogDrawerJobId(failedJobs[0].id)}
           >
             View Details ↓
@@ -359,7 +359,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
           <Button
             variant="ghost"
             size="sm"
-            className="text-red-400 hover:bg-red-100 text-xs"
+            className="text-amber-500 hover:bg-amber-100 text-xs"
             onClick={() => setAlertDismissed(true)}
           >
             Dismiss
@@ -492,8 +492,8 @@ function StatusCard({ title, value, icon, sub, variant }: {
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
           {icon}
         </div>
-        <p className={`text-lg font-bold truncate ${
-          variant === 'error' ? 'text-red-600' : variant === 'success' ? 'text-emerald-600' : variant === 'cyan' ? 'text-[#107DAC]' : 'text-[#21262A]'
+        <p className={`text-2xl font-bold truncate ${
+          variant === 'error' ? 'text-red-600' : variant === 'success' ? 'text-emerald-600' : 'text-[#107DAC]'
         }`}>
           {value}
         </p>
@@ -881,12 +881,12 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
         className="fixed right-0 top-0 bottom-0 w-[420px] max-w-[90vw] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10 bg-[#022F44]">
           <div className="min-w-0">
-            <p className="font-semibold text-[#21262A] truncate">{job?.name.replace(/_/g, ' ') || jobId}</p>
-            <p className="text-xs text-muted-foreground">{job?.scheduleDescription}</p>
+            <p className="font-semibold text-white truncate">{job?.name.replace(/_/g, ' ') || jobId}</p>
+            <p className="text-xs text-white/60">{job?.scheduleDescription}</p>
           </div>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-white/70 hover:text-white hover:bg-white/10" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
         </div>

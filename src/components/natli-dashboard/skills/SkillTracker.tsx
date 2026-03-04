@@ -61,15 +61,15 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
           },
         ].map(kpi => (
           <Card key={kpi.label} className="border-[#023F59]/20">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <kpi.icon className="w-3.5 h-3.5" />
+                <kpi.icon className="w-3.5 h-3.5 text-[#31D7DB]" />
                 {kpi.label}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold mb-0.5 truncate">{kpi.value}</div>
-              <div className={`text-xs ${kpi.accent ?? 'text-muted-foreground'}`}>{kpi.sub}</div>
+              <div className={`text-2xl font-bold mb-0.5 truncate ${kpi.accent ?? 'text-[#107DAC]'}`}>{kpi.value}</div>
+              <div className="text-xs text-muted-foreground">{kpi.sub}</div>
             </CardContent>
           </Card>
         ))}
@@ -79,16 +79,16 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Most Used Skills ──────────────────────────────────── */}
         <Card className="border-[#023F59]/20">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-amber-500" />
+              <Award className="w-4 h-4 text-[#31D7DB]" />
               Most Used
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
               {mostUsed.map((skill, i) => (
-                <div key={skill.id} className="flex items-center gap-3">
+                <div key={skill.id} className="flex items-center gap-3 py-1.5 border-b border-[#023F59]/5 last:border-0">
                   <span className="text-muted-foreground text-xs w-4 font-mono">{i + 1}</span>
                   <span className="text-sm">{skill.emoji}</span>
                   <span className="text-sm font-medium flex-1 truncate">{skill.name}</span>
@@ -117,16 +117,16 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Recently Added ───────────────────────────────────── */}
         <Card className="border-[#023F59]/20">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-[#107DAC]" />
+              <Clock className="w-4 h-4 text-[#31D7DB]" />
               Recently Added
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
               {recentlyAdded.map(skill => (
-                <div key={skill.id} className="flex items-center gap-2">
+                <div key={skill.id} className="flex items-center gap-2 py-1.5 border-b border-[#023F59]/5 last:border-0">
                   <span className="text-sm">{skill.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{skill.name}</p>
@@ -143,7 +143,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Category Breakdown ───────────────────────────────── */}
         <Card className="border-[#023F59]/20">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A]">Category Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -170,7 +170,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
         {/* ── Never Used / Needs Attention ─────────────────────── */}
         <Card className="border-[#023F59]/20">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               Needs Attention
@@ -194,7 +194,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                 <div key={skill.id} className="flex items-center gap-2">
                   <span className="text-sm">{skill.emoji}</span>
                   <span className="text-sm flex-1 truncate">{skill.name}</span>
-                  <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                  <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
                     No contract
                   </span>
                 </div>

@@ -96,7 +96,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
     <div className="flex flex-col h-full">
 
       {/* ── Editor Toolbar ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-2 bg-muted/30 border-b gap-3">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#023F59]/[0.02] border-b border-[#023F59]/10 gap-3">
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <code className="bg-muted px-2 py-0.5 rounded text-xs">{skill.path}</code>
           <span>{lineCount} lines · {charCount} chars</span>
@@ -122,7 +122,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
             variant="outline"
             size="sm"
             onClick={handleDiscard}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 border-[#023F59]/20"
           >
             <X className="w-3.5 h-3.5" />
             {isDirty ? 'Discard' : 'Cancel'}

@@ -63,10 +63,10 @@ function SkillListRow({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left rounded-lg px-3 py-2.5 transition-colors ${
+      className={`w-full text-left rounded-lg px-3 py-2.5 transition-colors border-b border-[#023F59]/10 last:border-0 ${
         isSelected
           ? 'bg-[#023F59] text-white'
-          : 'hover:bg-muted/60'
+          : 'hover:bg-[#023F59]/5'
       }`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
@@ -130,7 +130,7 @@ function SkillGridCard({
       className={`text-left rounded-lg p-3 transition-colors border ${
         isSelected
           ? 'bg-[#023F59] text-white border-[#023F59]'
-          : 'hover:bg-muted/60 border-transparent hover:border-[#023F59]/20'
+          : 'hover:bg-[#023F59]/5 border-[#023F59]/10 hover:border-[#023F59]/20'
       }`}
     >
       <div className={`text-2xl mb-1.5 ${skill.status !== 'ready' ? 'opacity-40 grayscale' : ''}`}>

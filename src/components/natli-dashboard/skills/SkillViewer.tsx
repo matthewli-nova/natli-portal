@@ -33,7 +33,7 @@ export function SkillViewer({ skill }: SkillViewerProps) {
     <div className="flex flex-col h-full">
 
       {/* ── Metadata Bar ───────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b bg-muted/20 flex flex-wrap gap-3 text-xs text-muted-foreground">
+      <div className="px-4 py-3 border-b border-[#023F59]/10 bg-[#023F59]/[0.02] flex flex-wrap gap-3 text-xs text-muted-foreground">
 
         <div className="flex items-center gap-1">
           <FileText className="w-3.5 h-3.5" />
@@ -71,7 +71,7 @@ export function SkillViewer({ skill }: SkillViewerProps) {
 
       {/* ── Tags ───────────────────────────────────────────────────── */}
       {skill.tags.length > 0 && (
-        <div className="px-4 py-2 border-b flex items-center gap-1.5 flex-wrap">
+        <div className="px-4 py-2 border-b border-[#023F59]/10 flex items-center gap-1.5 flex-wrap">
           <Tag className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
           {skill.tags.map(tag => (
             <span

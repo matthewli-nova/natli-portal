@@ -265,14 +265,13 @@ export function NatliDashboard() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex w-full overflow-x-auto bg-[#023F59]/5 h-auto flex-nowrap justify-start gap-0.5 px-1 py-1">
-          <TabsTrigger value="overview" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Overview</TabsTrigger>
-          <TabsTrigger value="system" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">System Health</TabsTrigger>
-          <TabsTrigger value="memory" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Memory & Knowledge</TabsTrigger>
-          <TabsTrigger value="skill" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
+          <TabsTrigger value="overview"  className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Overview</TabsTrigger>
+          <TabsTrigger value="system"   className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">System Health</TabsTrigger>
+          <TabsTrigger value="model"    className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Model</TabsTrigger>
+          <TabsTrigger value="sessions" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Session</TabsTrigger>
+          <TabsTrigger value="memory"   className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Memory</TabsTrigger>
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
-          <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
-          <TabsTrigger value="model" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Model</TabsTrigger>
-          <TabsTrigger value="sessions" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Sessions</TabsTrigger>
+          <TabsTrigger value="skill"    className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
 
         </TabsList>
 
@@ -552,10 +551,6 @@ export function NatliDashboard() {
         </TabsContent>
 
         {/* ─── Task Tab ──────────────────────────────────────── */}
-        <TabsContent value="task" className="space-y-4">
-          <TaskTab tasks={tasks} />
-        </TabsContent>
-
         {/* ─── Model Tab ──────────────────────────────────── */}
         <TabsContent value="model" className="space-y-4">
           <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Model stats…</div>}>

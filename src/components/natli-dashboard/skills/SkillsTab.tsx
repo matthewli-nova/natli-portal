@@ -155,7 +155,7 @@ export function SkillsTab() {
           <Card key={kpi.label} className="border-[#023F59]/20">
             <CardContent className="p-3">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
-              <p className={`text-xl font-bold text-[#21262A] ${kpi.accent}`}>{kpi.value}</p>
+              <p className={`text-2xl font-bold text-[#107DAC] ${kpi.accent}`}>{kpi.value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{kpi.sub}</p>
             </CardContent>
           </Card>
@@ -164,9 +164,9 @@ export function SkillsTab() {
 
       {/* ── Header: title + New Skill ─────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#21262A]">
+        <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
           <BookOpen className="w-4 h-4 text-[#107DAC]" />
-          Skill Browser
+          <span className="text-base font-semibold text-[#21262A]">Skill Browser</span>
         </div>
         <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-[#023F59] text-white hover:bg-[#022F44] flex items-center gap-1.5">
           <Plus className="w-4 h-4" />
