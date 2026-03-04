@@ -410,9 +410,25 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
               <AlertTriangle className="w-5 h-5 text-amber-500" />
               Switch AI Model?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              You are switching the primary model to <span className="font-semibold text-[#107DAC]">{resolveLabel(primary)}</span>.
-              The OpenClaw server will restart automatically. Active sessions may be interrupted.
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>You are applying the following model configuration changes:</p>
+                <ul className="space-y-1 pl-2 border-l-2 border-[#31D7DB]">
+                  <li>
+                    <span className="text-[#21262A] font-medium">Primary: </span>
+                    <span className="font-semibold text-[#107DAC]">{resolveLabel(primary) || '—'}</span>
+                  </li>
+                  <li>
+                    <span className="text-[#21262A] font-medium">Failover 1: </span>
+                    <span className="font-semibold text-[#107DAC]">{fallback0 && fallback0 !== 'none' ? resolveLabel(fallback0) : '(none)'}</span>
+                  </li>
+                  <li>
+                    <span className="text-[#21262A] font-medium">Failover 2: </span>
+                    <span className="font-semibold text-[#107DAC]">{fallback1 && fallback1 !== 'none' ? resolveLabel(fallback1) : '(none)'}</span>
+                  </li>
+                </ul>
+                <p className="text-amber-600 font-medium">⚠ The OpenClaw server will restart automatically. Active sessions may be interrupted.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
