@@ -466,78 +466,142 @@ export function ModelTab() {
 
 // ─── Token History Chart (Pure CSS) ──────────────────────────
 
-const CHART_HEIGHT = 120; // px
+const CHART_H = 130;
+const CHART_Y_LABEL_W = 40;
+const X_AXIS_H = 18;
 
 function TokenHistoryChart({ days, period }: { days: HistoryDay[]; period: number }) {
   const maxTotal = Math.max(...days.map(d => d.total), 1);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const labelEvery = period <= 7 ? 1 : period <= 30 ? 3 : period <= 90 ? 7 : period <= 180 ? 14 : 30;
-  const barMinW = period <= 30 ? 16 : period <= 90 ? 10 : 7;
 
-  // Y-axis tick values: 0, 50%, 100%
-  const yTicks = [
-    { label: formatTokens(maxTotal), pct: 100 },
-    { label: formatTokens(Math.round(maxTotal / 2)), pct: 50 },
-    { label: '0', pct: 0 },
-  ];
+  // Build SVG polyline points — responsive: use % of width
+  // We'll use a fixed SVG viewBox and let it scale
+  const W = 800; // internal SVG coordinate width
+  const H = CHART_H;
+  const pad = { t: 8, r: 8, b: 4, l: 4 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+
+  const pts = days.map((day, i) => {
+    const x = pad.l + (days.length === 1 ? plotW / 2 : (i / (days.length - 1)) * plotW);
+    const y = pad.t + plotH - (day.total / maxTotal) * plotH;
+    return { x, y, day };
+  });
+
+  // Area fill path
+  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const areaPath = pts.length
+    ? `${linePath} L${pts[pts.length - 1].x.toFixed(1)},${(pad.t + plotH).toFixed(1)} L${pts[0].x.toFixed(1)},${(pad.t + plotH).toFixed(1)} Z`
+    : '';
+
+  const yTicks = [maxTotal, maxTotal / 2, 0];
 
   return (
-    <div className="relative">
-      <div className="flex gap-2">
+    <div>
+      <div className="flex gap-1">
         {/* Y-axis labels */}
-        <div className="flex flex-col justify-between shrink-0" style={{ height: CHART_HEIGHT, width: 36 }}>
-          {yTicks.map(t => (
-            <span key={t.pct} className="text-[9px] text-muted-foreground text-right leading-none">{t.label}</span>
+        <div
+          className="flex flex-col justify-between shrink-0 py-[8px]"
+          style={{ width: CHART_Y_LABEL_W, height: CHART_H }}
+        >
+          {yTicks.map((v, i) => (
+            <span key={i} className="text-[9px] text-muted-foreground text-right leading-none block">
+              {formatTokens(Math.round(v))}
+            </span>
           ))}
         </div>
 
-        {/* Chart + X-axis */}
-        <div className="flex-1 overflow-x-auto pb-1">
-          <div style={{ minWidth: days.length * (barMinW + 2) }}>
-            {/* Chart area */}
-            <div className="relative flex items-end gap-[2px]" style={{ height: CHART_HEIGHT }}>
-              {days.map((day, i) => {
-                const barH = Math.max(Math.round((day.total / maxTotal) * CHART_HEIGHT), 3);
-                return (
-                  <div
-                    key={day.date}
-                    className="relative flex-1 flex flex-col justify-end"
-                    style={{ minWidth: barMinW, height: CHART_HEIGHT }}
-                    onMouseEnter={() => setHoverIdx(i)}
-                    onMouseLeave={() => setHoverIdx(null)}
-                  >
-                    {/* Tooltip */}
-                    {hoverIdx === i && (
-                      <div className="absolute bottom-[calc(100%+4px)] left-1/2 -translate-x-1/2 z-20 bg-[#21262A] text-white text-[10px] rounded-md px-2.5 py-1.5 whitespace-nowrap shadow-lg pointer-events-none">
-                        <p className="font-semibold mb-0.5">{day.date}</p>
-                        <p>Total: {formatTokens(day.total)}</p>
-                        {Object.entries(day.byModel).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([model, tokens]) => (
-                          <p key={model} className="opacity-75">{getModelShortName(model)}: {formatTokens(tokens)}</p>
-                        ))}
-                      </div>
-                    )}
-                    <div
-                      className="w-full rounded-t cursor-pointer transition-colors"
-                      style={{
-                        height: barH,
-                        backgroundColor: hoverIdx === i ? '#31D7DB' : '#023F59',
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {/* X-axis labels */}
-            <div className="flex gap-[2px] mt-1" style={{ height: 16 }}>
-              {days.map((day, i) => (
-                <div key={day.date} className="flex-1 text-center overflow-hidden" style={{ minWidth: barMinW }}>
-                  {i % labelEvery === 0 && (
-                    <span className="text-[9px] text-muted-foreground leading-none">{day.date.slice(5)}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* SVG line chart */}
+        <div className="flex-1 relative" style={{ height: CHART_H }}>
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            className="w-full"
+            style={{ height: CHART_H, display: 'block' }}
+          >
+            <defs>
+              <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#107DAC" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#107DAC" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            {/* Horizontal grid lines */}
+            {[0, 0.5, 1].map((frac) => (
+              <line
+                key={frac}
+                x1={pad.l} y1={pad.t + plotH * (1 - frac)}
+                x2={W - pad.r} y2={pad.t + plotH * (1 - frac)}
+                stroke="#023F59" strokeOpacity="0.08" strokeWidth="1"
+              />
+            ))}
+            {/* Area fill */}
+            {areaPath && <path d={areaPath} fill="url(#lineAreaGrad)" />}
+            {/* Line */}
+            {linePath && (
+              <path d={linePath} fill="none" stroke="#107DAC" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            )}
+            {/* Dots + hover targets */}
+            {pts.map((p, i) => (
+              <g key={p.day.date}>
+                <circle
+                  cx={p.x} cy={p.y} r="10"
+                  fill="transparent"
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <circle
+                  cx={p.x} cy={p.y} r={hoverIdx === i ? 4 : 3}
+                  fill={hoverIdx === i ? '#31D7DB' : '#107DAC'}
+                  stroke="white" strokeWidth="1.5"
+                  style={{ pointerEvents: 'none' }}
+                />
+              </g>
+            ))}
+          </svg>
+
+          {/* Hover tooltip (DOM, not SVG, for easy styling) */}
+          {hoverIdx !== null && pts[hoverIdx] && (() => {
+            const p = pts[hoverIdx];
+            const day = p.day;
+            const leftPct = (p.x / W) * 100;
+            return (
+              <div
+                className="absolute z-20 bg-[#21262A] text-white text-[10px] rounded-md px-2.5 py-1.5 whitespace-nowrap shadow-lg pointer-events-none"
+                style={{
+                  bottom: `calc(${100 - (p.y / CHART_H) * 100}% + 10px)`,
+                  left: `${Math.min(Math.max(leftPct, 5), 75)}%`,
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                <p className="font-semibold mb-0.5">{day.date}</p>
+                <p>Total: {formatTokens(day.total)}</p>
+                {Object.entries(day.byModel).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([model, tokens]) => (
+                  <p key={model} className="opacity-75">{getModelShortName(model)}: {formatTokens(tokens)}</p>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* X-axis labels */}
+      <div className="flex" style={{ paddingLeft: CHART_Y_LABEL_W + 4, height: X_AXIS_H }}>
+        <div className="flex-1 relative">
+          {pts.map((p, i) => {
+            if (i % labelEvery !== 0) return null;
+            const leftPct = (p.x / W) * 100;
+            return (
+              <span
+                key={p.day.date}
+                className="absolute text-[9px] text-muted-foreground -translate-x-1/2"
+                style={{ left: `${leftPct}%`, top: 2 }}
+              >
+                {p.day.date.slice(5)}
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>
