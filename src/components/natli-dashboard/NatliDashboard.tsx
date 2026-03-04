@@ -232,6 +232,7 @@ export function NatliDashboard() {
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
           <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
           <TabsTrigger value="research" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Research</TabsTrigger>
+          <TabsTrigger value="skill" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
 
 
         </TabsList>
@@ -832,8 +833,61 @@ export function NatliDashboard() {
         </TabsContent>
 
 
+        {/* ─── Skill Tab (Tracker, live data) ──────────────────── */}
+        <TabsContent value="skill" className="space-y-4">
+          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Skill tracker…</div>}>
+            <LiveSkillTracker />
+          </Suspense>
+        </TabsContent>
+
       </Tabs>
     </div>
+  );
+}
+
+// ─── Live Skill Tracker wrapper (fetches live API data) ──────────────────────
+import { type Skill } from './skills/skills-data';
+import { getSkillStats, ALL_SKILLS } from './skills/skills-data';
+const SkillTrackerComponent = lazy(() => import('./skills/SkillTracker').then(m => ({ default: m.SkillTracker })));
+
+function LiveSkillTracker() {
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [stats, setStats] = useState<ReturnType<typeof getSkillStats> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/skills')
+      .then(r => r.json())
+      .then((data: { skills: Skill[]; stats: { total: number; custom: number; system: number; ready: number; needsSetup: number; withContract: number } }) => {
+        setSkills(data.skills);
+        // Build a stats shape compatible with SkillTracker
+        const liveStats = getSkillStats(); // base shape
+        liveStats.total = data.stats.total;
+        liveStats.totalCustom = data.stats.custom;
+        liveStats.totalSystem = data.stats.system;
+        liveStats.ready = data.stats.ready;
+        liveStats.needsSetup = data.stats.needsSetup;
+        liveStats.withContract = data.stats.withContract;
+        liveStats.contractCoverage = data.stats.custom > 0
+          ? Math.round((data.stats.withContract / data.stats.custom) * 100)
+          : 0;
+        setStats(liveStats);
+      })
+      .catch(() => {
+        // Fallback to static
+        setSkills(ALL_SKILLS);
+        setStats(getSkillStats());
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="text-muted-foreground text-sm p-8 text-center">Loading skills data…</div>;
+  if (!stats) return null;
+
+  return (
+    <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading…</div>}>
+      <SkillTrackerComponent stats={stats} skills={skills} />
+    </Suspense>
   );
 }
 
