@@ -224,13 +224,13 @@ export function NatliDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-[#023F59]/5">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Overview</TabsTrigger>
-          <TabsTrigger value="system" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">System Health</TabsTrigger>
-          <TabsTrigger value="memory" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Memory & Knowledge</TabsTrigger>
-          <TabsTrigger value="schedule" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Schedule</TabsTrigger>
-          <TabsTrigger value="task" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Task</TabsTrigger>
-          <TabsTrigger value="research" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Research</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto bg-[#023F59]/5 h-auto flex-nowrap justify-start gap-0.5 px-1 py-1">
+          <TabsTrigger value="overview" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Overview</TabsTrigger>
+          <TabsTrigger value="system" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">System Health</TabsTrigger>
+          <TabsTrigger value="memory" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Memory & Knowledge</TabsTrigger>
+          <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
+          <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
+          <TabsTrigger value="research" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Research</TabsTrigger>
         </TabsList>
 
         {/* ─── Overview Tab ──────────────────────────────────── */}
@@ -479,6 +479,86 @@ export function NatliDashboard() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {health?.timestamp ? new Date(health.timestamp).toLocaleTimeString() : ''}
                   </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* ════════════════════════════════════════════════════ */}
+          {/* OpenClaw Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+              <span className="text-lg font-bold text-[#21262A]">⚙️ OpenClaw Health</span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* Gateway Service */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Server className="w-4 h-4 text-[#31D7DB]" />
+                      <span className="text-sm font-semibold text-[#21262A]">Gateway Service</span>
+                    </div>
+                    <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${health?.gatewayServiceRunning ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      {health?.gatewayServiceRunning ? 'Running' : 'Stopped'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <div className="text-muted-foreground">Version</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayVersion || '—'}</div>
+                    <div className="text-muted-foreground">PID</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayPid || '—'}</div>
+                    <div className="text-muted-foreground">Latency</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayLatencyMs ?? 0} ms</div>
+                    <div className="text-muted-foreground">Uptime</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayStartTime ? formatUptime(health.gatewayStartTime) : '—'}</div>
+                    <div className="text-muted-foreground">Host</div>
+                    <div className="font-mono text-[#21262A] truncate text-xs">{health?.gatewayHost || '—'}</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Active Model */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Brain className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Active Model</span>
+                  </div>
+                  <p className="text-xl font-bold text-[#107DAC] leading-tight">
+                    {health?.primaryModel ? resolveModelLabel(health.primaryModel) : '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">{health?.primaryModel || ''}</p>
+                  <div className="mt-3 pt-3 border-t border-[#023F59]/10">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Sessions</span>
+                      <span className="font-bold text-[#107DAC]">{health?.totalSessions ?? 0}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Channels & Services */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Activity className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Services</span>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Gateway :18789', ok: health?.gatewayReachable },
+                      { label: 'Ollama :11434', ok: health?.services?.ollama },
+                      { label: 'Slack Channel', ok: true },
+                    ].map(({ label, ok }) => (
+                      <div key={label} className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">{label}</span>
+                        <Badge className={`text-[10px] font-bold px-2 py-0 border-0 ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {ok ? 'Online' : 'Offline'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
