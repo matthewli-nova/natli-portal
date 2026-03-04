@@ -11,9 +11,9 @@ const PATHS = {
     hex: '#D97757',
     path: 'M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5527h3.7442ZM5.7506 13.7553l2.4494-6.3538 2.4494 6.3538Z',
   },
-  // Google Gemini — hex #8E75B2
+  // Google Gemini — Google Blue
   gemini: {
-    hex: '#8E75B2',
+    hex: '#4285F4',
     path: 'M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.96-2.19-.93-3.81-2.55t-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81T4.68 11.04Q2.49 12 0 12q2.49 0 4.68.96 2.19.96 3.81 2.58t2.55 3.78Z',
   },
   // Meta (Llama) — hex #0467DF
@@ -51,10 +51,10 @@ function detectProvider(modelId: string): {
     return { key: 'claude', hex: '#D97757', label: 'Anthropic' };
   }
   if (id.includes('gemini') || (id.includes('google') && !id.includes('gemma'))) {
-    return { key: 'gemini', hex: '#8E75B2', label: 'Google' };
+    return { key: 'gemini', hex: '#4285F4', label: 'Google' };
   }
   if (id.includes('gemma')) {
-    return { key: 'gemini', hex: '#34A853', label: 'Google' };
+    return { key: 'gemini', hex: '#4285F4', label: 'Google' };
   }
   if (id.includes('grok') || id.includes('x-ai') || id.includes('xai')) {
     return { key: 'x', hex: '#000000', label: 'xAI' };
