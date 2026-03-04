@@ -247,6 +247,82 @@ app.post('/api/config/model', async (req, res) => {
   }
 });
 
+// ─── API Keys Management ─────────────────────────────────────
+
+function maskKey(key: string): string {
+  if (!key || key.length < 12) return '••••';
+  return key.slice(0, 8) + '...' + key.slice(-4);
+}
+
+app.get('/api/config/keys', async (_req, res) => {
+  try {
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    const providers: Record<string, Record<string, unknown>> = data.models?.providers ?? {};
+
+    const keys = Object.entries(providers).map(([provider, config]) => {
+      const apiKey = (config.apiKey as string) || '';
+      return {
+        provider,
+        label: provider.charAt(0).toUpperCase() + provider.slice(1),
+        keyPreview: apiKey ? maskKey(apiKey) : '',
+        keyLength: apiKey.length,
+        hasKey: !!apiKey,
+      };
+    });
+
+    // Add managed Anthropic entry
+    keys.unshift({
+      provider: 'anthropic',
+      label: 'Anthropic (Claude)',
+      keyPreview: '(managed via system keychain)',
+      keyLength: 0,
+      hasKey: true,
+      managed: true,
+    } as typeof keys[number] & { managed: boolean });
+
+    res.json({ keys });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.put('/api/config/keys/:provider', async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const { apiKey } = req.body as { apiKey: string };
+    if (!apiKey) {
+      res.status(400).json({ error: 'apiKey is required' });
+      return;
+    }
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    if (!data.models) data.models = {};
+    if (!data.models.providers) data.models.providers = {};
+    if (!data.models.providers[provider]) data.models.providers[provider] = {};
+    data.models.providers[provider].apiKey = apiKey;
+    await fs.writeFile(OPENCLAW_CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    res.json({ ok: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.delete('/api/config/keys/:provider', async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    if (data.models?.providers?.[provider]) {
+      data.models.providers[provider].apiKey = '';
+    }
+    await fs.writeFile(OPENCLAW_CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    res.json({ ok: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
 // Restart gateway
 app.post('/api/config/restart', (_req, res) => {
   try {

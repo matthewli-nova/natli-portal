@@ -41,6 +41,7 @@ import {
   AlertDialogAction,
 } from '../ui/alert-dialog';
 import { toast } from 'sonner';
+import { ManageKeysPage } from './ManageKeysPage';
 
 type SettingCategory = 'all' | 'core' | 'integration' | 'security';
 
@@ -184,6 +185,7 @@ function SettingCard({ item, onClick }: {
 // ─── AI Model Configuration Detail Page ─────────────────────
 
 function AIModelDetailPage({ onBack }: { onBack: () => void }) {
+  const [view, setView] = useState<'config' | 'keys'>('config');
   const [config, setConfig] = useState<ModelConfig | null>(null);
   const [primary, setPrimary] = useState('');
   const [fallback0, setFallback0] = useState('');
@@ -251,6 +253,10 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
     }
   };
 
+  if (view === 'keys') {
+    return <ManageKeysPage onBack={() => setView('config')} />;
+  }
+
   if (!loaded) {
     return (
       <div className="space-y-4">
@@ -291,16 +297,27 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
       {/* Header */}
       <Card className="border-[#31D7DB]/30 bg-gradient-to-br from-[#023F59]/5 to-transparent">
         <div className="p-6 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#023F59]/10">
-              <BrainCircuit className="h-6 w-6 text-[#31D7DB]" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#023F59]/10">
+                <BrainCircuit className="h-6 w-6 text-[#31D7DB]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-[#21262A]">AI Model Configuration</h2>
+                <p className="text-sm text-muted-foreground">
+                  Select and configure AI models for your agents
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-[#21262A]">AI Model Configuration</h2>
-              <p className="text-sm text-muted-foreground">
-                Select and configure AI models for your agents
-              </p>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setView('keys')}
+              className="border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
+            >
+              <KeyRound className="w-4 h-4 mr-1.5" />
+              Manage Keys
+            </Button>
           </div>
 
           {/* Current model banner */}
