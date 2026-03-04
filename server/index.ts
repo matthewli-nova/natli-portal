@@ -263,7 +263,7 @@ app.get('/api/config/keys', async (_req, res) => {
       const apiKey = (config.apiKey as string) || '';
       return {
         provider,
-        label: provider.charAt(0).toUpperCase() + provider.slice(1),
+        label: ({ openrouter: 'OpenRouter', moonshot: 'Moonshot (Kimi)', anthropic: 'Anthropic' } as Record<string,string>)[provider] ?? (provider.charAt(0).toUpperCase() + provider.slice(1)),
         keyPreview: apiKey ? maskKey(apiKey) : '',
         keyLength: apiKey.length,
         hasKey: !!apiKey,
