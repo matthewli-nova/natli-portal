@@ -318,6 +318,61 @@ app.get('/api/cron/jobs', async (_req, res) => {
   }
 });
 
+// GET /api/cron/jobs/token-summary — last run token usage + est daily spend for each job
+app.get('/api/cron/jobs/token-summary', async (_req, res) => {
+  try {
+    const listOut = await execCommand('openclaw cron list --json');
+    const data = JSON.parse(listOut);
+    const jobs: Record<string, unknown>[] = data.jobs || [];
+
+    const summary: Record<string, { lastRunTokens: number; estDailyTokens: number }> = {};
+
+    await Promise.all(
+      jobs.map(async (job) => {
+        const id = job.id as string;
+        try {
+          const runOut = await execCommand(`openclaw cron runs --id ${id} --limit 3`);
+          const runData = JSON.parse(runOut);
+          const entries: Record<string, unknown>[] = runData.entries || runData.runs || [];
+          const last = entries[0];
+          if (!last) return;
+          const usage = last.usage as Record<string, number> | undefined;
+          const lastRunTokens = usage?.total_tokens || 0;
+
+          // Estimate daily runs from schedule
+          const schedule = job.schedule as Record<string, unknown>;
+          let runsPerDay = 1;
+          if (schedule?.kind === 'every') {
+            const everyMs = Number(schedule.everyMs || 86400000);
+            runsPerDay = (24 * 3600 * 1000) / everyMs;
+          } else if (schedule?.kind === 'cron') {
+            // Rough estimate: count fields to guess frequency
+            const expr = String(schedule.expr || '0 0 * * *');
+            const parts = expr.trim().split(/\s+/);
+            const dayPart = parts[4] || '*';
+            const hourPart = parts[1] || '*';
+            if (dayPart !== '*') runsPerDay = 1 / 7; // weekly
+            else if (hourPart === '*') runsPerDay = 24;
+            else runsPerDay = 1;
+          }
+
+          summary[id] = {
+            lastRunTokens,
+            estDailyTokens: Math.round(lastRunTokens * Math.min(runsPerDay, 24)),
+          };
+        } catch {
+          // ignore per-job errors
+        }
+      })
+    );
+
+    res.json({ summary });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message, summary: {} });
+  }
+});
+
 // GET /api/cron/jobs/:id/runs — run history
 app.get('/api/cron/jobs/:id/runs', async (req, res) => {
   try {

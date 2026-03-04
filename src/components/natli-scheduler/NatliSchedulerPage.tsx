@@ -218,6 +218,7 @@ function categorizeJobs(jobs: CronJob[]): JobGroup[] {
 export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [tokenSummary, setTokenSummary] = useState<Record<string, { lastRunTokens: number; estDailyTokens: number }>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -238,6 +239,10 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
     if (tlRes) setTimeline(tlRes.timeline);
     setLoading(false);
     setRefreshing(false);
+    // Fetch token summary in background (slower, 16 jobs × 1 run each)
+    fetchApi<{ summary: Record<string, { lastRunTokens: number; estDailyTokens: number }> }>('/api/cron/jobs/token-summary')
+      .then(r => { if (r) setTokenSummary(r.summary); })
+      .catch(() => {});
   }, [timelineZoom]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -422,6 +427,8 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
                     <th className="text-left py-2 px-3 font-medium">Schedule</th>
                     <th className="text-left py-2 px-3 font-medium">Last Run</th>
                     <th className="text-left py-2 px-3 font-medium">Duration</th>
+                    <th className="text-left py-2 px-3 font-medium">Last Tokens</th>
+                    <th className="text-left py-2 px-3 font-medium">Est. Daily</th>
                     <th className="text-left py-2 px-3 font-medium">Next Run</th>
                     <th className="text-left py-2 px-3 font-medium">Target</th>
                     <th className="text-left py-2 px-3 font-medium">Model</th>
@@ -434,6 +441,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
                       key={job.id}
                       job={job}
                       now={now}
+                      tokenData={tokenSummary[job.id]}
                       onRunNow={() => handleRunNow(job.id)}
                       onToggle={() => handleToggle(job)}
                       onViewLogs={() => setLogDrawerJobId(job.id)}
@@ -730,8 +738,17 @@ function NextFiringCard({ job, now, onRunNow, running }: {
 
 // ─── [E] Job Row ─────────────────────────────────────────────
 
-function JobRow({ job, now, onRunNow, onToggle, onViewLogs, onEdit, running }: {
-  job: CronJob; now: number; onRunNow: () => void; onToggle: () => void; onViewLogs: () => void; onEdit: () => void; running: boolean;
+function formatTokensShort(n: number | undefined): string {
+  if (!n) return '—';
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, running }: {
+  job: CronJob; now: number;
+  tokenData?: { lastRunTokens: number; estDailyTokens: number };
+  onRunNow: () => void; onToggle: () => void; onViewLogs: () => void; onEdit: () => void; running: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -768,6 +785,16 @@ function JobRow({ job, now, onRunNow, onToggle, onViewLogs, onEdit, running }: {
       </td>
       <td className="py-2 pr-3 text-xs font-mono text-muted-foreground">
         {formatDurationHMS(job.state.lastDurationMs)}
+      </td>
+      <td className="py-2 pr-3 text-xs text-muted-foreground">
+        {tokenData ? (
+          <span className="text-[#107DAC] font-medium">{formatTokensShort(tokenData.lastRunTokens)}</span>
+        ) : <span className="opacity-40">…</span>}
+      </td>
+      <td className="py-2 pr-3 text-xs text-muted-foreground">
+        {tokenData ? (
+          <span className="text-[#107DAC] font-medium">{formatTokensShort(tokenData.estDailyTokens)}</span>
+        ) : <span className="opacity-40">…</span>}
       </td>
       <td className="py-2 pr-3 text-xs text-[#107DAC] font-medium">
         {job.state.nextRunAtMs ? `in ${formatCountdown(Math.max(0, (job.state.nextRunAtMs || 0) - now))}` : '—'}

@@ -59,6 +59,44 @@ interface HistoryDay {
 
 // ─── Helpers ─────────────────────────────────────────────────
 
+// ─── Model release & knowledge cutoff dates ──────────────────
+
+const MODEL_DATES: Record<string, { released: string; cutoff?: string }> = {
+  'claude-opus-4-6':          { released: '2025-07', cutoff: '2025-04' },
+  'claude-sonnet-4-6':        { released: '2025-07', cutoff: '2025-04' },
+  'claude-haiku-4-5':         { released: '2025-05', cutoff: '2025-04' },
+  'claude-opus-4-5':          { released: '2025-05', cutoff: '2025-04' },
+  'claude-sonnet-4-5':        { released: '2025-05', cutoff: '2025-04' },
+  'claude-3-5-sonnet':        { released: '2024-10', cutoff: '2024-04' },
+  'claude-3-5-haiku':         { released: '2024-11', cutoff: '2024-07' },
+  'gemini-2.5-pro':           { released: '2025-03', cutoff: '2025-01' },
+  'gemini-2.5-flash':         { released: '2025-05', cutoff: '2025-01' },
+  'gemini-3-pro-preview':     { released: '2025-06', cutoff: '2025-04' },
+  'gemini-3-pro':             { released: '2025-06', cutoff: '2025-04' },
+  'gemma-3-27b-it':           { released: '2025-03' },
+  'grok-3':                   { released: '2025-02', cutoff: '2024-11' },
+  'grok-4':                   { released: '2025-06', cutoff: '2025-04' },
+  'kimi-latest':              { released: '2024-11' },
+  'kimi-k2-thinking-turbo':   { released: '2025-07' },
+  'deepseek-r1':              { released: '2025-01', cutoff: '2024-11' },
+  'llama-3.3-70b-instruct':   { released: '2024-12', cutoff: '2023-12' },
+  'qwen3-coder':              { released: '2025-06', cutoff: '2025-03' },
+  'minimax-m2.5':             { released: '2025-05' },
+  'minimax-m1':               { released: '2025-06' },
+};
+
+function getModelDates(modelId: string): { released: string; cutoff?: string } | null {
+  const id = modelId.toLowerCase();
+  for (const [key, val] of Object.entries(MODEL_DATES)) {
+    if (id.includes(key.replace(/[-.]/g, '').toLowerCase()) ||
+        id.endsWith(key) ||
+        id.includes(key)) {
+      return val;
+    }
+  }
+  return null;
+}
+
 function formatTokens(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
@@ -343,6 +381,16 @@ export function ModelTab() {
                         ? 'Free'
                         : `$${model.pricing.input.toFixed(2)} / $${model.pricing.output.toFixed(2)} per 1M`}
                     </div>
+                    {(() => {
+                      const dates = getModelDates(model.id);
+                      if (!dates) return null;
+                      return (
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5 border-t border-[#023F59]/5">
+                          <span>Released: <span className="text-[#21262A] font-medium">{dates.released}</span></span>
+                          {dates.cutoff && <span>Cutoff: <span className="text-[#21262A] font-medium">{dates.cutoff}</span></span>}
+                        </div>
+                      );
+                    })()}
                     {usage && (
                       <div className="text-[#107DAC] font-medium">
                         {usage.sessions} sessions · {formatTokens(usage.tokens)} tokens
@@ -417,64 +465,61 @@ export function ModelTab() {
 
 // ─── Token History Chart (Pure CSS) ──────────────────────────
 
+const CHART_HEIGHT = 120; // px
+
 function TokenHistoryChart({ days, period }: { days: HistoryDay[]; period: number }) {
   const maxTotal = Math.max(...days.map(d => d.total), 1);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-
-  // Determine label frequency
   const labelEvery = period <= 7 ? 1 : period <= 30 ? 3 : period <= 90 ? 7 : period <= 180 ? 14 : 30;
+  const barMinW = period <= 30 ? 16 : period <= 90 ? 10 : 7;
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto">
-        <div className="flex items-end gap-[2px]" style={{ height: 120, minWidth: days.length * 14 }}>
-          {days.map((day, i) => {
-            const heightPct = (day.total / maxTotal) * 100;
-            return (
-              <div
-                key={day.date}
-                className="relative flex flex-col items-center flex-1"
-                style={{ minWidth: 10 }}
-                onMouseEnter={() => setHoverIdx(i)}
-                onMouseLeave={() => setHoverIdx(null)}
-              >
+      <div className="overflow-x-auto pb-1">
+        <div style={{ minWidth: days.length * (barMinW + 2) }}>
+          {/* Chart area */}
+          <div className="relative flex items-end gap-[2px]" style={{ height: CHART_HEIGHT }}>
+            {days.map((day, i) => {
+              const barH = Math.max(Math.round((day.total / maxTotal) * CHART_HEIGHT), 3);
+              return (
                 <div
-                  className="w-full rounded-t transition-all cursor-pointer hover:opacity-100"
-                  style={{
-                    height: `${Math.max(heightPct, 1)}%`,
-                    backgroundColor: '#023F59',
-                    opacity: hoverIdx === i ? 1 : 0.7,
-                  }}
-                />
-                {/* Tooltip */}
-                {hoverIdx === i && (
-                  <div className="absolute bottom-full mb-2 z-20 bg-[#21262A] text-white text-[10px] rounded-md px-2.5 py-1.5 whitespace-nowrap shadow-lg pointer-events-none">
-                    <p className="font-semibold">{day.date}</p>
-                    <p>Total: {formatTokens(day.total)}</p>
-                    {Object.entries(day.byModel).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([model, tokens]) => (
-                      <p key={model} className="opacity-80">{getModelShortName(model)}: {formatTokens(tokens)}</p>
-                    ))}
-                  </div>
+                  key={day.date}
+                  className="relative flex-1 flex flex-col justify-end"
+                  style={{ minWidth: barMinW, height: CHART_HEIGHT }}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                >
+                  {/* Tooltip */}
+                  {hoverIdx === i && (
+                    <div className="absolute bottom-[calc(100%+4px)] left-1/2 -translate-x-1/2 z-20 bg-[#21262A] text-white text-[10px] rounded-md px-2.5 py-1.5 whitespace-nowrap shadow-lg pointer-events-none">
+                      <p className="font-semibold mb-0.5">{day.date}</p>
+                      <p>Total: {formatTokens(day.total)}</p>
+                      {Object.entries(day.byModel).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([model, tokens]) => (
+                        <p key={model} className="opacity-75">{getModelShortName(model)}: {formatTokens(tokens)}</p>
+                      ))}
+                    </div>
+                  )}
+                  <div
+                    className="w-full rounded-t cursor-pointer transition-opacity"
+                    style={{
+                      height: barH,
+                      backgroundColor: hoverIdx === i ? '#31D7DB' : '#023F59',
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {/* X-axis labels */}
+          <div className="flex gap-[2px] mt-1" style={{ height: 16 }}>
+            {days.map((day, i) => (
+              <div key={day.date} className="flex-1 text-center overflow-hidden" style={{ minWidth: barMinW }}>
+                {i % labelEvery === 0 && (
+                  <span className="text-[9px] text-muted-foreground leading-none">{day.date.slice(5)}</span>
                 )}
               </div>
-            );
-          })}
-        </div>
-        {/* X-axis labels */}
-        <div className="flex gap-[2px]" style={{ minWidth: days.length * 14 }}>
-          {days.map((day, i) => (
-            <div
-              key={day.date}
-              className="flex-1 text-center"
-              style={{ minWidth: 10 }}
-            >
-              {i % labelEvery === 0 && (
-                <span className="text-[9px] text-muted-foreground">
-                  {day.date.slice(5)}
-                </span>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
