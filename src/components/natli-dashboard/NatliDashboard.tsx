@@ -30,6 +30,11 @@ import {
   ListTodo,
   Brain,
   FileText,
+  Zap,
+  ArrowDown,
+  ArrowUp,
+  Monitor,
+  Thermometer,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -37,10 +42,19 @@ import { Button } from '../ui/button';
 
 interface HealthData {
   status: string;
-  alerts: string[];
-  cpu?: number;
-  memory?: number;
-  disk?: number;
+  timestamp: string;
+  alerts: Array<{ level: 'warning' | 'critical' | 'info'; type: string; message: string; timestamp: string }>;
+  cpu: number; memory: number; disk: number;
+  memTotalGb: number; memUsedGb: number; memAvailGb: number;
+  cpuTemp: number; gpuTemp: number; socTemp: number;
+  cpuPowerW: number; systemPowerW: number;
+  gpuPercent: number; gpuFreqMhz: number;
+  netInKbps: number; netOutKbps: number;
+  diskReadKbps: number; diskWriteKbps: number;
+  thermalState: string; socModel: string;
+  coreCount: number; eCores: number; pCores: number;
+  services: { openclaw: boolean; ollama: boolean; gateway: boolean };
+  topProcesses: Array<{ pid: number; command: string; cpu_percent: number; memory_percent: number; gpu_ms_per_sec?: number }>;
 }
 
 interface CronJob {
@@ -109,6 +123,7 @@ export function NatliDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshingModel, setRefreshingModel] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -127,9 +142,15 @@ export function NatliDashboard() {
     setModelConfig(mc);
     setLoading(false);
     setRefreshing(false);
+    setLastUpdated(new Date().toLocaleTimeString());
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    const interval = setInterval(loadData, 30_000);
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -171,16 +192,21 @@ export function NatliDashboard() {
         <p className="text-sm text-muted-foreground">
           Live monitoring for Nat Lee AI operations
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground">Last updated: {lastUpdated}</span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
@@ -290,10 +316,10 @@ export function NatliDashboard() {
               <CardContent className="space-y-3">
                 <ServiceStatusRow
                   name="OpenClaw"
-                  status={health?.status === 'ok' ? 'online' : 'unknown'}
+                  status={health?.services?.openclaw ? 'online' : health ? 'offline' : 'unknown'}
                 />
-                <ServiceStatusRow name="Ollama" status="unknown" port={11434} />
-                <ServiceStatusRow name="Gateway" status="unknown" port={18789} />
+                <ServiceStatusRow name="Ollama" status={health?.services?.ollama ? 'online' : health ? 'offline' : 'unknown'} port={11434} />
+                <ServiceStatusRow name="Gateway" status={health?.services?.gateway ? 'online' : health ? 'offline' : 'unknown'} port={18789} />
                 <Separator className="my-2" />
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
@@ -306,66 +332,201 @@ export function NatliDashboard() {
 
         {/* ─── System Tab ────────────────────────────────────── */}
         <TabsContent value="system" className="space-y-4">
-          {/* Active Model Config Status */}
+          {/* Row 1: Chip Info */}
           <Card className="border-[#31D7DB]/30 bg-gradient-to-r from-[#023F59]/5 to-[#31D7DB]/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
-                <Brain className="w-4 h-4 text-[#31D7DB]" />
-                Model Configuration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Primary Model</p>
-                  <p className="text-lg font-bold text-[#107DAC]">
-                    {modelConfig ? resolveModelLabel(modelConfig.primary) : '—'}
-                  </p>
+            <CardContent className="py-3">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-[#31D7DB]" />
+                  <span className="font-semibold text-[#21262A]">{health?.socModel ?? '—'}</span>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Failover Chain</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {modelConfig && modelConfig.fallbacks.length > 0 ? (
-                      modelConfig.fallbacks.map((f, i) => (
-                        <Badge key={i} className="bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30 text-xs">
-                          {resolveModelLabel(f)}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-sm text-muted-foreground">No failover configured</span>
-                    )}
-                  </div>
-                </div>
+                <Separator orientation="vertical" className="h-5" />
+                <span className="text-sm text-muted-foreground">
+                  {health?.coreCount ?? '—'} cores ({health?.eCores ?? '—'}E + {health?.pCores ?? '—'}P)
+                </span>
+                <Separator orientation="vertical" className="h-5" />
+                <Badge className={
+                  health?.thermalState === 'Normal'
+                    ? 'bg-emerald-100 text-emerald-700 border-0'
+                    : 'bg-amber-100 text-amber-700 border-0'
+                }>
+                  {health?.thermalState ?? '—'}
+                </Badge>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <GaugeCard label="CPU" value={health?.cpu ?? 0} icon={<Cpu className="w-4 h-4 text-[#31D7DB]" />} />
-            <GaugeCard label="Memory" value={health?.memory ?? 0} icon={<MemoryStick className="w-4 h-4 text-[#31D7DB]" />} />
-            <GaugeCard label="Disk" value={health?.disk ?? 0} icon={<HardDrive className="w-4 h-4 text-[#31D7DB]" />} />
+          {/* Row 2: Resource Gauges */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <GaugeCard label="CPU" value={health?.cpu ?? 0} icon={<Cpu className="w-4 h-4 text-[#31D7DB]" />} subtitle={`${health?.socModel ?? 'CPU'} · ${health?.eCores ?? 0}E+${health?.pCores ?? 0}P Cores`} />
+            <GaugeCard label="Memory" value={health?.memory ?? 0} icon={<MemoryStick className="w-4 h-4 text-[#31D7DB]" />} subtitle={`${health?.memUsedGb ?? 0} GB / ${health?.memTotalGb ?? 0} GB used`} />
+            <GaugeCard label="Disk" value={health?.disk ?? 0} icon={<HardDrive className="w-4 h-4 text-[#31D7DB]" />} subtitle="Used / Available" />
+            <GaugeCard label="GPU" value={health?.gpuPercent ?? 0} icon={<Monitor className="w-4 h-4 text-[#31D7DB]" />} subtitle={`${health?.gpuFreqMhz ?? 0} MHz`} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <ServiceCard name="OpenClaw" status={health?.status === 'ok' ? 'online' : 'offline'} />
-            <ServiceCard name="Ollama" status="unknown" endpoint="localhost:11434" />
-            <ServiceCard name="Gateway" status="unknown" endpoint="localhost:18789" />
+          {/* Row 3: Temperature & Power */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border-[#023F59]/20">
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Thermometer className="w-4 h-4 text-[#31D7DB]" />
+                  <span className="text-sm font-semibold text-[#21262A]">Temperature</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <TempIndicator label="CPU" value={health?.cpuTemp ?? 0} />
+                  <TempIndicator label="GPU" value={health?.gpuTemp ?? 0} />
+                  <TempIndicator label="SoC" value={health?.socTemp ?? 0} />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-[#023F59]/20">
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-[#31D7DB]" />
+                  <span className="text-sm font-semibold text-[#21262A]">Power</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#107DAC]">{health?.cpuPowerW ?? 0}<span className="text-sm font-normal ml-1">W</span></p>
+                    <p className="text-xs text-muted-foreground">CPU</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#107DAC]">{health?.systemPowerW ?? 0}<span className="text-sm font-normal ml-1">W</span></p>
+                    <p className="text-xs text-muted-foreground">System</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
+          {/* Row 4: Network & Disk I/O */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border-[#023F59]/20">
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity className="w-4 h-4 text-[#31D7DB]" />
+                  <span className="text-sm font-semibold text-[#21262A]">Network</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <ArrowDown className="w-3.5 h-3.5 text-emerald-500" />
+                    <div>
+                      <p className="text-lg font-bold text-[#107DAC]">{health?.netInKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
+                      <p className="text-xs text-muted-foreground">IN</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ArrowUp className="w-3.5 h-3.5 text-amber-500" />
+                    <div>
+                      <p className="text-lg font-bold text-[#107DAC]">{health?.netOutKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
+                      <p className="text-xs text-muted-foreground">OUT</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-[#023F59]/20">
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <HardDrive className="w-4 h-4 text-[#31D7DB]" />
+                  <span className="text-sm font-semibold text-[#21262A]">Disk I/O</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <ArrowDown className="w-3.5 h-3.5 text-emerald-500" />
+                    <div>
+                      <p className="text-lg font-bold text-[#107DAC]">{health?.diskReadKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
+                      <p className="text-xs text-muted-foreground">Read</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ArrowUp className="w-3.5 h-3.5 text-amber-500" />
+                    <div>
+                      <p className="text-lg font-bold text-[#107DAC]">{health?.diskWriteKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
+                      <p className="text-xs text-muted-foreground">Write</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Row 5: Service Status */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <ServiceCard name="OpenClaw" status={health?.services?.openclaw ? 'online' : 'offline'} />
+            <ServiceCard name="Ollama" status={health?.services?.ollama ? 'online' : 'offline'} endpoint=":11434" />
+            <ServiceCard name="Gateway" status={health?.services?.gateway ? 'online' : 'offline'} endpoint=":18789" />
+          </div>
+
+          {/* Row 6: Top Processes */}
+          {health?.topProcesses && health.topProcesses.length > 0 && (
+            <Card className="border-[#023F59]/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#31D7DB]" />
+                  Top Processes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-[#023F59]/10">
+                      <TableHead className="w-[60px]">PID</TableHead>
+                      <TableHead>Process</TableHead>
+                      <TableHead className="text-right">CPU%</TableHead>
+                      <TableHead className="text-right">Memory%</TableHead>
+                      <TableHead className="text-right">GPU ms/s</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {health.topProcesses
+                      .sort((a, b) => b.cpu_percent - a.cpu_percent)
+                      .slice(0, 8)
+                      .map((proc) => (
+                        <TableRow key={proc.pid} className={proc.cpu_percent > 10 ? 'bg-amber-50/60' : ''}>
+                          <TableCell className="font-mono text-xs">{proc.pid}</TableCell>
+                          <TableCell className="font-medium text-sm truncate max-w-[200px]">{proc.command}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">{proc.cpu_percent.toFixed(1)}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">{proc.memory_percent.toFixed(1)}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">{proc.gpu_ms_per_sec != null ? proc.gpu_ms_per_sec.toFixed(1) : '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Row 7: Alerts */}
           {health && health.alerts.length > 0 && (
             <Card className="border-red-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
-                  Alerts
+                  System Alerts
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {health.alerts.map((alert, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm text-red-700">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      {alert}
+                    <div
+                      key={i}
+                      className={`flex items-center gap-2 text-sm px-3 py-2 rounded-md border ${
+                        alert.level === 'critical'
+                          ? 'bg-red-50 border-red-200 text-red-700'
+                          : 'bg-amber-50 border-amber-200 text-amber-700'
+                      }`}
+                    >
+                      <Badge className={`text-[10px] uppercase font-bold px-1.5 py-0 ${
+                        alert.level === 'critical' ? 'bg-red-600 text-white border-0' : 'bg-amber-500 text-white border-0'
+                      }`}>
+                        {alert.level}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] uppercase font-medium px-1.5 py-0 border-[#31D7DB] text-[#107DAC]">
+                        {alert.type}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground shrink-0">{alert.timestamp}</span>
+                      <span className="flex-1">{alert.message}</span>
                     </div>
                   ))}
                 </div>
@@ -511,10 +672,11 @@ function KPICard({ title, value, icon, description }: {
   );
 }
 
-function GaugeCard({ label, value, icon }: {
+function GaugeCard({ label, value, icon, subtitle }: {
   label: string;
   value: number;
   icon: React.ReactNode;
+  subtitle?: string;
 }) {
   const color = value > 80 ? 'text-red-500' : value > 60 ? 'text-amber-500' : 'text-[#107DAC]';
   return (
@@ -528,8 +690,19 @@ function GaugeCard({ label, value, icon }: {
           <span className={`text-2xl font-bold ${color}`}>{value}%</span>
         </div>
         <Progress value={value} className="h-2 [&>div]:bg-[#31D7DB]" />
+        {subtitle && <p className="text-xs text-muted-foreground mt-2">{subtitle}</p>}
       </CardContent>
     </Card>
+  );
+}
+
+function TempIndicator({ label, value }: { label: string; value: number }) {
+  const color = value > 75 ? 'text-red-500' : value > 60 ? 'text-amber-500' : 'text-emerald-500';
+  return (
+    <div className="text-center">
+      <p className={`text-2xl font-bold ${color}`}>{value}<span className="text-sm font-normal">°C</span></p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
   );
 }
 

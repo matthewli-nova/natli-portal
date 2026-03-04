@@ -27,41 +27,142 @@ function execCommand(cmd: string): Promise<string> {
 }
 
 // Health
+// Format alert timestamp as ddmmyy hhmmss
+function fmtAlertTime(d: Date = new Date()): string {
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yy = String(d.getFullYear()).slice(-2);
+  const hh = String(d.getHours()).padStart(2,'0');
+  const min = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  return `${dd}${mm}${yy} ${hh}${min}${ss}`;
+}
+
+interface Alert { level: 'warning' | 'critical' | 'info'; type: string; message: string; timestamp: string; }
+
 app.get('/api/health', async (_req, res) => {
   try {
-    const healthScript = '/Users/natlee/.openclaw/workspace/scripts/system_health.py';
-    let health: { status: string; alerts: string[]; cpu?: number; memory?: number; disk?: number } = { status: 'ok', alerts: [] };
+    const now = new Date();
+    const alerts: Alert[] = [];
 
+    // Run mactop for rich system data
+    let mactopData: Record<string, unknown> | null = null;
     try {
-      const output = await execCommand(`python3 "${healthScript}"`);
-      if (output.toLowerCase().includes('no alerts')) {
-        health = { status: 'ok', alerts: [] };
-      } else {
-        health = { status: 'warning', alerts: output.split('\n').filter(Boolean) };
-      }
-    } catch {
-      health = { status: 'unknown', alerts: ['Health script not available'] };
+      const mactopOut = await execCommand('PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH mactop --headless --count 1 --format json');
+      const parsed = JSON.parse(mactopOut);
+      mactopData = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch { /* fallback to os module */ }
+
+    // Extract metrics
+    let cpuPercent = 0, memPercent = 0, diskPercent = 0;
+    let memTotalGb = 0, memUsedGb = 0, memAvailGb = 0;
+    let cpuTemp = 0, gpuTemp = 0, socTemp = 0;
+    let cpuPowerW = 0, systemPowerW = 0;
+    let gpuPercent = 0, gpuFreqMhz = 0;
+    let netInKbps = 0, netOutKbps = 0;
+    let diskReadKbps = 0, diskWriteKbps = 0;
+    let thermalState = 'Normal';
+    let socModel = 'Unknown';
+    let coreCount = 0, eCores = 0, pCores = 0;
+    let topProcesses: unknown[] = [];
+
+    if (mactopData) {
+      const soc = mactopData.soc_metrics as Record<string,number> ?? {};
+      const mem = mactopData.memory as Record<string,number> ?? {};
+      const net = mactopData.net_disk as Record<string,number> ?? {};
+      const info = mactopData.system_info as Record<string,unknown> ?? {};
+
+      cpuPercent = Math.round((mactopData.cpu_usage as number) ?? 0);
+      gpuPercent = Math.round((mactopData.gpu_usage as number) ?? 0);
+      gpuFreqMhz = Math.round(soc.gpu_freq_mhz ?? 0);
+      cpuTemp = Math.round(soc.cpu_temp ?? soc.soc_temp ?? 0);
+      gpuTemp = Math.round(soc.gpu_temp ?? 0);
+      socTemp = Math.round(soc.soc_temp ?? 0);
+      cpuPowerW = Math.round((soc.cpu_power ?? 0) * 10) / 10;
+      systemPowerW = Math.round((soc.system_power ?? 0) * 10) / 10;
+      thermalState = (mactopData.thermal_state as string) ?? 'Normal';
+      socModel = (info.name as string) ?? 'Apple Silicon';
+      coreCount = (info.core_count as number) ?? 0;
+      eCores = (info.e_core_count as number) ?? 0;
+      pCores = (info.p_core_count as number) ?? 0;
+
+      const totalMem = mem.total ?? 0;
+      const usedMem = mem.used ?? 0;
+      const availMem = mem.available ?? 0;
+      memPercent = totalMem > 0 ? Math.round((usedMem / totalMem) * 100) : 0;
+      memTotalGb = Math.round((totalMem / 1073741824) * 10) / 10;
+      memUsedGb = Math.round((usedMem / 1073741824) * 10) / 10;
+      memAvailGb = Math.round((availMem / 1073741824) * 10) / 10;
+
+      netInKbps = Math.round((net.in_bytes_per_sec ?? 0) / 1024);
+      netOutKbps = Math.round((net.out_bytes_per_sec ?? 0) / 1024);
+      diskReadKbps = Math.round(net.read_kbytes_per_sec ?? 0);
+      diskWriteKbps = Math.round(net.write_kbytes_per_sec ?? 0);
+
+      topProcesses = ((mactopData.processes as unknown[]) ?? []).slice(0, 8);
+    } else {
+      // Fallback: node os module
+      const os = await import('os');
+      const cpus = os.cpus();
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      cpuPercent = Math.round(cpus.reduce((acc, cpu) => {
+        const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+        return acc + ((total - cpu.times.idle) / total) * 100;
+      }, 0) / cpus.length);
+      memPercent = Math.round(((totalMem - freeMem) / totalMem) * 100);
+      memTotalGb = Math.round((totalMem / 1073741824) * 10) / 10;
+      memUsedGb = Math.round(((totalMem - freeMem) / 1073741824) * 10) / 10;
+      memAvailGb = Math.round((freeMem / 1073741824) * 10) / 10;
     }
 
-    // System stats via node os
-    const os = await import('os');
-    const cpus = os.cpus();
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    health.cpu = Math.round(cpus.reduce((acc, cpu) => {
-      const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
-      return acc + ((total - cpu.times.idle) / total) * 100;
-    }, 0) / cpus.length);
-    health.memory = Math.round(((totalMem - freeMem) / totalMem) * 100);
-
+    // Disk usage via df
     try {
-      const diskOutput = await execCommand("df -h / | tail -1 | awk '{print $5}'");
-      health.disk = parseInt(diskOutput.replace('%', ''), 10);
-    } catch {
-      health.disk = 0;
-    }
+      const dfOut = await execCommand("/bin/df -k / | tail -1");
+      const parts = dfOut.trim().split(/\s+/);
+      const used = parseInt(parts[2], 10);
+      const avail = parseInt(parts[3], 10);
+      const total = used + avail;
+      diskPercent = total > 0 ? Math.round((used / total) * 100) : 0;
+    } catch { diskPercent = 0; }
 
-    res.json(health);
+    // Service health checks
+    let openclawOk = false, ollamaOk = false, gatewayOk = false;
+    try { await execCommand('openclaw gateway status'); openclawOk = true; } catch { /* down */ }
+    try { const r = await fetch('http://localhost:11434/api/tags', {signal: AbortSignal.timeout(3000)}); ollamaOk = r.ok; } catch { /* down */ }
+    try { const r = await fetch('http://localhost:18789/', {signal: AbortSignal.timeout(3000)}); gatewayOk = r.ok || r.status < 500; } catch { /* down */ }
+
+    // Build alerts with level, type, timestamp (ddmmyy hhmmss)
+    if (cpuPercent > 85) alerts.push({ level: 'critical', type: 'CPU', message: `CPU usage critical: ${cpuPercent}%`, timestamp: fmtAlertTime(now) });
+    else if (cpuPercent > 70) alerts.push({ level: 'warning', type: 'CPU', message: `CPU usage high: ${cpuPercent}%`, timestamp: fmtAlertTime(now) });
+    if (memPercent > 90) alerts.push({ level: 'critical', type: 'Memory', message: `Memory critical: ${memPercent}% used (${memUsedGb}GB / ${memTotalGb}GB)`, timestamp: fmtAlertTime(now) });
+    else if (memPercent > 80) alerts.push({ level: 'warning', type: 'Memory', message: `Memory high: ${memPercent}% used`, timestamp: fmtAlertTime(now) });
+    if (diskPercent > 90) alerts.push({ level: 'critical', type: 'Disk', message: `Disk critical: ${diskPercent}% used`, timestamp: fmtAlertTime(now) });
+    else if (diskPercent > 75) alerts.push({ level: 'warning', type: 'Disk', message: `Disk usage high: ${diskPercent}%`, timestamp: fmtAlertTime(now) });
+    if (cpuTemp > 80) alerts.push({ level: 'warning', type: 'Temperature', message: `CPU temp high: ${cpuTemp}°C`, timestamp: fmtAlertTime(now) });
+    if (thermalState !== 'Normal') alerts.push({ level: 'warning', type: 'Thermal', message: `Thermal state: ${thermalState}`, timestamp: fmtAlertTime(now) });
+    if (!openclawOk) alerts.push({ level: 'critical', type: 'Service', message: 'OpenClaw service not responding', timestamp: fmtAlertTime(now) });
+    if (!ollamaOk) alerts.push({ level: 'warning', type: 'Service', message: 'Ollama not responding on :11434', timestamp: fmtAlertTime(now) });
+    if (!gatewayOk) alerts.push({ level: 'warning', type: 'Service', message: 'Gateway not responding on :18789', timestamp: fmtAlertTime(now) });
+
+    res.json({
+      status: alerts.some(a => a.level === 'critical') ? 'critical' : alerts.length > 0 ? 'warning' : 'ok',
+      timestamp: now.toISOString(),
+      alerts,
+      cpu: cpuPercent,
+      memory: memPercent,
+      disk: diskPercent,
+      memTotalGb, memUsedGb, memAvailGb,
+      cpuTemp, gpuTemp, socTemp,
+      cpuPowerW, systemPowerW,
+      gpuPercent, gpuFreqMhz,
+      netInKbps, netOutKbps,
+      diskReadKbps, diskWriteKbps,
+      thermalState, socModel,
+      coreCount, eCores, pCores,
+      services: { openclaw: openclawOk, ollama: ollamaOk, gateway: gatewayOk },
+      topProcesses,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     res.status(500).json({ error: message });
