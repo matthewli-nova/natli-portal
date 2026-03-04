@@ -355,15 +355,20 @@ function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 
 function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
   const [content, setContent] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [savedLines, setSavedLines] = useState<number | null>(null);
 
   useState(() => {
     fetch('/api/memory/file')
       .then(r => r.json() as Promise<{ ok: boolean; content?: string; error?: string }>)
       .then(d => {
-        if (d.ok && d.content) setContent(d.content);
+        if (d.ok && d.content) { setContent(d.content); setEditContent(d.content); }
         else setError(d.error ?? 'Failed to load');
       })
       .catch(() => setError('Network error'))
@@ -371,87 +376,137 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
   });
 
   const handleCopy = () => {
-    if (!content) return;
+    const src = editing ? editContent : (content ?? '');
+    if (!src) return;
     try {
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(content).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        });
+        navigator.clipboard.writeText(src).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
       } else {
         const ta = document.createElement('textarea');
-        ta.value = content;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        ta.value = src; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        setCopied(true); setTimeout(() => setCopied(false), 2000);
       }
     } catch { /* ignore */ }
   };
 
-  // Close on backdrop click
-  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
+  const handleEdit = () => { setEditContent(content ?? ''); setEditing(true); setSaveError(''); };
+  const handleCancel = () => { setEditing(false); setSaveError(''); };
+
+  const handleSave = async () => {
+    setSaving(true); setSaveError('');
+    try {
+      const res = await fetch('/api/memory/file', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editContent }),
+      });
+      const data = await res.json() as { ok: boolean; lines?: number; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error ?? 'Save failed');
+      setContent(editContent);
+      setSavedLines(data.lines ?? null);
+      setEditing(false);
+      setTimeout(() => setSavedLines(null), 3000);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Unknown error');
+    }
+    setSaving(false);
   };
 
-  const lines = content ? content.split('\n').length : 0;
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget && !editing) onClose();
+  };
+
+  const displayContent = editing ? editContent : (content ?? '');
+  const lines = displayContent.split('\n').length;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/30 z-50 flex justify-end"
-      onMouseDown={handleBackdrop}
-    >
+    <div className="fixed inset-0 bg-black/30 z-50 flex justify-end" onMouseDown={handleBackdrop}>
       <div className="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10 shrink-0">
           <div className="flex items-center gap-2.5">
             <Brain className="w-5 h-5 text-[#107DAC]" />
             <div>
-              <p className="font-semibold text-[#21262A] text-sm">MEMORY.md</p>
+              <p className="font-semibold text-[#21262A] text-sm">MEMORY.md {editing && <span className="text-amber-500 text-xs font-normal ml-1">— Editing</span>}</p>
               <p className="text-[10px] text-muted-foreground font-mono">/Users/natlee/.openclaw/workspace/MEMORY.md</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {content && (
-              <Badge className="bg-[#023F59]/10 text-[#023F59] border-0 text-xs">{lines} lines</Badge>
+          <div className="flex items-center gap-1.5">
+            <Badge className={`border-0 text-xs ${lines >= 145 ? 'bg-red-100 text-red-700' : 'bg-[#023F59]/10 text-[#023F59]'}`}>
+              {lines} lines
+            </Badge>
+            {savedLines !== null && (
+              <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">✓ Saved ({savedLines} lines)</Badge>
             )}
-            <button
-              onClick={handleCopy}
-              disabled={!content}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#107DAC] px-2 py-1 rounded hover:bg-[#023F59]/5 transition-colors disabled:opacity-40"
-            >
-              {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded hover:bg-[#023F59]/5 text-muted-foreground hover:text-[#21262A] transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {!editing && (
+              <button onClick={handleCopy} disabled={!content}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-[#107DAC] px-2 py-1 rounded hover:bg-[#023F59]/5 transition-colors disabled:opacity-40">
+                {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            )}
+            {!editing && content && (
+              <button onClick={handleEdit}
+                className="flex items-center gap-1 text-xs text-[#107DAC] hover:text-[#023F59] px-2 py-1 rounded hover:bg-[#023F59]/5 transition-colors font-medium">
+                <FileCode className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            )}
+            {!editing && (
+              <button onClick={onClose} className="p-1.5 rounded hover:bg-[#023F59]/5 text-muted-foreground hover:text-[#21262A] transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Save error */}
+        {saveError && (
+          <div className="mx-5 mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 shrink-0">
+            ❌ {saveError}
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5">
           {loading && (
             <div className="space-y-2 animate-pulse">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="h-3 bg-[#023F59]/5 rounded" style={{ width: `${60 + Math.random() * 35}%` }} />
+                <div key={i} className="h-3 bg-[#023F59]/5 rounded" style={{ width: `${60 + (i * 7) % 35}%` }} />
               ))}
             </div>
           )}
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">
-              ❌ {error}
-            </div>
+          {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">❌ {error}</div>}
+          {!loading && !error && editing && (
+            <textarea
+              value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              className="w-full h-full min-h-[500px] text-xs font-mono text-[#21262A] leading-relaxed resize-none border border-[#023F59]/20 rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-[#107DAC] bg-[#023F59]/[0.02]"
+              spellCheck={false}
+            />
           )}
-          {content && (
+          {!loading && !error && !editing && content && (
             <pre className="text-xs font-mono text-[#21262A] leading-relaxed whitespace-pre-wrap break-words">{content}</pre>
           )}
         </div>
+
+        {/* Edit footer */}
+        {editing && (
+          <div className="flex items-center justify-between px-5 py-4 border-t border-[#023F59]/10 shrink-0 bg-[#023F59]/[0.02]">
+            <p className="text-[10px] text-muted-foreground">⚠ A backup (.bak) is created before saving.</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleCancel} className="border-[#023F59]/20" disabled={saving}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-[#023F59] text-white hover:bg-[#022F44]">
+                {saving ? <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
+                {saving ? 'Saving…' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

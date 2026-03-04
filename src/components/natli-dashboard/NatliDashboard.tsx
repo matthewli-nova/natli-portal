@@ -31,6 +31,7 @@ import {
   Hash,
   Archive,
   BookOpen,
+  Power,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -130,6 +131,8 @@ export function NatliDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshingModel, setRefreshingModel] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [gatewayRestarting, setGatewayRestarting] = useState(false);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -168,6 +171,19 @@ export function NatliDashboard() {
     const mc = await fetchApi<ModelConfig>('/api/config/model');
     setModelConfig(mc);
     setRefreshingModel(false);
+  };
+
+  const handleGatewayRestart = async () => {
+    setShowRestartConfirm(false);
+    setGatewayRestarting(true);
+    try {
+      await fetch('/api/gateway/restart', { method: 'POST' });
+    } catch { /* gateway will restart — connection drop is expected */ }
+    // Wait 5s for gateway to come back, then reload dashboard data
+    setTimeout(() => {
+      setGatewayRestarting(false);
+      loadData();
+    }, 5000);
   };
 
   if (loading) return <DashboardSkeleton />;
@@ -212,7 +228,43 @@ export function NatliDashboard() {
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowRestartConfirm(true)}
+            disabled={gatewayRestarting}
+            className="border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+          >
+            <Power className={`w-3.5 h-3.5 mr-1.5 ${gatewayRestarting ? 'animate-pulse' : ''}`} />
+            {gatewayRestarting ? 'Restarting…' : 'Restart Gateway'}
+          </Button>
         </div>
+
+        {/* Restart Confirm Dialog */}
+        {showRestartConfirm && (
+          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <Power className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#21262A]">Restart Gateway?</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">All active sessions will be briefly interrupted. Takes ~5 seconds.</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" size="sm" onClick={() => setShowRestartConfirm(false)} className="border-[#023F59]/20">
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleGatewayRestart} className="bg-red-600 text-white hover:bg-red-700">
+                  <Power className="w-3.5 h-3.5 mr-1.5" />
+                  Yes, Restart
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="overview" className="w-full">

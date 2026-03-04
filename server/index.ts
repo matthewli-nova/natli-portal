@@ -723,6 +723,40 @@ app.get('/api/memory/file', async (_req, res) => {
   }
 });
 
+// Memory — Save MEMORY.md content
+app.put('/api/memory/file', async (req, res) => {
+  try {
+    const { content } = req.body as { content: string };
+    if (typeof content !== 'string') {
+      return res.status(400).json({ ok: false, error: 'content is required' });
+    }
+    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    // Backup before overwrite
+    const backupPath = memPath + '.bak';
+    try { await fs.copyFile(memPath, backupPath); } catch { /* ok if no existing file */ }
+    await fs.writeFile(memPath, content, 'utf-8');
+    const lines = content.split('\n').length;
+    res.json({ ok: true, lines });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+// Gateway — Restart
+app.post('/api/gateway/restart', async (_req, res) => {
+  try {
+    // Fire restart non-blocking — response goes out first, then gateway restarts
+    setTimeout(() => {
+      exec('PATH=/opt/homebrew/bin:$PATH openclaw gateway restart', { timeout: 10000 }, () => {});
+    }, 500);
+    res.json({ ok: true, message: 'Gateway restart initiated' });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
 // Agents
 app.get('/api/agents', async (_req, res) => {
   try {
