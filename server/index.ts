@@ -261,12 +261,14 @@ app.get('/api/config/keys', async (_req, res) => {
 
     const keys = Object.entries(providers).map(([provider, config]) => {
       const apiKey = (config.apiKey as string) || '';
+      const updatedAt = (config._keyUpdatedAt as string) || null;
       return {
         provider,
         label: ({ openrouter: 'OpenRouter', moonshot: 'Moonshot (Kimi)', anthropic: 'Anthropic' } as Record<string,string>)[provider] ?? (provider.charAt(0).toUpperCase() + provider.slice(1)),
         keyPreview: apiKey ? maskKey(apiKey) : '',
         keyLength: apiKey.length,
         hasKey: !!apiKey,
+        updatedAt,
       };
     });
 
@@ -300,8 +302,23 @@ app.put('/api/config/keys/:provider', async (req, res) => {
     if (!data.models.providers) data.models.providers = {};
     if (!data.models.providers[provider]) data.models.providers[provider] = {};
     data.models.providers[provider].apiKey = apiKey;
+    data.models.providers[provider]._keyUpdatedAt = new Date().toISOString();
     await fs.writeFile(OPENCLAW_CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
     res.json({ ok: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Return full key for copy (owner-only local portal)
+app.get('/api/config/keys/:provider/value', async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    const apiKey = data.models?.providers?.[provider]?.apiKey || '';
+    if (!apiKey) { res.status(404).json({ error: 'No key set' }); return; }
+    res.json({ apiKey });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     res.status(500).json({ error: message });

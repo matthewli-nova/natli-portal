@@ -9,6 +9,8 @@ import {
   Loader2,
   ShieldCheck,
   KeyRound,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
@@ -28,6 +30,7 @@ interface ProviderKey {
   keyLength: number;
   hasKey: boolean;
   managed?: boolean;
+  updatedAt?: string | null;
 }
 
 function KeyCard({
@@ -46,6 +49,27 @@ function KeyCard({
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      const res = await fetch(`/api/config/keys/${entry.provider}/value`);
+      if (!res.ok) throw new Error('Failed to fetch key');
+      const { apiKey } = await res.json() as { apiKey: string };
+      await navigator.clipboard.writeText(apiKey);
+      setCopied(true);
+      toast.success('API key copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy key');
+    }
+  };
+
+  const formatUpdatedAt = (iso: string | null | undefined) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-HK', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
 
   const handleSaveEdit = async () => {
     if (!editValue.trim()) return;
@@ -142,9 +166,16 @@ function KeyCard({
               </Button>
             </div>
           ) : (
-            <p className="text-sm font-mono text-muted-foreground tracking-wider">
-              {revealed ? revealedDisplay : maskedDisplay}
-            </p>
+            <div className="space-y-1">
+              <p className="text-sm font-mono text-muted-foreground tracking-wider">
+                {revealed ? revealedDisplay : maskedDisplay}
+              </p>
+              {entry.updatedAt && (
+                <p className="text-[11px] text-muted-foreground">
+                  Last updated: {formatUpdatedAt(entry.updatedAt)}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -159,6 +190,16 @@ function KeyCard({
               disabled={!entry.hasKey}
             >
               {revealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              className="h-8 w-8 p-0"
+              title="Copy full key"
+              disabled={!entry.hasKey}
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>
             <Button
               size="sm"
