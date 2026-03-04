@@ -6,20 +6,15 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
+import { CronSummaryCard } from '../natli-scheduler/NatliSchedulerPage';
+
+const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
+
 import {
   Activity,
   Clock,
   Database,
   HardDrive,
-  Play,
   RefreshCw,
   Server,
   Timer,
@@ -340,6 +335,9 @@ export function NatliDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* [G] Cron Summary Card */}
+          <CronSummaryCard />
         </TabsContent>
 
         {/* ─── System Tab ────────────────────────────────────── */}
@@ -716,59 +714,9 @@ export function NatliDashboard() {
 
         {/* ─── Schedule Tab ──────────────────────────────────── */}
         <TabsContent value="schedule" className="space-y-4">
-          <Card className="border-[#023F59]/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-[#21262A]">Cron Jobs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {crons.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  No cron jobs found. Run `openclaw cron list --json` to verify.
-                </p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-[#023F59]/10">
-                      <TableHead>Name</TableHead>
-                      <TableHead>Schedule</TableHead>
-                      <TableHead>Last Run</TableHead>
-                      <TableHead>Next Run</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {crons.map((cron, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{cron.name}</TableCell>
-                        <TableCell className="font-mono text-xs">{cron.schedule}</TableCell>
-                        <TableCell className="text-xs">
-                          {cron.last_run ? new Date(cron.last_run).toLocaleString() : '—'}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {cron.next_run ? new Date(cron.next_run).toLocaleString() : '—'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={
-                            cron.enabled !== false
-                              ? 'bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30'
-                              : 'bg-gray-100 text-gray-500 border-0'
-                          }>
-                            {cron.enabled !== false ? 'Enabled' : 'Disabled'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="hover:text-[#31D7DB]">
-                            <Play className="w-3 h-3" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Scheduler…</div>}>
+            <LazyNatliSchedulerPage />
+          </Suspense>
         </TabsContent>
 
         {/* ─── Task Tab ──────────────────────────────────────── */}

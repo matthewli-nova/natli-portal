@@ -7,6 +7,7 @@ import { RegistrationLinkManager } from './components/registration-links/Registr
 import { NatliSettingsPage } from './components/natli-settings/NatliSettingsPage';
 import { NatliDashboard } from './components/natli-dashboard/NatliDashboard';
 import { NatliSkillsPage } from './components/natli-skills/NatliSkillsPage';
+import { NatliSchedulerPage } from './components/natli-scheduler/NatliSchedulerPage';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -524,6 +525,8 @@ export default function App() {
                   <NatliSettingsPage />
                 ) : platform === 'natli' && activeItem === 'natli-skills' ? (
                   <NatliSkillsPage />
+                ) : platform === 'natli' && activeItem === 'natli-scheduler' ? (
+                  <NatliSchedulerPage />
                 ) : platform === 'natli' ? (
                   <PagePlaceholder />
                 ) : activeItem === 'dashboard' ? (

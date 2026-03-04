@@ -265,6 +265,164 @@ app.get('/api/crons', async (_req, res) => {
   }
 });
 
+// ─── Cron Scheduler Endpoints ─────────────────────────────────────────────
+
+function parseScheduleDescription(schedule: Record<string, unknown>): string {
+  const kind = schedule.kind as string;
+  if (kind === 'every') {
+    const ms = schedule.everyMs as number;
+    if (ms >= 86400000) return `Every ${Math.round(ms / 86400000)}d`;
+    if (ms >= 3600000) return `Every ${Math.round(ms / 3600000)}h`;
+    if (ms >= 60000) return `Every ${Math.round(ms / 60000)}m`;
+    return `Every ${Math.round(ms / 1000)}s`;
+  }
+  if (kind === 'cron') {
+    const expr = schedule.expr as string;
+    const tz = (schedule.tz as string) || 'UTC';
+    const tzLabel = tz.includes('Hong_Kong') ? 'HKT' : tz.replace(/.*\//, '');
+    const parts = expr.split(' ');
+    if (parts.length >= 5) {
+      const [min, hour, dom, mon, dow] = parts;
+      const timeStr = `${hour.padStart(2, '0')}:${min.padStart(2, '0')}`;
+      if (dom === '*' && mon === '*') {
+        if (dow === '*') return `Daily ${timeStr} ${tzLabel}`;
+        if (dow === '1-5') return `Weekdays ${timeStr} ${tzLabel}`;
+        if (dow === '0,6') return `Weekends ${timeStr} ${tzLabel}`;
+        if (dow === '0') return `Sundays ${timeStr} ${tzLabel}`;
+        if (dow === '1') return `Mondays ${timeStr} ${tzLabel}`;
+        return `${dow} ${timeStr} ${tzLabel}`;
+      }
+    }
+    return `Cron: ${expr}`;
+  }
+  if (kind === 'at') {
+    const at = schedule.at as number;
+    return `One-shot ${new Date(at).toISOString()}`;
+  }
+  return 'Unknown';
+}
+
+// GET /api/cron/jobs — all jobs with parsed schedule
+app.get('/api/cron/jobs', async (_req, res) => {
+  try {
+    const output = await execCommand('openclaw cron list --json');
+    const data = JSON.parse(output);
+    const jobs = (data.jobs || []).map((job: Record<string, unknown>) => ({
+      ...job,
+      scheduleDescription: parseScheduleDescription(job.schedule as Record<string, unknown>),
+    }));
+    res.json({ jobs, total: data.total ?? jobs.length });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message, jobs: [] });
+  }
+});
+
+// GET /api/cron/jobs/:id/runs — run history
+app.get('/api/cron/jobs/:id/runs', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 20;
+    const output = await execCommand(`openclaw cron runs --id ${req.params.id} --limit ${limit}`);
+    res.json(JSON.parse(output));
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message, entries: [] });
+  }
+});
+
+// POST /api/cron/jobs/:id/run — trigger now
+app.post('/api/cron/jobs/:id/run', async (req, res) => {
+  try {
+    const output = await execCommand(`openclaw cron run ${req.params.id}`);
+    res.json({ ok: true, output });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+// PATCH /api/cron/jobs/:id — enable/disable toggle
+app.patch('/api/cron/jobs/:id', async (req, res) => {
+  try {
+    const { enabled } = req.body as { enabled: boolean };
+    const cmd = enabled ? 'enable' : 'disable';
+    const output = await execCommand(`openclaw cron ${cmd} ${req.params.id}`);
+    res.json({ ok: true, output });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+// GET /api/cron/timeline — past+upcoming firings ±12h
+app.get('/api/cron/timeline', async (_req, res) => {
+  try {
+    const output = await execCommand('openclaw cron list --json');
+    const data = JSON.parse(output);
+    const now = Date.now();
+    const windowMs = 12 * 60 * 60 * 1000; // 12h
+    const startMs = now - windowMs;
+    const endMs = now + windowMs;
+    const timeline: Array<{ jobId: string; jobName: string; firedAtMs: number; status: string }> = [];
+
+    for (const job of data.jobs || []) {
+      if (!job.enabled) continue;
+      const sched = job.schedule as Record<string, unknown>;
+      const state = job.state as Record<string, unknown>;
+
+      // Add last run if within window
+      if (state.lastRunAtMs && (state.lastRunAtMs as number) >= startMs && (state.lastRunAtMs as number) <= endMs) {
+        timeline.push({
+          jobId: job.id,
+          jobName: job.name,
+          firedAtMs: state.lastRunAtMs as number,
+          status: (state.lastStatus as string) || 'unknown',
+        });
+      }
+
+      // Add next run if within window
+      if (state.nextRunAtMs && (state.nextRunAtMs as number) >= startMs && (state.nextRunAtMs as number) <= endMs) {
+        timeline.push({
+          jobId: job.id,
+          jobName: job.name,
+          firedAtMs: state.nextRunAtMs as number,
+          status: 'scheduled',
+        });
+      }
+
+      // For 'every' kind, compute additional firings within window
+      if (sched.kind === 'every') {
+        const everyMs = sched.everyMs as number;
+        const anchorMs = (sched.anchorMs as number) || (state.lastRunAtMs as number) || now;
+        if (everyMs > 0 && everyMs < windowMs * 2) {
+          // Find first firing at or after startMs
+          const elapsed = startMs - anchorMs;
+          const periods = Math.ceil(elapsed / everyMs);
+          let t = anchorMs + periods * everyMs;
+          while (t <= endMs) {
+            const existing = timeline.find(e => e.jobId === job.id && Math.abs(e.firedAtMs - t) < 60000);
+            if (!existing) {
+              timeline.push({
+                jobId: job.id,
+                jobName: job.name,
+                firedAtMs: t,
+                status: t <= now ? 'ok' : 'scheduled',
+              });
+            }
+            t += everyMs;
+          }
+        }
+      }
+    }
+
+    timeline.sort((a, b) => a.firedAtMs - b.firedAtMs);
+    res.json({ timeline, windowStartMs: startMs, windowEndMs: endMs, nowMs: now });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message, timeline: [] });
+  }
+});
+
 // Sessions
 app.get('/api/sessions', async (_req, res) => {
   try {
