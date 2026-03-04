@@ -687,11 +687,10 @@ app.get('/api/memory/stats', async (_req, res) => {
 // Memory — Force Reindex
 app.post('/api/memory/reindex', async (_req, res) => {
   try {
-    const { stdout, stderr } = await execAsync(
-      'openclaw memory index --force',
-      { env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH}` } }
+    const output = await execCommand(
+      `PATH=/opt/homebrew/bin:$PATH openclaw memory index --force`
     );
-    res.json({ ok: true, output: stdout || stderr });
+    res.json({ ok: true, output });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     res.status(500).json({ ok: false, error: message });
@@ -702,11 +701,22 @@ app.post('/api/memory/reindex', async (_req, res) => {
 app.post('/api/memory/janitor', async (_req, res) => {
   try {
     const janitorPath = '/Users/natlee/.openclaw/workspace/scripts/memory-janitor.py';
-    const { stdout, stderr } = await execAsync(
-      `python3 "${janitorPath}"`,
-      { env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH}` }, timeout: 60000 }
+    const output = await execCommand(
+      `PATH=/opt/homebrew/bin:$PATH python3 "${janitorPath}"`
     );
-    res.json({ ok: true, output: stdout || stderr });
+    res.json({ ok: true, output });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+// Memory — Read MEMORY.md content
+app.get('/api/memory/file', async (_req, res) => {
+  try {
+    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    const content = await fs.readFile(memPath, 'utf-8');
+    res.json({ ok: true, content, path: memPath });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     res.status(500).json({ ok: false, error: message });

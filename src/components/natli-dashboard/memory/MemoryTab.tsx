@@ -18,7 +18,10 @@ import {
   BookOpen,
   Trash2,
   RefreshCw,
-  FolderOpen,
+  FileCode,
+  X,
+  Copy,
+  CheckCheck,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -121,28 +124,16 @@ export function MemoryTab({ health }: MemoryTabProps) {
     setActionLoading(null);
   };
 
-  const handleOpenMemory = () => {
-    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
-    try {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(memPath).then(() => showToast('📂 Path copied to clipboard'));
-      } else {
-        const ta = document.createElement('textarea');
-        ta.value = memPath;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('📂 Path copied to clipboard');
-      }
-    } catch {
-      showToast(`📂 ${memPath}`);
-    }
-  };
+  const [memoryDrawerOpen, setMemoryDrawerOpen] = useState(false);
+
+  const handleOpenMemory = () => setMemoryDrawerOpen(true);
 
   return (
     <div className="space-y-5">
       <Toast message={toast} />
+      {memoryDrawerOpen && (
+        <MemoryFileDrawer onClose={() => setMemoryDrawerOpen(false)} />
+      )}
 
       {/* ─── [A] MEMORY.md Capacity Hero Card ─────────────────── */}
       <Card className="border-[#023F59]/20 overflow-hidden">
@@ -336,8 +327,8 @@ export function MemoryTab({ health }: MemoryTabProps) {
               className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white text-sm"
               onClick={handleOpenMemory}
             >
-              <FolderOpen className="w-4 h-4 mr-1.5" />
-              Open Memory File
+              <FileCode className="w-4 h-4 mr-1.5" />
+              View MEMORY.md
             </Button>
           </div>
         </CardContent>
@@ -356,6 +347,112 @@ function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         <span className="text-sm text-muted-foreground">{label}</span>
       </div>
       <span className="text-sm font-semibold text-[#21262A]">{value}</span>
+    </div>
+  );
+}
+
+// ─── Memory File Drawer ──────────────────────────────────────
+
+function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
+  const [content, setContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useState(() => {
+    fetch('/api/memory/file')
+      .then(r => r.json() as Promise<{ ok: boolean; content?: string; error?: string }>)
+      .then(d => {
+        if (d.ok && d.content) setContent(d.content);
+        else setError(d.error ?? 'Failed to load');
+      })
+      .catch(() => setError('Network error'))
+      .finally(() => setLoading(false));
+  });
+
+  const handleCopy = () => {
+    if (!content) return;
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(content).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = content;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch { /* ignore */ }
+  };
+
+  // Close on backdrop click
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  const lines = content ? content.split('\n').length : 0;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/30 z-50 flex justify-end"
+      onMouseDown={handleBackdrop}
+    >
+      <div className="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <Brain className="w-5 h-5 text-[#107DAC]" />
+            <div>
+              <p className="font-semibold text-[#21262A] text-sm">MEMORY.md</p>
+              <p className="text-[10px] text-muted-foreground font-mono">/Users/natlee/.openclaw/workspace/MEMORY.md</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {content && (
+              <Badge className="bg-[#023F59]/10 text-[#023F59] border-0 text-xs">{lines} lines</Badge>
+            )}
+            <button
+              onClick={handleCopy}
+              disabled={!content}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#107DAC] px-2 py-1 rounded hover:bg-[#023F59]/5 transition-colors disabled:opacity-40"
+            >
+              {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded hover:bg-[#023F59]/5 text-muted-foreground hover:text-[#21262A] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {loading && (
+            <div className="space-y-2 animate-pulse">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="h-3 bg-[#023F59]/5 rounded" style={{ width: `${60 + Math.random() * 35}%` }} />
+              ))}
+            </div>
+          )}
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">
+              ❌ {error}
+            </div>
+          )}
+          {content && (
+            <pre className="text-xs font-mono text-[#21262A] leading-relaxed whitespace-pre-wrap break-words">{content}</pre>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
