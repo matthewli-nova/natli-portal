@@ -93,7 +93,8 @@ export function SkillsTab() {
       if (res.ok) {
         const data = await res.json() as { skills: Skill[]; stats: LiveStats };
         setLiveStats(data.stats);
-        setLiveSkills(data.skills);
+        // Normalize: live API skills may lack `type`; default to 'custom'
+        setLiveSkills(data.skills.map(s => ({ ...s, type: s.type ?? 'custom' })));
         setLastUpdated(new Date().toLocaleTimeString());
       }
     } catch { /* fallback to static */ }

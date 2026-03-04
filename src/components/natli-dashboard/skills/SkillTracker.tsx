@@ -24,9 +24,9 @@ interface SkillTrackerProps {
 
 export function SkillTracker({ stats, skills }: SkillTrackerProps) {
   const categoryBreakdown = getCategoryBreakdown(skills);
-  const mostUsed    = mostUsed    ?? [];
-  const recentlyAdded = recentlyAdded ?? [...skills].sort((a,b) => (b.addedDate ?? '').localeCompare(a.addedDate ?? '')).slice(0,5);
-  const neverUsed   = neverUsed   ?? skills.filter(s => !s.usageCount);
+  const mostUsed    = stats.mostUsed    ?? [];
+  const recentlyAdded = stats.recentlyAdded ?? [...skills].sort((a,b) => (b.addedDate ?? '').localeCompare(a.addedDate ?? '')).slice(0,5);
+  const neverUsed   = stats.neverUsed   ?? skills.filter(s => !s.usageCount);
 
   return (
     <div className="space-y-6">
@@ -227,7 +227,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
           <p className="text-sm font-medium">
             {stats.contractCoverage === 100
               ? '✅ All custom skills have contracts'
-              : `⚠️ ${stats.withContract} of ${stats.totalCustom} custom skills have contracts`}
+              : `⚠️ ${stats.withContract ?? 0} of ${stats.totalCustom} custom skills have contracts`}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
             Contract coverage: {stats.contractCoverage}% · Use skill-creator to add missing contracts
