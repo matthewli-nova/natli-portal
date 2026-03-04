@@ -589,6 +589,431 @@ app.get('/api/files/content', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SKILLS API
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CUSTOM_SKILLS_DIR = path.join(OPENCLAW_WORKSPACE, 'skills', 'skills');
+const ALT_SKILLS_DIR    = path.join(OPENCLAW_WORKSPACE, 'skills');
+const SYSTEM_SKILLS_DIR = '/opt/homebrew/lib/node_modules/openclaw/skills';
+const SKILLS_REGISTRY   = path.join(OPENCLAW_WORKSPACE, 'SKILLS-REGISTRY.md');
+
+type SkillType   = 'custom' | 'system';
+type SkillStatus = 'ready' | 'needs-setup' | 'disabled';
+
+interface SkillMeta {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  path: string;
+  type: SkillType;
+  status: SkillStatus;
+  category: string;
+  tags: string[];
+  hasContract: boolean;
+  addedDate?: string;
+  version?: string;
+}
+
+// Parse first 30 lines of a SKILL.md for metadata
+async function parseSkillMeta(skillPath: string): Promise<Partial<SkillMeta>> {
+  try {
+    const content = await fs.readFile(skillPath, 'utf-8');
+    const lines = content.split('\n').slice(0, 40);
+    const meta: Partial<SkillMeta> = {};
+
+    // Title from H1
+    const h1 = lines.find(l => l.startsWith('# '));
+    if (h1) {
+      const title = h1.slice(2).trim();
+      // Extract emoji if present
+      const emojiMatch = title.match(/^([\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}☁️🍎⚙️🔷📡🏗️🗄️📋💬💼✍️📧📰💻💰📊🎼🛠️🤖🔒📬🎬♊️🍌📦🌤️])/u);
+      if (emojiMatch) {
+        meta.emoji = emojiMatch[1];
+        meta.name = title.slice(emojiMatch[1].length).trim();
+      } else {
+        meta.name = title;
+      }
+    }
+
+    // Version
+    const versionLine = lines.find(l => l.toLowerCase().startsWith('**version:**'));
+    if (versionLine) {
+      meta.version = versionLine.replace(/\*\*version:\*\*/i, '').trim();
+    }
+
+    // Has contract
+    meta.hasContract = content.includes('## Contract');
+
+    // Description from first non-empty paragraph after metadata
+    const overviewIdx = lines.findIndex(l => l.startsWith('## Overview') || l.startsWith('## Description'));
+    if (overviewIdx > -1) {
+      const descLine = lines.slice(overviewIdx + 1).find(l => l.trim() && !l.startsWith('#'));
+      if (descLine) meta.description = descLine.trim().slice(0, 120);
+    }
+
+    return meta;
+  } catch {
+    return {};
+  }
+}
+
+// Discover all skills from filesystem
+async function discoverSkills(): Promise<SkillMeta[]> {
+  const skills: SkillMeta[] = [];
+
+  // Helper: scan a directory for SKILL.md files
+  async function scanDir(dir: string, type: SkillType, category: string): Promise<void> {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const skillMdPath = path.join(dir, entry.name, 'SKILL.md');
+        try {
+          await fs.access(skillMdPath);
+          const parsedMeta = await parseSkillMeta(skillMdPath);
+          const stat = await fs.stat(skillMdPath);
+          skills.push({
+            id: entry.name,
+            name: parsedMeta.name ?? entry.name,
+            emoji: parsedMeta.emoji ?? '🛠️',
+            description: parsedMeta.description ?? '',
+            path: skillMdPath,
+            type,
+            status: 'ready',
+            category,
+            tags: [entry.name],
+            hasContract: parsedMeta.hasContract ?? false,
+            version: parsedMeta.version,
+            addedDate: stat.birthtime.toISOString().split('T')[0],
+          });
+        } catch {
+          // no SKILL.md — skip
+        }
+      }
+    } catch {
+      // dir doesn't exist — skip
+    }
+  }
+
+  await Promise.all([
+    scanDir(CUSTOM_SKILLS_DIR, 'custom', 'Custom'),
+    scanDir(SYSTEM_SKILLS_DIR, 'system', 'System'),
+  ]);
+
+  // Also scan alt custom skill dirs (skills/linkedin, skills/google-workspace, etc.)
+  try {
+    const altEntries = await fs.readdir(ALT_SKILLS_DIR, { withFileTypes: true });
+    for (const entry of altEntries) {
+      if (!entry.isDirectory() || entry.name === 'skills') continue;
+      const skillMdPath = path.join(ALT_SKILLS_DIR, entry.name, 'SKILL.md');
+      try {
+        await fs.access(skillMdPath);
+        // Only add if not already in list
+        if (!skills.find(s => s.id === entry.name)) {
+          const parsedMeta = await parseSkillMeta(skillMdPath);
+          const stat = await fs.stat(skillMdPath);
+          skills.push({
+            id: entry.name,
+            name: parsedMeta.name ?? entry.name,
+            emoji: parsedMeta.emoji ?? '🛠️',
+            description: parsedMeta.description ?? '',
+            path: skillMdPath,
+            type: 'custom',
+            status: 'ready',
+            category: 'Business Operations',
+            tags: [entry.name],
+            hasContract: parsedMeta.hasContract ?? false,
+            version: parsedMeta.version,
+            addedDate: stat.birthtime.toISOString().split('T')[0],
+          });
+        }
+      } catch { /* skip */ }
+    }
+  } catch { /* skip */ }
+
+  return skills.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// GET /api/skills — list all skills
+app.get('/api/skills', async (_req, res) => {
+  try {
+    const skills = await discoverSkills();
+    const total = skills.length;
+    const custom = skills.filter(s => s.type === 'custom').length;
+    const system = skills.filter(s => s.type === 'system').length;
+    const ready = skills.filter(s => s.status === 'ready').length;
+    const withContract = skills.filter(s => s.hasContract).length;
+    res.json({
+      skills,
+      stats: { total, custom, system, ready, needsSetup: total - ready, withContract },
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// GET /api/skills/:id — skill metadata only
+app.get('/api/skills/:id', async (req, res) => {
+  try {
+    const skills = await discoverSkills();
+    const skill = skills.find(s => s.id === req.params.id);
+    if (!skill) { res.status(404).json({ error: 'Skill not found' }); return; }
+    res.json(skill);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// GET /api/skills/:id/content — read SKILL.md content
+app.get('/api/skills/:id/content', async (req, res) => {
+  try {
+    const skills = await discoverSkills();
+    const skill = skills.find(s => s.id === req.params.id);
+    if (!skill) { res.status(404).json({ error: 'Skill not found' }); return; }
+
+    const stat = await fs.stat(skill.path);
+    if (stat.size > 200 * 1024) {
+      res.status(413).json({ error: 'Skill file too large (max 200KB)' });
+      return;
+    }
+    const content = await fs.readFile(skill.path, 'utf-8');
+    res.json({
+      id: skill.id,
+      path: skill.path,
+      content,
+      size: stat.size,
+      lastModified: stat.mtime.toISOString(),
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// PUT /api/skills/:id/content — write SKILL.md content (custom skills only)
+app.put('/api/skills/:id/content', async (req, res) => {
+  try {
+    const { content } = req.body as { content: string };
+    if (typeof content !== 'string') {
+      res.status(400).json({ error: 'content (string) is required in body' });
+      return;
+    }
+    if (content.length > 200 * 1024) {
+      res.status(413).json({ error: 'Content too large (max 200KB)' });
+      return;
+    }
+
+    const skills = await discoverSkills();
+    const skill = skills.find(s => s.id === req.params.id);
+    if (!skill) { res.status(404).json({ error: 'Skill not found' }); return; }
+    if (skill.type === 'system') {
+      res.status(403).json({ error: 'System skills are read-only' });
+      return;
+    }
+
+    // Write file
+    await fs.writeFile(skill.path, content, 'utf-8');
+    const stat = await fs.stat(skill.path);
+    res.json({
+      ok: true,
+      id: skill.id,
+      path: skill.path,
+      size: stat.size,
+      lastModified: stat.mtime.toISOString(),
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// POST /api/skills — create new skill
+app.post('/api/skills', async (req, res) => {
+  try {
+    const { id, name, emoji, description, category, tags, content } = req.body as {
+      id: string; name: string; emoji?: string; description: string;
+      category?: string; tags?: string[]; content?: string;
+    };
+
+    if (!id || !name || !description) {
+      res.status(400).json({ error: 'id, name, and description are required' });
+      return;
+    }
+
+    // Validate id (slug format)
+    if (!/^[a-z0-9-]+$/.test(id)) {
+      res.status(400).json({ error: 'id must be lowercase letters, numbers, and hyphens only' });
+      return;
+    }
+
+    const skillDir = path.join(CUSTOM_SKILLS_DIR, id);
+    const skillMdPath = path.join(skillDir, 'SKILL.md');
+
+    // Check if already exists
+    try {
+      await fs.access(skillMdPath);
+      res.status(409).json({ error: `Skill '${id}' already exists at ${skillMdPath}` });
+      return;
+    } catch { /* good — doesn't exist yet */ }
+
+    // Create directory and SKILL.md
+    await fs.mkdir(skillDir, { recursive: true });
+
+    const skillContent = content ?? `# ${emoji ?? '🛠️'} ${name}
+
+**Version:** 1.0
+**Last Updated:** ${new Date().toISOString().split('T')[0]}
+**Tags:** ${(tags ?? [id]).join(', ')}
+
+---
+
+## Overview
+
+${description}
+
+---
+
+## Contract
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| \`input\` | string | ✅ | — | Primary input |
+
+### Output
+
+Description of output.
+
+### Errors
+
+| Code | Condition | Recovery |
+|------|-----------|---------|
+| ERR_001 | Missing input | Provide required parameter |
+
+### Example
+
+\`\`\`
+Example usage of ${name}
+\`\`\`
+
+---
+
+## Instructions
+
+1. Step one
+2. Step two
+3. Step three
+
+---
+
+## Notes
+
+- Category: ${category ?? 'Business Operations'}
+- Added: ${new Date().toISOString().split('T')[0]}
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | ${new Date().toISOString().split('T')[0]} | Initial creation |
+`;
+
+    await fs.writeFile(skillMdPath, skillContent, 'utf-8');
+
+    // Append to SKILLS-REGISTRY.md
+    try {
+      const registry = await fs.readFile(SKILLS_REGISTRY, 'utf-8');
+      const entry = `| ${emoji ?? '🛠️'} ${id} | ${description.slice(0, 80)} | \`skills/skills/${id}/SKILL.md\` | ⏸ Needs Setup |\n`;
+      // Insert before system skills section or at end
+      const insertBefore = '## System Skills';
+      const updatedRegistry = registry.includes(insertBefore)
+        ? registry.replace(insertBefore, `${entry}\n${insertBefore}`)
+        : registry + '\n' + entry;
+      await fs.writeFile(SKILLS_REGISTRY, updatedRegistry, 'utf-8');
+    } catch { /* registry update is best-effort */ }
+
+    res.status(201).json({
+      ok: true,
+      skill: {
+        id, name,
+        emoji: emoji ?? '🛠️',
+        description,
+        path: skillMdPath,
+        type: 'custom',
+        status: 'needs-setup',
+        category: category ?? 'Business Operations',
+        tags: tags ?? [id],
+        hasContract: true, // template includes contract
+        version: '1.0',
+        addedDate: new Date().toISOString().split('T')[0],
+      },
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// DELETE /api/skills/:id — delete custom skill (moves to trash, not permanent)
+app.delete('/api/skills/:id', async (req, res) => {
+  try {
+    const skills = await discoverSkills();
+    const skill = skills.find(s => s.id === req.params.id);
+    if (!skill) { res.status(404).json({ error: 'Skill not found' }); return; }
+    if (skill.type === 'system') {
+      res.status(403).json({ error: 'Cannot delete system skills' });
+      return;
+    }
+
+    // Move to trash instead of delete
+    const trashDir = path.join(OPENCLAW_WORKSPACE, 'skills', '.trash');
+    await fs.mkdir(trashDir, { recursive: true });
+    const skillDir = path.dirname(skill.path);
+    const trashDest = path.join(trashDir, `${req.params.id}-${Date.now()}`);
+    await fs.rename(skillDir, trashDest);
+
+    res.json({ ok: true, message: `Skill '${req.params.id}' moved to trash at ${trashDest}` });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// GET /api/skills/stats — usage stats (from memory search)
+app.get('/api/skills/stats', async (_req, res) => {
+  try {
+    const skills = await discoverSkills();
+    const registryContent = await fs.readFile(SKILLS_REGISTRY, 'utf-8').catch(() => '');
+
+    // Count registry entries per status
+    const readyCount    = (registryContent.match(/✓ Ready/g) ?? []).length;
+    const setupCount    = (registryContent.match(/⏸ Needs Setup/g) ?? []).length;
+    const contractCount = skills.filter(s => s.hasContract).length;
+    const customSkills  = skills.filter(s => s.type === 'custom');
+
+    res.json({
+      total: skills.length,
+      custom: customSkills.length,
+      system: skills.filter(s => s.type === 'system').length,
+      ready: readyCount,
+      needsSetup: setupCount,
+      contractCoverage: customSkills.length
+        ? Math.round((contractCount / customSkills.length) * 100)
+        : 0,
+      withContract: contractCount,
+      recentlyAdded: skills
+        .filter(s => s.type === 'custom' && s.addedDate)
+        .sort((a, b) => (b.addedDate ?? '').localeCompare(a.addedDate ?? ''))
+        .slice(0, 5),
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Nat Li API server running on http://0.0.0.0:${PORT}`);
 });
