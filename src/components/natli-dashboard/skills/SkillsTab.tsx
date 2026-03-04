@@ -2,7 +2,7 @@
 // Features: live /api/skills data, refresh button, resizable left/right splitter
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Search, Plus, LayoutGrid, List, BookOpen, PenLine, RefreshCw } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, BookOpen, PenLine } from 'lucide-react';
 import { Input } from '../../ui/input';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -77,14 +77,10 @@ export function SkillsTab() {
   const [showAddModal, setShowAddModal]             = useState(false);
   const [liveStats, setLiveStats]                   = useState<LiveStats | null>(null);
   const [liveSkills, setLiveSkills]                 = useState<Skill[] | null>(null);
-  const [refreshing, setRefreshing]                 = useState(false);
-  const [lastUpdated, setLastUpdated]               = useState<string>('');
-
   const { width: leftWidth, onMouseDown: onDragStart } = useResizable(280);
 
   // Live fetch from backend
   const fetchLive = useCallback(async () => {
-    setRefreshing(true);
     try {
       const res = await fetch('/api/skills');
       if (res.ok) {
@@ -92,10 +88,8 @@ export function SkillsTab() {
         setLiveStats(data.stats);
         // Normalize: live API skills may lack `type`; default to 'custom'
         setLiveSkills(data.skills.map(s => ({ ...s, type: s.type ?? 'custom' })));
-        setLastUpdated(new Date().toLocaleTimeString());
       }
     } catch { /* fallback to static */ }
-    setRefreshing(false);
   }, []);
 
   useEffect(() => { fetchLive(); }, [fetchLive]);
@@ -155,36 +149,17 @@ export function SkillsTab() {
   return (
     <div className="space-y-4 min-w-0 w-full">
 
-      {/* ── KPI Strip + Refresh ───────────────────────────────────── */}
-      <div className="flex items-start gap-3">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 flex-1">
-          {kpis.map(kpi => (
-            <Card key={kpi.label} className="border-[#023F59]/20">
-              <CardContent className="p-3">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
-                <p className={`text-xl font-bold text-[#21262A] ${kpi.accent}`}>{kpi.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{kpi.sub}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Refresh */}
-        <div className="flex flex-col items-end gap-1 pt-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchLive}
-            disabled={refreshing}
-            className="border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          {lastUpdated && (
-            <span className="text-[10px] text-muted-foreground">Updated {lastUpdated}</span>
-          )}
-        </div>
+      {/* ── KPI Strip ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {kpis.map(kpi => (
+          <Card key={kpi.label} className="border-[#023F59]/20">
+            <CardContent className="p-3">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
+              <p className={`text-xl font-bold text-[#21262A] ${kpi.accent}`}>{kpi.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{kpi.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* ── Header: title + New Skill ─────────────────────────────── */}

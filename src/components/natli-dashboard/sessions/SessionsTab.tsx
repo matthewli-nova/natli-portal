@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { RefreshCw, Activity, Cpu, Bot, MessageSquare, Clock, Zap } from 'lucide-react';
+import { Activity, Cpu, Bot, MessageSquare, Clock, Zap } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -96,10 +96,8 @@ const AGENT_ICONS: Record<string, typeof Bot> = {
 export function SessionsTab() {
   const [data, setData] = useState<SessionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+  const fetchData = useCallback(async () => {
     try {
       const res = await fetch('/api/sessions');
       const json: SessionsResponse = await res.json();
@@ -108,7 +106,6 @@ export function SessionsTab() {
       // keep stale data
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
@@ -166,17 +163,9 @@ export function SessionsTab() {
 
   return (
     <div className="space-y-4">
-      {/* Header with refresh */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[#21262A]">Sessions Overview</h3>
-        <button
-          onClick={() => fetchData(true)}
-          disabled={refreshing}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-[#023F59]/20 text-[#023F59] hover:bg-[#023F59]/5 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
       </div>
 
       {/* [A] KPI Strip */}
@@ -328,8 +317,8 @@ function StatusDot({ isActive, isRecent }: { isActive: boolean; isRecent: boolea
 function AgentBadge({ agent }: { agent: string }) {
   const colors: Record<string, string> = {
     main: 'bg-[#023F59] text-white',
-    coder: 'bg-blue-100 text-blue-800',
-    designer: 'bg-purple-100 text-purple-800',
+    coder: 'bg-[#107DAC]/15 text-[#107DAC]',
+    designer: 'bg-[#31D7DB]/15 text-[#023F59]',
     marketing: 'bg-orange-100 text-orange-800',
     strategy: 'bg-teal-100 text-teal-800',
   };

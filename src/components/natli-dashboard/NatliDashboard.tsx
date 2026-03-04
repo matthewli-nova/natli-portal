@@ -313,7 +313,7 @@ export function NatliDashboard() {
                 <Clock className="w-3 h-3 mr-1" />
                 {health?.gatewayStartTime ? formatUptime(health.gatewayStartTime) : '—'}
               </Badge>
-              <Badge className="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-700 border-0">
+              <Badge className="px-3 py-1 text-xs font-semibold bg-[#107DAC]/15 text-[#107DAC] border-0">
                 <Activity className="w-3 h-3 mr-1" />
                 {health?.totalSessions ?? 0} sessions
               </Badge>
@@ -447,7 +447,7 @@ export function NatliDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-blue-500 font-bold">↑</span>
+                      <span className="text-[#107DAC] font-bold">↑</span>
                       <div>
                         <p className="font-mono font-bold text-[#107DAC]">{health?.netOutKbps ?? 0} KB/s</p>
                         <p className="text-xs text-muted-foreground">Outbound</p>

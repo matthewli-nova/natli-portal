@@ -589,7 +589,7 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
     if (status === 'ok') return 'bg-emerald-500';
     if (status === 'error') return 'bg-red-500';
     if (status === 'missed') return 'bg-amber-500';
-    if (status === 'scheduled') return 'bg-blue-500';
+    if (status === 'scheduled') return 'bg-[#107DAC]';
     return 'bg-gray-300';
   }
 
@@ -659,7 +659,7 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
             <div className="absolute bottom-0 left-0 flex gap-3 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> OK</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> Failed</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> Scheduled</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#107DAC] inline-block" /> Scheduled</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Missed</span>
             </div>
           </div>
@@ -686,7 +686,7 @@ function NextFiringCard({ job, now, onRunNow, running }: {
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Next</span>
-          <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px]">
+          <Badge className="bg-[#107DAC]/15 text-[#107DAC] border-0 text-[10px]">
             {job.scheduleDescription}
           </Badge>
         </div>

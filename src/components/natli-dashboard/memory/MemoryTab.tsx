@@ -164,7 +164,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
           <div className="flex gap-2 flex-wrap mt-4">
             <Badge className="bg-red-100 text-red-700 border-0 text-xs">P0: {health?.p0Sections ?? 0} sections</Badge>
             <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">P1: Active</Badge>
-            <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">P2: Temp</Badge>
+            <Badge className="bg-[#107DAC]/15 text-[#107DAC] border-0 text-xs">P2: Temp</Badge>
           </div>
 
           <p className="text-xs text-muted-foreground mt-3">

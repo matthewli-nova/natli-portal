@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Skeleton } from '../../ui/skeleton';
 import { Button } from '../../ui/button';
-import { RefreshCw, Settings, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -171,18 +171,9 @@ export function ModelTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header with refresh */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[#21262A]">Model Configuration & Usage</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => { setLoading(true); fetchStats(); }}
-          className="border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
-        >
-          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-          Refresh
-        </Button>
       </div>
 
       {/* [A] Active Config Strip */}
@@ -297,7 +288,7 @@ export function ModelTab() {
                       </Badge>
                     )}
                     {model.isFallback && (
-                      <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0">
+                      <Badge variant="secondary" className="text-[10px] bg-[#107DAC]/15 text-[#107DAC] px-1.5 py-0">
                         🔄 FALLBACK {model.fallbackOrder}
                       </Badge>
                     )}
@@ -420,12 +411,7 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel; c
             </span>
           )}
         </div>
-        <button
-          className="mt-2 text-[11px] text-[#107DAC] hover:underline flex items-center gap-1"
-          onClick={() => {/* no-op for now */}}
-        >
-          <Settings className="w-3 h-3" /> Configure
-        </button>
+
       </CardContent>
     </Card>
   );

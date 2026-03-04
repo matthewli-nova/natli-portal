@@ -510,7 +510,7 @@ function TasksCard({
     const pl = p.toLowerCase();
     if (pl === 'urgent') return 'bg-red-500';
     if (pl === 'high') return 'bg-amber-500';
-    if (pl === 'normal') return 'bg-blue-500';
+    if (pl === 'normal') return 'bg-[#107DAC]';
     return 'bg-gray-400';
   };
 
