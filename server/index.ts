@@ -544,6 +544,42 @@ app.put('/api/cron/jobs/:id', async (req, res) => {
   }
 });
 
+// ─── Model History (Token Consumption) ───────────────────────
+
+app.get('/api/model/history', async (req, res) => {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days as string) || 30, 1), 365);
+    const output = await execCommand('openclaw sessions --json --all-agents');
+    const parsed = JSON.parse(output);
+    const rawSessions: Array<Record<string, unknown>> = parsed.sessions || [];
+
+    const cutoffMs = Date.now() - days * 86400000;
+    const dayMap: Record<string, { total: number; byModel: Record<string, number> }> = {};
+
+    for (const s of rawSessions) {
+      const updatedAt = Number(s.updatedAt || 0);
+      if (updatedAt < cutoffMs) continue;
+      const tokens = Number(s.totalTokens || 0);
+      if (tokens <= 0) continue;
+      const model = String(s.model || 'unknown');
+      const date = new Date(updatedAt).toISOString().split('T')[0];
+
+      if (!dayMap[date]) dayMap[date] = { total: 0, byModel: {} };
+      dayMap[date].total += tokens;
+      dayMap[date].byModel[model] = (dayMap[date].byModel[model] || 0) + tokens;
+    }
+
+    const result = Object.entries(dayMap)
+      .map(([date, data]) => ({ date, total: data.total, byModel: data.byModel }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    res.json({ days: result });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message, days: [] });
+  }
+});
+
 // Sessions (enriched)
 const CHANNEL_NAME_MAP: Record<string, string> = {
   'c0aes69kg2d': '#nat-2_nat-portal',
@@ -607,23 +643,28 @@ app.get('/api/sessions', async (_req, res) => {
     const byModel: Record<string, number> = {};
     const byType: Record<string, number> = {};
     const byAgent: Record<string, { count: number; tokens: number }> = {};
+    const tokensByModel: Record<string, number> = {};
+    const tokensByType: Record<string, number> = {};
 
     for (const s of sessions) {
       const model = String(s.model || 'unknown');
+      const tokens = Number(s.totalTokens || 0);
       byModel[model] = (byModel[model] || 0) + 1;
+      tokensByModel[model] = (tokensByModel[model] || 0) + tokens;
 
       const st = String(s.sessionType);
       byType[st] = (byType[st] || 0) + 1;
+      tokensByType[st] = (tokensByType[st] || 0) + tokens;
 
       const agent = String(s.agentId || 'unknown');
       if (!byAgent[agent]) byAgent[agent] = { count: 0, tokens: 0 };
       byAgent[agent].count++;
-      byAgent[agent].tokens += Number(s.totalTokens || 0);
+      byAgent[agent].tokens += tokens;
     }
 
     res.json({
       sessions,
-      stats: { total: sessions.length, active, recentHour, totalTokens, byModel, byType, byAgent },
+      stats: { total: sessions.length, active, recentHour, totalTokens, byModel, byType, byAgent, tokensByModel, tokensByType },
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';

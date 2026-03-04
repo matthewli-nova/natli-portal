@@ -7,10 +7,10 @@ import {
   ListTodo,
   FileText,
   Timer,
-  Database,
   CheckCircle2,
   XCircle,
 } from 'lucide-react';
+import { ModelIcon, getModelShortName } from '../../../lib/model-icons';
 
 // ─── Types (mirrored from parent / sibling tabs) ────────────
 
@@ -132,8 +132,15 @@ function timeUntil(ms: number): string {
   const diff = ms - Date.now();
   if (diff <= 0) return 'now';
   if (diff < 60_000) return `${Math.ceil(diff / 1000)}s`;
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h`;
+  if (diff < 3_600_000) {
+    const mins = Math.floor(diff / 60_000);
+    return `${mins}m`;
+  }
+  if (diff < 86_400_000) {
+    const hrs = Math.floor(diff / 3_600_000);
+    const mins = Math.floor((diff % 3_600_000) / 60_000);
+    return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+  }
   return `${Math.floor(diff / 86_400_000)}d`;
 }
 
@@ -145,25 +152,7 @@ function relativeTime(ageMs: number): string {
   return `${Math.floor(ageMs / 86_400_000)}d ago`;
 }
 
-function modelShort(id: string): string {
-  let name = id.replace(/^claude-/, '');
-  const parts = name.split('-');
-  const words: string[] = [];
-  let i = 0;
-  while (i < parts.length) {
-    if (/^\d+$/.test(parts[i]) && i + 1 < parts.length && /^\d+$/.test(parts[i + 1])) {
-      words.push(`${parts[i]}.${parts[i + 1]}`);
-      i += 2;
-    } else {
-      words.push(parts[i].charAt(0).toUpperCase() + parts[i].slice(1));
-      i++;
-    }
-  }
-  return words.join(' ');
-}
-
 function estimateCost(tokens: number): string {
-  // Rough blended rate: ~$15/M tokens
   const cost = (tokens / 1_000_000) * 15;
   if (cost < 0.01) return '<$0.01';
   return `~$${cost.toFixed(2)}`;
@@ -265,15 +254,16 @@ function KPIStrip({
     .filter(c => c.state.nextRunAtMs && c.state.nextRunAtMs > Date.now())
     .sort((a, b) => (a.state.nextRunAtMs ?? 0) - (b.state.nextRunAtMs ?? 0))[0];
 
+  const primaryId = modelConfig?.primary ?? health?.primaryModel ?? '';
   const primaryLabel = modelConfig
-    ? modelConfig.availableModels.find(m => m.id === modelConfig.primary)?.label ?? modelShort(modelConfig.primary)
+    ? modelConfig.availableModels.find(m => m.id === modelConfig.primary)?.label ?? getModelShortName(modelConfig.primary)
     : health?.primaryModel
-      ? modelShort(health.primaryModel)
+      ? getModelShortName(health.primaryModel)
       : '—';
 
   const kpis = [
     {
-      icon: <Brain className="w-4 h-4 text-[#31D7DB]" />,
+      icon: primaryId ? <ModelIcon modelId={primaryId} size="sm" /> : <Brain className="w-4 h-4 text-[#31D7DB]" />,
       label: 'Active Model',
       value: primaryLabel,
       subtitle: modelConfig ? `${modelConfig.fallbacks.length} failover${modelConfig.fallbacks.length !== 1 ? 's' : ''}` : '',
@@ -307,8 +297,8 @@ function KPIStrip({
     {
       icon: <Timer className="w-4 h-4 text-[#107DAC]" />,
       label: 'Next Cron',
-      value: nextCron ? timeUntil(nextCron.state.nextRunAtMs!) : '—',
-      subtitle: nextCron ? nextCron.name : 'No crons pending',
+      value: nextCron ? timeUntil(nextCron.state.nextRunAtMs!) : 'None scheduled',
+      subtitle: nextCron ? nextCron.name.slice(0, 20) + (nextCron.name.length > 20 ? '…' : '') : 'No crons pending',
       badgeColor: 'bg-gray-100 text-gray-600',
       badge: null,
     },
@@ -330,7 +320,7 @@ function KPIStrip({
               </Badge>
             )}
             <div className="flex items-center gap-2 mb-1.5">{kpi.icon}</div>
-            <p className="text-2xl font-bold text-[#21262A] leading-tight">{kpi.value}</p>
+            <p className="text-2xl font-bold text-[#107DAC] leading-tight truncate">{kpi.value}</p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{kpi.label}</p>
             <p className="text-xs text-muted-foreground truncate">{kpi.subtitle}</p>
           </CardContent>
@@ -370,7 +360,6 @@ function AgentActivityCard({
                   key={s.key}
                   className="flex items-center gap-3 py-2 hover:bg-[#023F59]/[0.02] rounded px-1 -mx-1"
                 >
-                  {/* Status dot */}
                   <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span
                       className={`inline-block h-2.5 w-2.5 rounded-full ${
@@ -382,27 +371,22 @@ function AgentActivityCard({
                     )}
                   </span>
 
-                  {/* Label */}
                   <span className="text-sm text-[#21262A] truncate flex-1 min-w-0">
                     {s.label || s.key}
                   </span>
 
-                  {/* Agent badge */}
                   <Badge className="text-[10px] font-medium px-1.5 py-0 border-0 bg-[#023F59]/8 text-[#21262A] shrink-0">
                     {s.agentId || 'main'}
                   </Badge>
 
-                  {/* Model */}
-                  <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">
-                    {modelShort(s.model)}
+                  <span className="shrink-0 hidden sm:inline">
+                    <ModelIcon modelId={s.model} size="xs" showLabel />
                   </span>
 
-                  {/* Tokens */}
                   <span className="text-xs font-mono text-[#107DAC] shrink-0 w-14 text-right">
                     {s.totalTokens ? formatTokens(s.totalTokens) : '—'}
                   </span>
 
-                  {/* Time */}
                   <span className="text-xs text-muted-foreground shrink-0 w-16 text-right">
                     {relativeTime(s.ageMs)}
                   </span>
@@ -433,12 +417,12 @@ function CronHealthCard({
   return (
     <Card className="border-[#023F59]/20">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-[#21262A]">Cron Jobs</CardTitle>
+        <CardTitle className="text-sm font-semibold text-[#21262A]">Cron Health</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('schedule')} />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <p className="text-sm text-[#21262A]">
-          <span className="font-bold">{enabled.length}</span>
+          <span className="font-bold text-[#107DAC]">{enabled.length}</span>
           <span className="text-muted-foreground"> enabled / {crons.length} total</span>
         </p>
 
@@ -451,10 +435,10 @@ function CronHealthCard({
         {nextFiring.length > 0 ? (
           <div className="space-y-2">
             {nextFiring.map(c => (
-              <div key={c.id} className="flex items-center justify-between text-sm">
-                <span className="truncate text-[#21262A] flex-1 min-w-0 mr-2">{c.name}</span>
+              <div key={c.id} className="flex items-center justify-between py-1.5 border-b border-[#023F59]/5 last:border-0">
+                <span className="truncate text-[#21262A] text-sm flex-1 min-w-0 mr-2">{c.name}</span>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-[#107DAC] font-medium">
                     {timeUntil(c.state.nextRunAtMs!)}
                   </span>
                   {c.state.lastStatus === 'ok' || c.state.lastStatus === 'success' ? (
@@ -485,11 +469,7 @@ function TasksCard({
   tasks: ClickUpTask[];
   onNavigateTo: (tab: string) => void;
 }) {
-  const statusCounts = {
-    open: 0,
-    sprint: 0,
-    completed: 0,
-  };
+  const statusCounts = { open: 0, sprint: 0, completed: 0 };
   const openTasks: ClickUpTask[] = [];
 
   tasks.forEach(t => {
@@ -530,7 +510,7 @@ function TasksCard({
         </div>
         <div className="space-y-1.5">
           {openTasks.slice(0, 4).map(t => (
-            <div key={t.id} className="flex items-center gap-2 text-sm">
+            <div key={t.id} className="flex items-center gap-2 text-sm py-1.5 border-b border-[#023F59]/5 last:border-0">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${priorityColor(t.priority?.priority)}`}
               />
@@ -574,7 +554,6 @@ function MemoryCard({
         <ViewAllLink onClick={() => onNavigateTo('memory')} />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        {/* MEMORY.md progress bar */}
         <div>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-muted-foreground">MEMORY.md</span>
@@ -588,7 +567,6 @@ function MemoryCard({
           />
         </div>
 
-        {/* Stats */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span>Daily Logs <strong className="text-[#21262A]">{dailyLogs}</strong></span>
           <span>·</span>
@@ -597,7 +575,6 @@ function MemoryCard({
           <span>DB <strong className="text-[#21262A]">{dbSize}MB</strong></span>
         </div>
 
-        {/* Knowledge */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span>Files <strong className="text-[#21262A]">{files.toLocaleString()}</strong></span>
           <span>·</span>
@@ -628,7 +605,6 @@ function ModelUsageCard({
 }) {
   const totalTokens = sessions.reduce((sum, s) => sum + (s.totalTokens ?? 0), 0);
 
-  // Aggregate by model
   const byModel: Record<string, number> = {};
   sessions.forEach(s => {
     if (s.model && s.totalTokens) {
@@ -641,7 +617,7 @@ function ModelUsageCard({
   const maxModelTokens = topModels.length > 0 ? topModels[0][1] : 1;
 
   const primaryLabel = modelConfig
-    ? modelConfig.availableModels.find(m => m.id === modelConfig.primary)?.label ?? modelShort(modelConfig.primary)
+    ? modelConfig.availableModels.find(m => m.id === modelConfig.primary)?.label ?? getModelShortName(modelConfig.primary)
     : '—';
 
   return (
@@ -652,6 +628,7 @@ function ModelUsageCard({
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div className="flex items-center gap-2">
+          {modelConfig?.primary && <ModelIcon modelId={modelConfig.primary} size="sm" />}
           <span className="text-sm font-medium text-[#21262A]">{primaryLabel}</span>
           <Badge className="text-[10px] px-1.5 py-0 border-0 bg-[#31D7DB]/20 text-[#107DAC]">
             Primary
@@ -665,13 +642,15 @@ function ModelUsageCard({
 
         <p className="text-sm font-medium text-amber-600">{estimateCost(totalTokens)}</p>
 
-        {/* Top models mini bars */}
         {topModels.length > 0 && (
           <div className="space-y-1.5">
             {topModels.map(([model, tokens]) => (
               <div key={model}>
-                <div className="flex justify-between text-xs mb-0.5">
-                  <span className="text-muted-foreground truncate">{modelShort(model)}</span>
+                <div className="flex items-center justify-between text-xs mb-0.5">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <ModelIcon modelId={model} size="xs" />
+                    <span className="text-muted-foreground truncate">{getModelShortName(model)}</span>
+                  </div>
                   <span className="text-[#21262A] font-mono">{formatTokens(tokens)}</span>
                 </div>
                 <div className="h-1.5 bg-[#023F59]/10 rounded-full overflow-hidden">
@@ -686,24 +665,6 @@ function ModelUsageCard({
         )}
       </CardContent>
     </Card>
-  );
-}
-
-// ─── Section [E]: Skills Summary ─────────────────────────────
-
-function SkillsSummaryStrip({ onNavigateTo }: { onNavigateTo: (tab: string) => void }) {
-  return (
-    <div className="bg-[#023F59]/5 rounded-lg px-4 py-2.5 flex items-center gap-3 text-sm flex-wrap">
-      <Database className="w-3.5 h-3.5 text-[#107DAC] shrink-0" />
-      <span className="font-medium text-[#21262A]">Skills</span>
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="bg-[#023F59]/5 rounded px-2 py-0.5 text-xs text-[#21262A]">
-          Installed
-        </span>
-      </div>
-      <span className="flex-1" />
-      <ViewAllLink onClick={() => onNavigateTo('skill')} />
-    </div>
   );
 }
 
@@ -744,9 +705,6 @@ export function OverviewTab({
         <MemoryCard health={health} memory={memory} onNavigateTo={onNavigateTo} />
         <ModelUsageCard sessions={sessions} modelConfig={modelConfig} onNavigateTo={onNavigateTo} />
       </div>
-
-      {/* [E] Skills Summary */}
-      <SkillsSummaryStrip onNavigateTo={onNavigateTo} />
     </div>
   );
 }

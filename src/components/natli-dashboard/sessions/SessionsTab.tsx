@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Activity, Cpu, Bot, MessageSquare, Clock, Zap } from 'lucide-react';
+import { ModelIcon, getModelShortName } from '../../../lib/model-icons';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ interface SessionStats {
   byModel: Record<string, number>;
   byType: Record<string, number>;
   byAgent: Record<string, { count: number; tokens: number }>;
+  tokensByModel?: Record<string, number>;
+  tokensByType?: Record<string, number>;
 }
 
 interface SessionsResponse {
@@ -55,25 +58,6 @@ function formatRelativeTime(ageMs: number): string {
   return `${Math.floor(ageMs / 86_400_000)}d ago`;
 }
 
-function modelShortName(model: string): string {
-  // "claude-sonnet-4-6" → "Sonnet 4.6", "gemini-3-pro" → "Gemini 3 Pro"
-  let name = model.replace(/^claude-/, '');
-  // Convert dashes to dots for version: "sonnet-4-6" → "sonnet 4.6"
-  const parts = name.split('-');
-  const words: string[] = [];
-  let i = 0;
-  while (i < parts.length) {
-    if (/^\d+$/.test(parts[i]) && i + 1 < parts.length && /^\d+$/.test(parts[i + 1])) {
-      words.push(`${parts[i]}.${parts[i + 1]}`);
-      i += 2;
-    } else {
-      words.push(parts[i].charAt(0).toUpperCase() + parts[i].slice(1));
-      i++;
-    }
-  }
-  return words.join(' ');
-}
-
 const TYPE_LABELS: Record<string, string> = {
   'slack-channel': 'Slack Channel',
   'slack-dm': 'Slack DM',
@@ -91,11 +75,15 @@ const AGENT_ICONS: Record<string, typeof Bot> = {
   strategy: Clock,
 };
 
+type SortMode = 'sessions' | 'tokens';
+
 // ─── Component ───────────────────────────────────────────────
 
 export function SessionsTab() {
   const [data, setData] = useState<SessionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [modelSort, setModelSort] = useState<SortMode>('sessions');
+  const [typeSort, setTypeSort] = useState<SortMode>('sessions');
 
   const fetchData = useCallback(async () => {
     try {
@@ -141,16 +129,31 @@ export function SessionsTab() {
   const { sessions, stats } = data;
   const subagentCount = stats.byType['subagent'] || 0;
 
-  // Sort models and types by count desc
+  // Model entries sorted by chosen mode
   const modelEntries = Object.entries(stats.byModel)
-    .map(([model, count]) => ({ label: modelShortName(model), count }))
-    .sort((a, b) => b.count - a.count);
-  const maxModelCount = modelEntries[0]?.count || 1;
+    .map(([model, count]) => ({
+      model,
+      label: getModelShortName(model),
+      count,
+      tokens: stats.tokensByModel?.[model] ?? 0,
+    }))
+    .sort((a, b) => modelSort === 'tokens' ? b.tokens - a.tokens : b.count - a.count);
+  const maxModelValue = modelEntries[0]
+    ? (modelSort === 'tokens' ? modelEntries[0].tokens : modelEntries[0].count)
+    : 1;
 
+  // Type entries sorted by chosen mode
   const typeEntries = Object.entries(stats.byType)
-    .map(([type, count]) => ({ label: TYPE_LABELS[type] || type, count }))
-    .sort((a, b) => b.count - a.count);
-  const maxTypeCount = typeEntries[0]?.count || 1;
+    .map(([type, count]) => ({
+      type,
+      label: TYPE_LABELS[type] || type,
+      count,
+      tokens: stats.tokensByType?.[type] ?? 0,
+    }))
+    .sort((a, b) => typeSort === 'tokens' ? b.tokens - a.tokens : b.count - a.count);
+  const maxTypeValue = typeEntries[0]
+    ? (typeSort === 'tokens' ? typeEntries[0].tokens : typeEntries[0].count)
+    : 1;
 
   // Top 20 recent sessions
   const recentSessions = [...sessions]
@@ -164,8 +167,8 @@ export function SessionsTab() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#21262A]">Sessions Overview</h3>
+      <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+        <span className="text-base font-semibold text-[#21262A]">Sessions Overview</span>
       </div>
 
       {/* [A] KPI Strip */}
@@ -185,23 +188,59 @@ export function SessionsTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="border-[#023F59]/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
+              <SortToggle value={modelSort} onChange={setModelSort} />
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {modelEntries.map((entry) => (
-              <BarRow key={entry.label} label={entry.label} count={entry.count} max={maxModelCount} />
+              <div key={entry.model} className="flex items-center gap-3">
+                <ModelIcon modelId={entry.model} size="xs" />
+                <span className="text-xs text-[#21262A] w-24 shrink-0 truncate">{entry.label}</span>
+                <div className="flex-1 h-5 bg-[#023F59]/5 rounded overflow-hidden">
+                  <div
+                    className="h-full bg-[#023F59] rounded transition-all"
+                    style={{
+                      width: `${Math.max(((modelSort === 'tokens' ? entry.tokens : entry.count) / maxModelValue) * 100, 2)}%`,
+                      opacity: 0.6 + ((modelSort === 'tokens' ? entry.tokens : entry.count) / maxModelValue) * 0.4,
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">
+                  {modelSort === 'tokens' ? formatTokens(entry.tokens) : entry.count}
+                </span>
+              </div>
             ))}
           </CardContent>
         </Card>
 
         <Card className="border-[#023F59]/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-[#21262A]">Session Types</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-[#21262A]">Session Types</CardTitle>
+              <SortToggle value={typeSort} onChange={setTypeSort} />
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            {typeEntries.map((entry) => (
-              <BarRow key={entry.label} label={entry.label} count={entry.count} max={maxTypeCount} />
-            ))}
+            {typeEntries.map((entry) => {
+              const val = typeSort === 'tokens' ? entry.tokens : entry.count;
+              const pct = Math.max((val / maxTypeValue) * 100, 2);
+              return (
+                <div key={entry.type} className="flex items-center gap-3">
+                  <span className="text-xs text-[#21262A] w-28 shrink-0 truncate">{entry.label}</span>
+                  <div className="flex-1 h-5 bg-[#023F59]/5 rounded overflow-hidden">
+                    <div
+                      className="h-full bg-[#023F59] rounded transition-all"
+                      style={{ width: `${pct}%`, opacity: 0.6 + (val / maxTypeValue) * 0.4 }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">
+                    {typeSort === 'tokens' ? formatTokens(entry.tokens) : entry.count}
+                  </span>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       </div>
@@ -234,7 +273,12 @@ export function SessionsTab() {
                     <td className="px-4 py-2">
                       <AgentBadge agent={s.agentId} />
                     </td>
-                    <td className="px-4 py-2 text-muted-foreground">{modelShortName(s.model)}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <ModelIcon modelId={s.model} size="xs" />
+                        <span className="text-muted-foreground">{getModelShortName(s.model)}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">
                       {formatTokens(Number(s.totalTokens || 0))}
                     </td>
@@ -256,7 +300,7 @@ export function SessionsTab() {
           {agentEntries.map(([agent, info]) => {
             const Icon = AGENT_ICONS[agent] || Bot;
             return (
-              <div key={agent} className="flex items-center justify-between">
+              <div key={agent} className="flex items-center justify-between py-1.5 border-b border-[#023F59]/5 last:border-0">
                 <div className="flex items-center gap-2">
                   <Icon className="w-4 h-4 text-[#023F59]" />
                   <span className="font-medium text-[#21262A] capitalize">{agent}</span>
@@ -276,6 +320,27 @@ export function SessionsTab() {
 
 // ─── Sub-components ──────────────────────────────────────────
 
+function SortToggle({ value, onChange }: { value: SortMode; onChange: (v: SortMode) => void }) {
+  return (
+    <div className="flex items-center gap-1 text-xs">
+      <span className="text-muted-foreground mr-1">Sort:</span>
+      {(['sessions', 'tokens'] as const).map(mode => (
+        <button
+          key={mode}
+          onClick={() => onChange(mode)}
+          className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+            value === mode
+              ? 'bg-[#023F59] text-white'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          }`}
+        >
+          {mode === 'sessions' ? 'Sessions' : 'Tokens'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function KPICard({ title, value, dot, valueColor }: {
   title: string; value: string; dot?: 'emerald'; valueColor?: string;
 }) {
@@ -283,28 +348,12 @@ function KPICard({ title, value, dot, valueColor }: {
     <Card className="border-[#023F59]/20">
       <CardContent className="p-4">
         <div className="text-xs text-muted-foreground mb-1">{title}</div>
-        <div className={`text-2xl font-bold ${valueColor || 'text-[#21262A]'} flex items-center gap-2`}>
+        <div className={`text-2xl font-bold ${valueColor || 'text-[#107DAC]'} flex items-center gap-2`}>
           {dot === 'emerald' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />}
           {value}
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function BarRow({ label, count, max }: { label: string; count: number; max: number }) {
-  const pct = Math.max((count / max) * 100, 2);
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs text-[#21262A] w-28 shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-5 bg-[#023F59]/5 rounded overflow-hidden">
-        <div
-          className="h-full bg-[#023F59] rounded transition-all"
-          style={{ width: `${pct}%`, opacity: 0.6 + (count / max) * 0.4 }}
-        />
-      </div>
-      <span className="text-xs text-muted-foreground w-8 text-right tabular-nums">{count}</span>
-    </div>
   );
 }
 

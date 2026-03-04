@@ -4,6 +4,7 @@ import { Badge } from '../../ui/badge';
 import { Skeleton } from '../../ui/skeleton';
 import { Button } from '../../ui/button';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { ModelIcon, getModelShortName, getModelBrandColor } from '../../../lib/model-icons';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -50,6 +51,12 @@ interface ModelStats {
   topSessions: TopSession[];
 }
 
+interface HistoryDay {
+  date: string;
+  total: number;
+  byModel: Record<string, number>;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────
 
 function formatTokens(n: number): string {
@@ -76,29 +83,6 @@ function formatCtx(n: number): string {
   return `${(n / 1_000).toFixed(0)}K ctx`;
 }
 
-function getProviderColor(provider: string, subProvider?: string): string {
-  if (provider === 'anthropic') return '#023F59';
-  if (provider === 'moonshot') return '#f59e0b'; // amber-500
-  // openrouter sub-providers
-  if (subProvider === 'x-ai') return '#a855f7'; // purple-500
-  if (subProvider === 'deepseek') return '#f43f5e'; // rose-500
-  if (subProvider === 'minimax') return '#fb923c'; // orange-400
-  if (subProvider === 'meta-llama' || subProvider === 'qwen') return '#10b981'; // emerald-500
-  if (subProvider === 'google') return '#31D7DB';
-  return '#31D7DB'; // default openrouter cyan
-}
-
-function getProviderBorderClass(provider: string, subProvider?: string): string {
-  if (provider === 'anthropic') return 'border-l-[#023F59]';
-  if (provider === 'moonshot') return 'border-l-amber-500';
-  if (subProvider === 'x-ai') return 'border-l-purple-500';
-  if (subProvider === 'deepseek') return 'border-l-rose-500';
-  if (subProvider === 'minimax') return 'border-l-orange-400';
-  if (subProvider === 'meta-llama' || subProvider === 'qwen') return 'border-l-emerald-500';
-  if (subProvider === 'google') return 'border-l-[#31D7DB]';
-  return 'border-l-[#31D7DB]';
-}
-
 function providerLabel(provider: string, subProvider?: string): string {
   if (provider === 'anthropic') return 'Anthropic';
   if (provider === 'moonshot') return 'Moonshot';
@@ -122,12 +106,26 @@ function providerPillClasses(provider: string, subProvider?: string): string {
   return 'bg-[#31D7DB] text-[#023F59]';
 }
 
+function getProviderBorderClass(provider: string, subProvider?: string): string {
+  if (provider === 'anthropic') return 'border-l-[#023F59]';
+  if (provider === 'moonshot') return 'border-l-amber-500';
+  if (subProvider === 'x-ai') return 'border-l-purple-500';
+  if (subProvider === 'deepseek') return 'border-l-rose-500';
+  if (subProvider === 'minimax') return 'border-l-orange-400';
+  if (subProvider === 'meta-llama' || subProvider === 'qwen') return 'border-l-emerald-500';
+  if (subProvider === 'google') return 'border-l-[#31D7DB]';
+  return 'border-l-[#31D7DB]';
+}
+
 // ─── Component ───────────────────────────────────────────────
 
 export function ModelTab() {
   const [stats, setStats] = useState<ModelStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryDay[]>([]);
+  const [historyPeriod, setHistoryPeriod] = useState(30);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -143,11 +141,27 @@ export function ModelTab() {
     }
   }, []);
 
+  const fetchHistory = useCallback(async (days: number) => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/model/history?days=${days}`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data.days || []);
+      }
+    } catch { /* ignore */ }
+    setHistoryLoading(false);
+  }, []);
+
   useEffect(() => {
     fetchStats();
     const interval = setInterval(fetchStats, 60_000);
     return () => clearInterval(interval);
   }, [fetchStats]);
+
+  useEffect(() => {
+    fetchHistory(historyPeriod);
+  }, [historyPeriod, fetchHistory]);
 
   if (loading) return <LoadingSkeleton />;
   if (error) return <ErrorState error={error} onRetry={fetchStats} />;
@@ -157,59 +171,82 @@ export function ModelTab() {
   const totalSessions = tokenStats.byModel.reduce((s, m) => s + m.sessions, 0);
   const avgPerSession = totalSessions > 0 ? tokenStats.total / totalSessions : 0;
 
-  // Find primary + fallback models for config strip
   const primaryModel = availableModels.find(m => m.isPrimary);
   const fallbackModels = availableModels
     .filter(m => m.isFallback)
     .sort((a, b) => (a.fallbackOrder ?? 99) - (b.fallbackOrder ?? 99));
 
-  // Build usage lookup
   const usageLookup = new Map<string, ByModelEntry>();
-  for (const bm of tokenStats.byModel) {
-    usageLookup.set(bm.modelId, bm);
-  }
+  for (const bm of tokenStats.byModel) usageLookup.set(bm.modelId, bm);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#21262A]">Model Configuration & Usage</h3>
+      <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+        <span className="text-base font-semibold text-[#21262A]">Model Configuration & Usage</span>
       </div>
 
       {/* [A] Active Config Strip */}
       <div className="grid gap-4 md:grid-cols-3">
-        <ConfigCard title="PRIMARY" model={primaryModel} config={config} />
+        <ConfigCard title="PRIMARY" model={primaryModel} />
         {[0, 1].map(i => (
-          <ConfigCard
-            key={i}
-            title={`FALLBACK ${i + 1}`}
-            model={fallbackModels[i]}
-            config={config}
-          />
+          <ConfigCard key={i} title={`FALLBACK ${i + 1}`} model={fallbackModels[i]} />
         ))}
       </div>
 
       {/* [B] Token KPI Strip */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <KPICard
-          title="Total Tokens"
-          value={formatTokens(tokenStats.total)}
-          color="#107DAC"
-        />
-        <KPICard
-          title="Total Sessions"
-          value={String(totalSessions)}
-        />
+        <KPICard title="Total Tokens" value={formatTokens(tokenStats.total)} />
+        <KPICard title="Total Sessions" value={String(totalSessions)} />
         <KPICard
           title="Est. Cost"
           value={formatCost(tokenStats.totalCostEstimate)}
-          color={tokenStats.totalCostEstimate > 50 ? '#f59e0b' : undefined}
           subtitle="Estimated · blended 80/20 rate"
         />
-        <KPICard
-          title="Avg / Session"
-          value={formatTokens(Math.round(avgPerSession))}
-        />
+        <KPICard title="Avg / Session" value={formatTokens(Math.round(avgPerSession))} />
+      </div>
+
+      {/* [B2] Historical Token Consumption */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+          <span className="text-base font-semibold text-[#21262A]">Token Consumption History</span>
+        </div>
+        <Card className="border-[#023F59]/20">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-[#21262A]">Daily Token Usage</CardTitle>
+              <div className="flex gap-1">
+                {[7, 30, 90, 180, 365].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setHistoryPeriod(d)}
+                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                      historyPeriod === d
+                        ? 'bg-[#023F59] text-white'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {d}D
+                  </button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {historyLoading ? (
+              <div className="h-[140px] flex items-center justify-center text-sm text-muted-foreground">Loading…</div>
+            ) : history.length === 0 ? (
+              <div className="h-[140px] flex items-center justify-center text-sm text-muted-foreground">
+                No historical data available for this period
+              </div>
+            ) : (
+              <TokenHistoryChart days={history} period={historyPeriod} />
+            )}
+            <p className="text-[10px] text-muted-foreground mt-2">
+              ⚠ Token counts reflect session lifetime totals attributed to last-active date, not daily consumption
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* [C] Token Spend by Model */}
@@ -223,13 +260,11 @@ export function ModelTab() {
           ) : (
             tokenStats.byModel.map((entry) => {
               const model = availableModels.find(m => m.id === entry.modelId);
-              const color = getProviderColor(
-                model?.provider ?? entry.provider,
-                model?.subProvider
-              );
+              const color = getModelBrandColor(entry.modelId);
               return (
-                <div key={entry.modelId} className="flex items-center gap-3 text-sm">
-                  <div className="w-36 shrink-0 truncate font-medium text-[#21262A]">
+                <div key={entry.modelId} className="flex items-center gap-3 text-sm py-1.5 border-b border-[#023F59]/5 last:border-0">
+                  <ModelIcon modelId={entry.modelId} size="xs" />
+                  <div className="w-32 shrink-0 truncate font-medium text-[#21262A]">
                     {entry.label}
                   </div>
                   <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
@@ -258,22 +293,22 @@ export function ModelTab() {
       </Card>
 
       {/* [D] Available Models Grid */}
-      <Card className="border-[#023F59]/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">Available Models</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
-            {availableModels.map((model) => {
-              const usage = usageLookup.get(model.id);
-              const borderClass = getProviderBorderClass(model.provider, model.subProvider);
-              return (
-                <div
-                  key={model.id}
-                  className={`border border-[#023F59]/20 rounded-lg p-3 border-l-4 ${borderClass}`}
-                >
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+          <span className="text-base font-semibold text-[#21262A]">Available Models</span>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {availableModels.map((model) => {
+            const usage = usageLookup.get(model.id);
+            const borderClass = getProviderBorderClass(model.provider, model.subProvider);
+            return (
+              <Card key={model.id} className={`border-[#023F59]/20 border-l-4 ${borderClass}`}>
+                <CardContent className="p-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="font-semibold text-[#21262A] text-sm">{model.label}</div>
+                    <div className="flex items-center gap-2">
+                      <ModelIcon modelId={model.id} size="sm" />
+                      <span className="font-semibold text-[#21262A] text-sm">{model.label}</span>
+                    </div>
                     <Badge
                       variant="secondary"
                       className={`text-[10px] px-1.5 py-0 shrink-0 ${providerPillClasses(model.provider, model.subProvider)}`}
@@ -300,9 +335,7 @@ export function ModelTab() {
                   </div>
                   <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                     {model.alias && (
-                      <div>
-                        <span className="font-mono bg-gray-100 px-1 rounded text-[11px]">alias: {model.alias}</span>
-                      </div>
+                      <div><span className="font-mono bg-gray-100 px-1 rounded text-[11px]">alias: {model.alias}</span></div>
                     )}
                     <div>{formatCtx(model.contextTokens)}</div>
                     <div>
@@ -316,12 +349,12 @@ export function ModelTab() {
                       </div>
                     )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
 
       {/* [E] Top Token Consumers */}
       <Card className="border-[#023F59]/20">
@@ -355,10 +388,13 @@ export function ModelTab() {
                           {session.sessionType}
                         </Badge>
                       </td>
-                      <td className="py-2 pr-3 text-muted-foreground truncate max-w-[140px]">
-                        {session.model}
+                      <td className="py-2 pr-3">
+                        <div className="flex items-center gap-1.5">
+                          <ModelIcon modelId={session.model} size="xs" />
+                          <span className="text-muted-foreground truncate max-w-[120px]">{getModelShortName(session.model)}</span>
+                        </div>
                       </td>
-                      <td className="py-2 pr-3 text-right font-medium text-[#21262A]">
+                      <td className="py-2 pr-3 text-right font-medium text-[#107DAC]">
                         {formatTokens(session.tokens)}
                       </td>
                       <td className="py-2 pr-3 text-right text-muted-foreground">
@@ -379,9 +415,75 @@ export function ModelTab() {
   );
 }
 
+// ─── Token History Chart (Pure CSS) ──────────────────────────
+
+function TokenHistoryChart({ days, period }: { days: HistoryDay[]; period: number }) {
+  const maxTotal = Math.max(...days.map(d => d.total), 1);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  // Determine label frequency
+  const labelEvery = period <= 7 ? 1 : period <= 30 ? 3 : period <= 90 ? 7 : period <= 180 ? 14 : 30;
+
+  return (
+    <div className="relative">
+      <div className="overflow-x-auto">
+        <div className="flex items-end gap-[2px]" style={{ height: 120, minWidth: days.length * 14 }}>
+          {days.map((day, i) => {
+            const heightPct = (day.total / maxTotal) * 100;
+            return (
+              <div
+                key={day.date}
+                className="relative flex flex-col items-center flex-1"
+                style={{ minWidth: 10 }}
+                onMouseEnter={() => setHoverIdx(i)}
+                onMouseLeave={() => setHoverIdx(null)}
+              >
+                <div
+                  className="w-full rounded-t transition-all cursor-pointer hover:opacity-100"
+                  style={{
+                    height: `${Math.max(heightPct, 1)}%`,
+                    backgroundColor: '#023F59',
+                    opacity: hoverIdx === i ? 1 : 0.7,
+                  }}
+                />
+                {/* Tooltip */}
+                {hoverIdx === i && (
+                  <div className="absolute bottom-full mb-2 z-20 bg-[#21262A] text-white text-[10px] rounded-md px-2.5 py-1.5 whitespace-nowrap shadow-lg pointer-events-none">
+                    <p className="font-semibold">{day.date}</p>
+                    <p>Total: {formatTokens(day.total)}</p>
+                    {Object.entries(day.byModel).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([model, tokens]) => (
+                      <p key={model} className="opacity-80">{getModelShortName(model)}: {formatTokens(tokens)}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {/* X-axis labels */}
+        <div className="flex gap-[2px]" style={{ minWidth: days.length * 14 }}>
+          {days.map((day, i) => (
+            <div
+              key={day.date}
+              className="flex-1 text-center"
+              style={{ minWidth: 10 }}
+            >
+              {i % labelEvery === 0 && (
+                <span className="text-[9px] text-muted-foreground">
+                  {day.date.slice(5)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Sub-components ──────────────────────────────────────────
 
-function ConfigCard({ title, model }: { title: string; model?: AvailableModel; config: ModelStats['config'] }) {
+function ConfigCard({ title, model }: { title: string; model?: AvailableModel }) {
   if (!model) {
     return (
       <Card className="border-[#023F59]/20">
@@ -397,7 +499,10 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel; c
     <Card className="border-[#023F59]/20">
       <CardContent className="p-4">
         <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
-        <div className="text-base font-semibold text-[#21262A]">{model.label}</div>
+        <div className="flex items-center gap-2">
+          <ModelIcon modelId={model.id} size="md" />
+          <div className="text-base font-semibold text-[#21262A]">{model.label}</div>
+        </div>
         <div className="flex items-center gap-2 mt-1.5">
           <Badge
             variant="secondary"
@@ -411,23 +516,17 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel; c
             </span>
           )}
         </div>
-
       </CardContent>
     </Card>
   );
 }
 
-function KPICard({ title, value, color, subtitle }: { title: string; value: string; color?: string; subtitle?: string }) {
+function KPICard({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) {
   return (
     <Card className="border-[#023F59]/20">
       <CardContent className="p-4">
         <div className="text-xs text-muted-foreground font-medium">{title}</div>
-        <div
-          className="text-2xl font-bold mt-1"
-          style={{ color: color || '#21262A' }}
-        >
-          {value}
-        </div>
+        <div className="text-2xl font-bold text-[#107DAC] mt-1">{value}</div>
         {subtitle && <div className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</div>}
       </CardContent>
     </Card>

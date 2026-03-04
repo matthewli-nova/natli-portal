@@ -28,7 +28,10 @@ import {
   Calendar,
   Plus,
   Pencil,
+  HelpCircle,
+  Eye,
 } from 'lucide-react';
+import { ModelIcon } from '../../lib/model-icons';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -157,6 +160,15 @@ function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
   return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
+}
+
+function formatDurationHMS(ms: number | null | undefined): string {
+  if (!ms) return '—';
+  const totalSecs = Math.floor(ms / 1000);
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 function formatModelShort(model?: string): string {
@@ -409,6 +421,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
                     <th className="text-left py-2 px-3 font-medium">Job Name</th>
                     <th className="text-left py-2 px-3 font-medium">Schedule</th>
                     <th className="text-left py-2 px-3 font-medium">Last Run</th>
+                    <th className="text-left py-2 px-3 font-medium">Duration</th>
                     <th className="text-left py-2 px-3 font-medium">Next Run</th>
                     <th className="text-left py-2 px-3 font-medium">Target</th>
                     <th className="text-left py-2 px-3 font-medium">Model</th>
@@ -734,16 +747,36 @@ function JobRow({ job, now, onRunNow, onToggle, onViewLogs, onEdit, running }: {
       onMouseLeave={() => setHovered(false)}
     >
       <td className="py-2 pr-3">{statusPill()}</td>
-      <td className="py-2 pr-3 font-medium text-[#21262A]">{job.name.replace(/_/g, ' ')}</td>
+      <td className="py-2 pr-3">
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium text-[#21262A]">{job.name.replace(/_/g, ' ')}</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-[#107DAC] cursor-help shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs">
+              {job.payload?.message ? job.payload.message.slice(0, 200) + (job.payload.message.length > 200 ? '…' : '') : 'No description'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </td>
       <td className="py-2 pr-3 text-xs font-mono text-muted-foreground">{job.scheduleDescription}</td>
       <td className="py-2 pr-3 text-xs text-muted-foreground">
         {job.state.lastRunAtMs ? formatRelativeTime(job.state.lastRunAtMs) : '—'}
+      </td>
+      <td className="py-2 pr-3 text-xs font-mono text-muted-foreground">
+        {formatDurationHMS(job.state.lastDurationMs)}
       </td>
       <td className="py-2 pr-3 text-xs text-[#107DAC] font-medium">
         {job.state.nextRunAtMs ? `in ${formatCountdown(Math.max(0, (job.state.nextRunAtMs || 0) - now))}` : '—'}
       </td>
       <td className="py-2 pr-3 text-xs text-muted-foreground">{job.sessionTarget}</td>
-      <td className="py-2 pr-3 text-xs text-muted-foreground">{formatModelShort(job.payload.model)}</td>
+      <td className="py-2 pr-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          {job.payload.model && <ModelIcon modelId={job.payload.model} size="xs" />}
+          <span>{formatModelShort(job.payload.model)}</span>
+        </div>
+      </td>
       <td className="py-2 text-right">
         <div className={`flex items-center justify-end gap-1 transition-opacity ${hovered ? 'opacity-100' : 'opacity-0'}`}>
           <Tooltip>
@@ -759,6 +792,19 @@ function JobRow({ job, now, onRunNow, onToggle, onViewLogs, onEdit, running }: {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Run Now</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 hover:text-[#107DAC]"
+                onClick={onViewLogs}
+              >
+                <Eye className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>View Result</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
