@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Skeleton } from '../ui/skeleton';
-import { Separator } from '../ui/separator';
-import { CronSummaryCard } from '../natli-scheduler/NatliSchedulerPage';
+import { OverviewTab } from './overview/OverviewTab';
 
 const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
 const LazySessionsTab = lazy(() => import('./sessions/SessionsTab').then(m => ({ default: m.SessionsTab })));
@@ -27,10 +26,6 @@ import {
   ListTodo,
   Brain,
   FileText,
-  Search,
-  Hash,
-  Archive,
-  BookOpen,
   Power,
 } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -133,6 +128,7 @@ export function NatliDashboard() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [gatewayRestarting, setGatewayRestarting] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -267,7 +263,7 @@ export function NatliDashboard() {
         )}
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex w-full overflow-x-auto bg-[#023F59]/5 h-auto flex-nowrap justify-start gap-0.5 px-1 py-1">
           <TabsTrigger value="overview" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Overview</TabsTrigger>
           <TabsTrigger value="system" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">System Health</TabsTrigger>
@@ -282,117 +278,15 @@ export function NatliDashboard() {
 
         {/* ─── Overview Tab ──────────────────────────────────── */}
         <TabsContent value="overview" className="space-y-4">
-          {/* Active Model Banner */}
-          <Card className="border-[#31D7DB]/30 bg-gradient-to-r from-[#023F59]/5 to-[#31D7DB]/5">
-            <CardContent className="py-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#023F59]/10">
-                  <Brain className="w-6 h-6 text-[#31D7DB]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Model</p>
-                  <p className="text-xl font-bold text-[#107DAC]">
-                    {modelConfig ? resolveModelLabel(modelConfig.primary) : '—'}
-                  </p>
-                  {modelConfig && modelConfig.fallbacks.length > 0 && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Failover: {modelConfig.fallbacks.map(f => resolveModelLabel(f)).join(', ')}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRefreshModel}
-                    disabled={refreshingModel}
-                    className="h-7 w-7 p-0 hover:bg-[#023F59]/10"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 text-[#107DAC] ${refreshingModel ? 'animate-spin' : ''}`} />
-                  </Button>
-                  <Badge className="bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30">
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Online
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <KPICard
-              title="Active Sessions"
-              value={activeSessions}
-              icon={<Activity className="w-4 h-4 text-[#31D7DB]" />}
-              description="Last 60 minutes"
-            />
-            <KPICard
-              title="Cron Jobs"
-              value={enabledCrons}
-              icon={<Timer className="w-4 h-4 text-[#31D7DB]" />}
-              description={`${crons.length} total`}
-            />
-            <KPICard
-              title="Tasks In Progress"
-              value={inProgressTasks}
-              icon={<ListTodo className="w-4 h-4 text-[#31D7DB]" />}
-              description={`${tasks.length} total tasks`}
-            />
-            <KPICard
-              title="Memory Files"
-              value={memory?.dailyLogs ?? 0}
-              icon={<Brain className="w-4 h-4 text-[#31D7DB]" />}
-              description={`${memory?.dbSizeMb ?? 0} MB database`}
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Activity Feed */}
-            <Card className="border-[#023F59]/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-[#21262A]">Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {sessions.slice(0, 5).map((s, i) => (
-                  <div key={i} className="flex items-start gap-3 text-sm">
-                    <Activity className="w-3.5 h-3.5 mt-0.5 text-[#31D7DB] shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{s.agent || 'Session'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {s.last_active ? new Date(s.last_active).toLocaleString() : 'Unknown'}
-                        {s.messages ? ` · ${s.messages} messages` : ''}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {sessions.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No recent sessions</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Quick Status */}
-            <Card className="border-[#023F59]/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-[#21262A]">Service Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <ServiceStatusRow
-                  name="OpenClaw"
-                  status={health?.services?.openclaw ? 'online' : health ? 'offline' : 'unknown'}
-                />
-                <ServiceStatusRow name="Ollama" status={health?.services?.ollama ? 'online' : health ? 'offline' : 'unknown'} port={11434} />
-                <ServiceStatusRow name="Gateway" status={health?.services?.gateway ? 'online' : health ? 'offline' : 'unknown'} port={18789} />
-                <Separator className="my-2" />
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Clock className="w-3 h-3" />
-                  <span>System: CPU {health?.cpu ?? '—'}% · Memory {health?.memory ?? '—'}% · Disk {health?.disk ?? '—'}%</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* [G] Cron Summary Card */}
-          <CronSummaryCard />
+          <OverviewTab
+            health={health}
+            sessions={sessions as any}
+            crons={crons as any}
+            tasks={tasks}
+            modelConfig={modelConfig}
+            memory={memory}
+            onNavigateTo={setActiveTab}
+          />
         </TabsContent>
 
         {/* ─── System Tab ────────────────────────────────────── */}
