@@ -45,15 +45,92 @@ app.get('/api/health', async (_req, res) => {
     const now = new Date();
     const alerts: Alert[] = [];
 
-    // Run mactop for rich system data
-    let mactopData: Record<string, unknown> | null = null;
-    try {
-      const mactopOut = await execCommand('PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH mactop --headless --count 1 --format json');
-      const parsed = JSON.parse(mactopOut);
-      mactopData = Array.isArray(parsed) ? parsed[0] : parsed;
-    } catch { /* fallback to os module */ }
+    // Run mactop + openclaw status + filesystem reads in parallel
+    const [mactopResult, openclawStatusResult, fsStatsResult] = await Promise.all([
+      // 1. mactop
+      (async () => {
+        try {
+          const out = await execCommand('PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH mactop --headless --count 1 --format json');
+          const parsed = JSON.parse(out);
+          return Array.isArray(parsed) ? parsed[0] : parsed;
+        } catch { return null; }
+      })(),
+      // 2. openclaw status --json
+      (async () => {
+        try {
+          const out = await execCommand('openclaw status --json');
+          return JSON.parse(out) as Record<string, unknown>;
+        } catch { return null; }
+      })(),
+      // 3. Filesystem stats
+      (async () => {
+        const memoryMdPath = path.join(OPENCLAW_WORKSPACE, 'MEMORY.md');
+        const memoryDir = path.join(OPENCLAW_WORKSPACE, 'memory');
+        const archiveDir = path.join(OPENCLAW_WORKSPACE, 'memory', 'archive');
+        const dbPath = '/Users/natlee/.openclaw/memory/main.sqlite';
 
-    // Extract metrics
+        const [mdLines, dailyLogs, archiveCount, dbSize, dbMtime, p0, p1, p2] = await Promise.all([
+          execCommand(`wc -l < "${memoryMdPath}"`).then(s => parseInt(s.trim(), 10)).catch(() => 0),
+          fs.readdir(memoryDir).then(f => f.filter(x => x.endsWith('.md')).length).catch(() => 0),
+          fs.readdir(archiveDir).then(f => f.length).catch(() => 0),
+          execCommand(`du -sk "${dbPath}"`).then(s => Math.round((parseInt(s.split('\t')[0], 10) / 1024) * 100) / 100).catch(() => 0),
+          fs.stat(dbPath).then(s => s.mtime.toISOString()).catch(() => ''),
+          execCommand(`grep -c '## \\[P0\\]' "${memoryMdPath}"`).then(s => parseInt(s.trim(), 10)).catch(() => 0),
+          execCommand(`grep -c '## \\[P1\\]' "${memoryMdPath}"`).then(s => parseInt(s.trim(), 10)).catch(() => 0),
+          execCommand(`grep -c '## \\[P2\\]' "${memoryMdPath}"`).then(s => parseInt(s.trim(), 10)).catch(() => 0),
+        ]);
+        return { memoryMdLines: mdLines, memoryMdCap: 150, memoryDailyLogs: dailyLogs, memoryArchiveCount: archiveCount, memoryDbSizeMb: dbSize, lastMemorySyncTime: dbMtime, p0Sections: p0, p1Sections: p1, p2Sections: p2 };
+      })(),
+    ]);
+
+    const mactopData = mactopResult as Record<string, unknown> | null;
+
+    // Extract openclaw status fields
+    let gatewayReachable = false, gatewayLatencyMs = 0, gatewayVersion = '', gatewayHost = '';
+    let gatewayServiceRunning = false, gatewayPid = 0, gatewayStartTime = '';
+    let primaryModel = '', totalSessions = 0;
+    let memoryFiles = 0, memoryChunks = 0, memoryDirty = false, memoryDbPath = '';
+    let ollamaModel = '', cacheEntries = 0, vectorEnabled = false, ftsEnabled = false;
+
+    if (openclawStatusResult) {
+      const gw = openclawStatusResult.gateway as Record<string, unknown> ?? {};
+      const gwSelf = gw.self as Record<string, string> ?? {};
+      const gwSvc = openclawStatusResult.gatewayService as Record<string, string> ?? {};
+      const sess = openclawStatusResult.sessions as Record<string, unknown> ?? {};
+      const sessDefaults = sess.defaults as Record<string, string> ?? {};
+      const mem = openclawStatusResult.memory as Record<string, unknown> ?? {};
+      const cache = mem.cache as Record<string, unknown> ?? {};
+      const vec = mem.vector as Record<string, unknown> ?? {};
+      const fts = mem.fts as Record<string, unknown> ?? {};
+      const agents = openclawStatusResult.agents as Record<string, unknown> ?? {};
+
+      gatewayReachable = !!gw.reachable;
+      gatewayLatencyMs = (gw.connectLatencyMs as number) ?? 0;
+      gatewayVersion = gwSelf.version ?? '';
+      gatewayHost = gwSelf.host ?? '';
+      gatewayServiceRunning = ((gwSvc.runtimeShort ?? '') as string).includes('running');
+      const pidMatch = ((gwSvc.runtimeShort ?? '') as string).match(/pid (\d+)/);
+      gatewayPid = pidMatch ? parseInt(pidMatch[1], 10) : 0;
+      primaryModel = sessDefaults.model ?? '';
+      totalSessions = (agents.totalSessions as number) ?? (sess.count as number) ?? 0;
+      memoryFiles = (mem.files as number) ?? 0;
+      memoryChunks = (mem.chunks as number) ?? 0;
+      memoryDirty = !!mem.dirty;
+      memoryDbPath = (mem.dbPath as string) ?? '';
+      ollamaModel = (mem.model as string) ?? '';
+      cacheEntries = (cache.entries as number) ?? 0;
+      vectorEnabled = !!vec.available;
+      ftsEnabled = !!fts.available;
+
+      // Get gateway start time from PID
+      if (gatewayPid > 0) {
+        try {
+          gatewayStartTime = (await execCommand(`ps -p ${gatewayPid} -o lstart=`)).trim();
+        } catch { /* process may have restarted */ }
+      }
+    }
+
+    // Extract mactop metrics
     let cpuPercent = 0, memPercent = 0, diskPercent = 0;
     let memTotalGb = 0, memUsedGb = 0, memAvailGb = 0;
     let cpuTemp = 0, gpuTemp = 0, socTemp = 0;
@@ -128,9 +205,9 @@ app.get('/api/health', async (_req, res) => {
 
     // Service health checks
     let openclawOk = false, ollamaOk = false, gatewayOk = false;
-    try { await execCommand('openclaw gateway status'); openclawOk = true; } catch { /* down */ }
+    openclawOk = gatewayServiceRunning;
     try { const r = await fetch('http://localhost:11434/api/tags', {signal: AbortSignal.timeout(3000)}); ollamaOk = r.ok; } catch { /* down */ }
-    try { const r = await fetch('http://localhost:18789/', {signal: AbortSignal.timeout(3000)}); gatewayOk = r.ok || r.status < 500; } catch { /* down */ }
+    gatewayOk = gatewayReachable;
 
     // Build alerts with level, type, timestamp (ddmmyy hhmmss)
     if (cpuPercent > 85) alerts.push({ level: 'critical', type: 'CPU', message: `CPU usage critical: ${cpuPercent}%`, timestamp: fmtAlertTime(now) });
@@ -162,6 +239,14 @@ app.get('/api/health', async (_req, res) => {
       coreCount, eCores, pCores,
       services: { openclaw: openclawOk, ollama: ollamaOk, gateway: gatewayOk },
       topProcesses,
+      // Cat 1: Gateway & Sessions
+      gatewayReachable, gatewayLatencyMs, gatewayVersion, gatewayHost,
+      gatewayServiceRunning, gatewayPid, gatewayStartTime,
+      primaryModel, totalSessions,
+      // Cat 2: Memory & Knowledge
+      memoryFiles, memoryChunks, memoryDirty, memoryDbPath,
+      ollamaModel, cacheEntries, vectorEnabled, ftsEnabled,
+      ...fsStatsResult,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';

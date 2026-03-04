@@ -35,6 +35,10 @@ import {
   ArrowUp,
   Monitor,
   Thermometer,
+  Search,
+  Hash,
+  Archive,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -55,6 +59,16 @@ interface HealthData {
   coreCount: number; eCores: number; pCores: number;
   services: { openclaw: boolean; ollama: boolean; gateway: boolean };
   topProcesses: Array<{ pid: number; command: string; cpu_percent: number; memory_percent: number; gpu_ms_per_sec?: number }>;
+  // Cat 1: Gateway & Sessions
+  gatewayReachable: boolean; gatewayLatencyMs: number; gatewayVersion: string; gatewayHost: string;
+  gatewayServiceRunning: boolean; gatewayPid: number; gatewayStartTime: string;
+  primaryModel: string; totalSessions: number;
+  // Cat 2: Memory & Knowledge
+  memoryFiles: number; memoryChunks: number; memoryDirty: boolean; memoryDbPath: string;
+  ollamaModel: string; cacheEntries: number; vectorEnabled: boolean; ftsEnabled: boolean;
+  memoryMdLines: number; memoryMdCap: number; memoryDailyLogs: number; memoryArchiveCount: number;
+  memoryDbSizeMb: number; lastMemorySyncTime: string;
+  p0Sections: number; p1Sections: number; p2Sections: number;
 }
 
 interface CronJob {
@@ -331,173 +345,289 @@ export function NatliDashboard() {
         </TabsContent>
 
         {/* ─── System Tab ────────────────────────────────────── */}
-        <TabsContent value="system" className="space-y-4">
-          {/* Row 1: Chip Info */}
-          <Card className="border-[#31D7DB]/30 bg-gradient-to-r from-[#023F59]/5 to-[#31D7DB]/5">
-            <CardContent className="py-3">
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-[#31D7DB]" />
-                  <span className="font-semibold text-[#21262A]">{health?.socModel ?? '—'}</span>
-                </div>
-                <Separator orientation="vertical" className="h-5" />
-                <span className="text-sm text-muted-foreground">
-                  {health?.coreCount ?? '—'} cores ({health?.eCores ?? '—'}E + {health?.pCores ?? '—'}P)
-                </span>
-                <Separator orientation="vertical" className="h-5" />
-                <Badge className={
-                  health?.thermalState === 'Normal'
-                    ? 'bg-emerald-100 text-emerald-700 border-0'
-                    : 'bg-amber-100 text-amber-700 border-0'
-                }>
-                  {health?.thermalState ?? '—'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="system" className="space-y-6">
+          {/* ════════════════════════════════════════════════════ */}
+          {/* SECTION 1: System Status                            */}
+          {/* ════════════════════════════════════════════════════ */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+              <span className="text-lg font-bold text-[#21262A]">
+                {health?.gatewayReachable && health?.gatewayServiceRunning ? '\u{1F7E2}' : health?.gatewayServiceRunning ? '\u{1F7E1}' : '\u{1F534}'} System Status
+              </span>
+            </div>
 
-          {/* Row 2: Resource Gauges */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <GaugeCard label="CPU" value={health?.cpu ?? 0} icon={<Cpu className="w-4 h-4 text-[#31D7DB]" />} subtitle={`${health?.socModel ?? 'CPU'} · ${health?.eCores ?? 0}E+${health?.pCores ?? 0}P Cores`} />
-            <GaugeCard label="Memory" value={health?.memory ?? 0} icon={<MemoryStick className="w-4 h-4 text-[#31D7DB]" />} subtitle={`${health?.memUsedGb ?? 0} GB / ${health?.memTotalGb ?? 0} GB used`} />
-            <GaugeCard label="Disk" value={health?.disk ?? 0} icon={<HardDrive className="w-4 h-4 text-[#31D7DB]" />} subtitle="Used / Available" />
-            <GaugeCard label="GPU" value={health?.gpuPercent ?? 0} icon={<Monitor className="w-4 h-4 text-[#31D7DB]" />} subtitle={`${health?.gpuFreqMhz ?? 0} MHz`} />
+            {/* Top Status Bar — pill badges */}
+            <div className="flex flex-wrap gap-2">
+              <Badge className={`px-3 py-1 text-xs font-semibold border-0 ${health?.gatewayReachable ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                Gateway: {health?.gatewayReachable ? 'ONLINE' : 'OFFLINE'}
+              </Badge>
+              <Badge className="px-3 py-1 text-xs font-semibold bg-[#31D7DB]/20 text-[#107DAC] border-0">
+                {health?.primaryModel || '—'}
+              </Badge>
+              <Badge className="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 border-0">
+                <Clock className="w-3 h-3 mr-1" />
+                {health?.gatewayStartTime ? formatUptime(health.gatewayStartTime) : '—'}
+              </Badge>
+              <Badge className="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-700 border-0">
+                <Activity className="w-3 h-3 mr-1" />
+                {health?.totalSessions ?? 0} sessions
+              </Badge>
+            </div>
+
+            {/* Status Grid — 2-column cards */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Card 1: Gateway */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Server className="w-4 h-4 text-[#31D7DB]" />
+                      <span className="text-sm font-semibold text-[#21262A]">Gateway</span>
+                    </div>
+                    <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${health?.gatewayReachable ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      {health?.gatewayReachable ? 'Online' : 'Offline'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <div className="text-muted-foreground">Version</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayVersion || '—'}</div>
+                    <div className="text-muted-foreground">Host</div>
+                    <div className="font-mono text-[#21262A] truncate">{health?.gatewayHost || '—'}</div>
+                    <div className="text-muted-foreground">Latency</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayLatencyMs ?? 0} ms</div>
+                    <div className="text-muted-foreground">PID</div>
+                    <div className="font-mono text-[#21262A]">{health?.gatewayPid || '—'}</div>
+                    <div className="text-muted-foreground">Started</div>
+                    <div className="font-mono text-[#21262A] text-xs">{health?.gatewayStartTime || '—'}</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Current Model */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Brain className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Current Model</span>
+                  </div>
+                  <p className="text-2xl font-bold text-[#107DAC]">
+                    {health?.primaryModel ? resolveModelLabel(health.primaryModel) : '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">{health?.primaryModel || ''}</p>
+                </CardContent>
+              </Card>
+
+              {/* Card 3: Active Sessions */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Activity className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Active Sessions</span>
+                  </div>
+                  <p className="text-3xl font-bold text-[#107DAC]">{health?.totalSessions ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">total sessions</p>
+                </CardContent>
+              </Card>
+
+              {/* Card 4: Mac mini Health (compact) */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Monitor className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Mac mini Health</span>
+                  </div>
+                  <div className="space-y-2.5">
+                    <MiniBar label="CPU" value={health?.cpu ?? 0} />
+                    <MiniBar label="RAM" value={health?.memory ?? 0} />
+                    <MiniBar label="Disk" value={health?.disk ?? 0} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 5: Ollama Status */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Database className="w-4 h-4 text-[#31D7DB]" />
+                      <span className="text-sm font-semibold text-[#21262A]">Ollama</span>
+                    </div>
+                    <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${health?.services?.ollama ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      {health?.services?.ollama ? 'Online' : 'Offline'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <div className="text-muted-foreground">Model</div>
+                    <div className="font-mono text-[#21262A]">{health?.ollamaModel || '—'}</div>
+                    <div className="text-muted-foreground">Dims</div>
+                    <div className="font-mono text-[#21262A]">768</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 6: Last Active */}
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">Last Active</span>
+                  </div>
+                  <p className="text-2xl font-bold text-[#107DAC]">
+                    {health?.timestamp ? formatTimeAgo(health.timestamp) : '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {health?.timestamp ? new Date(health.timestamp).toLocaleTimeString() : ''}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          {/* Row 3: Temperature & Power */}
-          <div className="grid gap-4 md:grid-cols-2">
+          <Separator className="my-2" />
+
+          {/* ════════════════════════════════════════════════════ */}
+          {/* SECTION 2: Memory & Knowledge                       */}
+          {/* ════════════════════════════════════════════════════ */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+              <span className="text-lg font-bold text-[#21262A]">{'\u{1F9E0}'} Memory & Knowledge</span>
+            </div>
+
+            {/* Memory.md Health Card (full width) */}
             <Card className="border-[#023F59]/20">
               <CardContent className="pt-5 pb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Thermometer className="w-4 h-4 text-[#31D7DB]" />
-                  <span className="text-sm font-semibold text-[#21262A]">Temperature</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-semibold text-[#21262A]">MEMORY.md Health</span>
+                  </div>
+                  {(health?.memoryMdLines ?? 0) >= 145 && (
+                    <Badge className="bg-red-100 text-red-700 border-0 text-[10px] font-bold">NEAR CAP</Badge>
+                  )}
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <TempIndicator label="CPU" value={health?.cpuTemp ?? 0} />
-                  <TempIndicator label="GPU" value={health?.gpuTemp ?? 0} />
-                  <TempIndicator label="SoC" value={health?.socTemp ?? 0} />
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">
+                        {health?.memoryMdLines ?? 0} / {health?.memoryMdCap ?? 150} lines used
+                      </span>
+                      <span className="font-semibold text-[#21262A]">
+                        {health?.memoryMdCap ? Math.round(((health?.memoryMdLines ?? 0) / health.memoryMdCap) * 100) : 0}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={health?.memoryMdCap ? ((health?.memoryMdLines ?? 0) / health.memoryMdCap) * 100 : 0}
+                      className={`h-2.5 ${
+                        (health?.memoryMdLines ?? 0) >= 145
+                          ? '[&>div]:bg-red-500'
+                          : (health?.memoryMdLines ?? 0) >= 120
+                          ? '[&>div]:bg-amber-500'
+                          : '[&>div]:bg-emerald-500'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Badge className="bg-red-100 text-red-700 border-0 text-xs">P0: {health?.p0Sections ?? 0}</Badge>
+                    <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">P1: {health?.p1Sections ?? 0}</Badge>
+                    <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">P2: {health?.p2Sections ?? 0}</Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-[#023F59]/20">
-              <CardContent className="pt-5 pb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4 text-[#31D7DB]" />
-                  <span className="text-sm font-semibold text-[#21262A]">Power</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-[#107DAC]">{health?.cpuPowerW ?? 0}<span className="text-sm font-normal ml-1">W</span></p>
-                    <p className="text-xs text-muted-foreground">CPU</p>
+
+            {/* Knowledge Base Grid — 4 stat cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <KPICard
+                title="Chunks Indexed"
+                value={health?.memoryChunks ?? 0}
+                icon={<Hash className="w-4 h-4 text-[#31D7DB]" />}
+                description="memory chunks"
+              />
+              <KPICard
+                title="Files Indexed"
+                value={health?.memoryFiles ?? 0}
+                icon={<FileText className="w-4 h-4 text-[#31D7DB]" />}
+                description="source files"
+              />
+              <KPICard
+                title="Cache Entries"
+                value={health?.cacheEntries ?? 0}
+                icon={<Database className="w-4 h-4 text-[#31D7DB]" />}
+                description="embedding cache"
+              />
+              <KPICard
+                title="SQLite DB"
+                value={`${health?.memoryDbSizeMb ?? 0}`}
+                icon={<HardDrive className="w-4 h-4 text-[#31D7DB]" />}
+                description="MB"
+              />
+            </div>
+
+            {/* Memory System Status — 2 cards */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4 flex items-center gap-3">
+                  <Search className="w-5 h-5 text-[#31D7DB]" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-[#21262A]">Vector Search</p>
+                    <p className="text-xs text-muted-foreground">768 dims (nomic-embed-text)</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-[#107DAC]">{health?.systemPowerW ?? 0}<span className="text-sm font-normal ml-1">W</span></p>
-                    <p className="text-xs text-muted-foreground">System</p>
+                  <Badge className={`text-xs font-bold border-0 ${health?.vectorEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {health?.vectorEnabled ? '\u2705 Ready' : '\u274C Offline'}
+                  </Badge>
+                </CardContent>
+              </Card>
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4 flex items-center gap-3">
+                  <BookOpen className="w-5 h-5 text-[#31D7DB]" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-[#21262A]">Full-text Search</p>
+                    <p className="text-xs text-muted-foreground">FTS5 index</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <Badge className={`text-xs font-bold border-0 ${health?.ftsEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {health?.ftsEnabled ? '\u2705 Ready' : '\u274C Offline'}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Daily Log Stats — 2 mini cards + Last Sync */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-medium text-[#21262A]">Daily Logs</span>
+                  </div>
+                  <p className="text-2xl font-bold text-[#107DAC]">{health?.memoryDailyLogs ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">files</p>
+                </CardContent>
+              </Card>
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Archive className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-medium text-[#21262A]">Archive</span>
+                  </div>
+                  <p className="text-2xl font-bold text-[#107DAC]">{health?.memoryArchiveCount ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">files</p>
+                </CardContent>
+              </Card>
+              <Card className="border-[#023F59]/20">
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-[#31D7DB]" />
+                    <span className="text-sm font-medium text-[#21262A]">Last Sync</span>
+                  </div>
+                  <p className="text-sm font-mono text-[#107DAC]">
+                    {health?.lastMemorySyncTime ? new Date(health.lastMemorySyncTime).toLocaleString() : '—'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          {/* Row 4: Network & Disk I/O */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="border-[#023F59]/20">
-              <CardContent className="pt-5 pb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Activity className="w-4 h-4 text-[#31D7DB]" />
-                  <span className="text-sm font-semibold text-[#21262A]">Network</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2">
-                    <ArrowDown className="w-3.5 h-3.5 text-emerald-500" />
-                    <div>
-                      <p className="text-lg font-bold text-[#107DAC]">{health?.netInKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
-                      <p className="text-xs text-muted-foreground">IN</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ArrowUp className="w-3.5 h-3.5 text-amber-500" />
-                    <div>
-                      <p className="text-lg font-bold text-[#107DAC]">{health?.netOutKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
-                      <p className="text-xs text-muted-foreground">OUT</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-[#023F59]/20">
-              <CardContent className="pt-5 pb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <HardDrive className="w-4 h-4 text-[#31D7DB]" />
-                  <span className="text-sm font-semibold text-[#21262A]">Disk I/O</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2">
-                    <ArrowDown className="w-3.5 h-3.5 text-emerald-500" />
-                    <div>
-                      <p className="text-lg font-bold text-[#107DAC]">{health?.diskReadKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
-                      <p className="text-xs text-muted-foreground">Read</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ArrowUp className="w-3.5 h-3.5 text-amber-500" />
-                    <div>
-                      <p className="text-lg font-bold text-[#107DAC]">{health?.diskWriteKbps ?? 0}<span className="text-xs font-normal ml-1">KB/s</span></p>
-                      <p className="text-xs text-muted-foreground">Write</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Row 5: Service Status */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <ServiceCard name="OpenClaw" status={health?.services?.openclaw ? 'online' : 'offline'} />
-            <ServiceCard name="Ollama" status={health?.services?.ollama ? 'online' : 'offline'} endpoint=":11434" />
-            <ServiceCard name="Gateway" status={health?.services?.gateway ? 'online' : 'offline'} endpoint=":18789" />
-          </div>
-
-          {/* Row 6: Top Processes */}
-          {health?.topProcesses && health.topProcesses.length > 0 && (
-            <Card className="border-[#023F59]/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#31D7DB]" />
-                  Top Processes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-[#023F59]/10">
-                      <TableHead className="w-[60px]">PID</TableHead>
-                      <TableHead>Process</TableHead>
-                      <TableHead className="text-right">CPU%</TableHead>
-                      <TableHead className="text-right">Memory%</TableHead>
-                      <TableHead className="text-right">GPU ms/s</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {health.topProcesses
-                      .sort((a, b) => b.cpu_percent - a.cpu_percent)
-                      .slice(0, 8)
-                      .map((proc) => (
-                        <TableRow key={proc.pid} className={proc.cpu_percent > 10 ? 'bg-amber-50/60' : ''}>
-                          <TableCell className="font-mono text-xs">{proc.pid}</TableCell>
-                          <TableCell className="font-medium text-sm truncate max-w-[200px]">{proc.command}</TableCell>
-                          <TableCell className="text-right font-mono text-sm">{proc.cpu_percent.toFixed(1)}</TableCell>
-                          <TableCell className="text-right font-mono text-sm">{proc.memory_percent.toFixed(1)}</TableCell>
-                          <TableCell className="text-right font-mono text-sm">{proc.gpu_ms_per_sec != null ? proc.gpu_ms_per_sec.toFixed(1) : '—'}</TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Row 7: Alerts */}
+          {/* Alerts (keep at bottom) */}
           {health && health.alerts.length > 0 && (
             <Card className="border-red-200">
               <CardHeader className="pb-3">
@@ -646,6 +776,43 @@ export function NatliDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+
+function formatUptime(startTimeStr: string): string {
+  try {
+    const start = new Date(startTimeStr);
+    if (isNaN(start.getTime())) return '—';
+    const diff = Date.now() - start.getTime();
+    const hours = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h`;
+    }
+    return `${hours}h ${mins}m`;
+  } catch { return '—'; }
+}
+
+function formatTimeAgo(iso: string): string {
+  try {
+    const diff = Date.now() - new Date(iso).getTime();
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    return `${Math.floor(diff / 3600000)}h ago`;
+  } catch { return '—'; }
+}
+
+function MiniBar({ label, value }: { label: string; value: number }) {
+  const color = value > 80 ? '[&>div]:bg-red-500' : value > 60 ? '[&>div]:bg-amber-500' : '[&>div]:bg-[#31D7DB]';
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground w-8">{label}</span>
+      <Progress value={value} className={`h-1.5 flex-1 ${color}`} />
+      <span className="text-xs font-mono text-[#21262A] w-8 text-right">{value}%</span>
     </div>
   );
 }
