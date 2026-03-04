@@ -2,7 +2,7 @@
 // Renders skill cards in list or grid view for the sidebar
 
 import { Clock, Zap } from 'lucide-react';
-import { type Skill, STATUS_COLORS, STATUS_LABELS, CATEGORY_COLORS } from './skills-data';
+import { type Skill, CATEGORY_COLORS, CATEGORY_EMOJI } from './skills-data';
 
 interface SkillsListProps {
   skills: Skill[];
@@ -70,7 +70,10 @@ function SkillListRow({
       }`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
-        <span className="text-base flex-shrink-0">{skill.emoji}</span>
+        {/* Logo: category emoji when ready, greyed skill emoji when not */}
+        <span className={`text-base flex-shrink-0 ${skill.status !== 'ready' ? 'opacity-40 grayscale' : ''}`}>
+          {skill.status === 'ready' ? CATEGORY_EMOJI[skill.category] ?? skill.emoji : skill.emoji}
+        </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-sm font-medium truncate">{skill.name}</span>
@@ -79,13 +82,17 @@ function SkillListRow({
             )}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
+            {/* Category badge instead of status */}
             <span className={`text-xs px-1.5 py-0 rounded-full font-medium ${
               isSelected
                 ? 'bg-primary-foreground/20 text-primary-foreground'
-                : STATUS_COLORS[skill.status]
+                : CATEGORY_COLORS[skill.category]
             }`}>
-              {STATUS_LABELS[skill.status]}
+              {skill.category === 'Infrastructure & Platform' ? 'Infra' : skill.category.split(' ')[0]}
             </span>
+            {skill.status !== 'ready' && (
+              <span className={`text-xs ${isSelected ? 'text-primary-foreground/60' : 'text-amber-600'}`}>⚠</span>
+            )}
             {skill.lastUsed && (
               <span className={`text-xs flex items-center gap-0.5 ${
                 isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'
@@ -126,14 +133,16 @@ function SkillGridCard({
           : 'hover:bg-muted/60 border-transparent hover:border-border'
       }`}
     >
-      <div className="text-2xl mb-1.5">{skill.emoji}</div>
+      <div className={`text-2xl mb-1.5 ${skill.status !== 'ready' ? 'opacity-40 grayscale' : ''}`}>
+        {skill.status === 'ready' ? CATEGORY_EMOJI[skill.category] ?? skill.emoji : skill.emoji}
+      </div>
       <div className="text-xs font-medium truncate mb-1">{skill.name}</div>
       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
         isSelected
           ? 'bg-primary-foreground/20 text-primary-foreground'
-          : STATUS_COLORS[skill.status]
+          : CATEGORY_COLORS[skill.category]
       }`}>
-        {STATUS_LABELS[skill.status]}
+        {skill.category === 'Infrastructure & Platform' ? 'Infra' : skill.category.split(' ')[0]}
       </span>
     </button>
   );

@@ -526,6 +526,14 @@ export const ALL_SKILLS: Skill[] = [...CUSTOM_SKILLS, ...SYSTEM_SKILLS];
 
 // ─── Category Colors ───────────────────────────────────────────────────────────
 
+export const CATEGORY_EMOJI: Record<SkillCategory, string> = {
+  'Development': '💻',
+  'Infrastructure & Platform': '🏗️',
+  'Research & Orchestration': '🔍',
+  'Business Operations': '💼',
+  'System': '⚙️',
+};
+
 export const CATEGORY_COLORS: Record<SkillCategory, string> = {
   'Development': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   'Infrastructure & Platform': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',

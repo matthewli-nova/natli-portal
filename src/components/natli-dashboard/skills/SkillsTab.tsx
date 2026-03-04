@@ -210,9 +210,9 @@ export function SkillsTab() {
 
         {/* ── Skills Tab ─────────────────────────────────────────── */}
         <TabsContent value="skills" className="mt-3">
-          <div className="flex gap-0 min-h-[600px] border border-[#023F59]/20 rounded-lg overflow-hidden">
+          <div className="flex gap-0 h-[680px] border border-[#023F59]/20 rounded-lg overflow-hidden">
 
-            {/* Left panel */}
+            {/* Left panel — independent scroll */}
             <div
               className="flex-shrink-0 flex flex-col gap-3 p-3 border-r border-[#023F59]/20 overflow-hidden"
               style={{ width: leftWidth }}
@@ -296,11 +296,9 @@ export function SkillsTab() {
                       <Button variant={detailMode === 'view' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('view')} className={detailMode === 'view' ? 'bg-[#023F59] text-white' : ''}>
                         <BookOpen className="w-3.5 h-3.5 mr-1" />View
                       </Button>
-                      {selectedSkill.type === 'custom' && (
-                        <Button variant={detailMode === 'edit' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('edit')} className={detailMode === 'edit' ? 'bg-[#023F59] text-white' : ''}>
-                          <PenLine className="w-3.5 h-3.5 mr-1" />Edit
-                        </Button>
-                      )}
+                      <Button variant={detailMode === 'edit' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('edit')} className={detailMode === 'edit' ? 'bg-[#023F59] text-white' : ''}>
+                        <PenLine className="w-3.5 h-3.5 mr-1" />Edit
+                      </Button>
                     </div>
                   </div>
                   <div className="flex-1 overflow-auto">

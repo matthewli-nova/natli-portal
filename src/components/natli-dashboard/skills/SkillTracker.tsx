@@ -5,13 +5,28 @@ import { TrendingUp, Clock, AlertCircle, Award, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { type Skill, type SkillCategory, CATEGORY_COLORS, STATUS_COLORS } from './skills-data';
 
+// Accept either the full static stats shape or the partial live-API shape
 interface SkillTrackerProps {
-  stats: ReturnType<typeof import('./skills-data').getSkillStats>;
+  stats: {
+    total: number;
+    totalCustom: number;
+    totalSystem: number;
+    ready: number;
+    needsSetup: number;
+    contractCoverage: number;
+    withContract?: number;
+    mostUsed?: Skill[];
+    recentlyAdded?: Skill[];
+    neverUsed?: Skill[];
+  };
   skills: Skill[];
 }
 
 export function SkillTracker({ stats, skills }: SkillTrackerProps) {
   const categoryBreakdown = getCategoryBreakdown(skills);
+  const mostUsed    = mostUsed    ?? [];
+  const recentlyAdded = recentlyAdded ?? [...skills].sort((a,b) => (b.addedDate ?? '').localeCompare(a.addedDate ?? '')).slice(0,5);
+  const neverUsed   = neverUsed   ?? skills.filter(s => !s.usageCount);
 
   return (
     <div className="space-y-6">
@@ -28,21 +43,21 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
           {
             icon: TrendingUp,
             label: 'Most Active',
-            value: stats.mostUsed[0]?.name ?? '—',
-            sub: `${stats.mostUsed[0]?.usageCount ?? 0} uses all time`,
+            value: mostUsed[0]?.name ?? '—',
+            sub: `${mostUsed[0]?.usageCount ?? 0} uses all time`,
           },
           {
             icon: Clock,
             label: 'Recently Added',
-            value: stats.recentlyAdded[0]?.name ?? '—',
-            sub: stats.recentlyAdded[0]?.addedDate ?? '—',
+            value: recentlyAdded[0]?.name ?? '—',
+            sub: recentlyAdded[0]?.addedDate ?? '—',
           },
           {
             icon: AlertCircle,
             label: 'Never Used',
-            value: stats.neverUsed.length,
+            value: neverUsed.length,
             sub: 'skills with 0 uses',
-            accent: stats.neverUsed.length > 5 ? 'text-amber-600' : 'text-muted-foreground',
+            accent: neverUsed.length > 5 ? 'text-amber-600' : 'text-muted-foreground',
           },
         ].map(kpi => (
           <Card key={kpi.label}>
@@ -72,7 +87,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
-              {stats.mostUsed.map((skill, i) => (
+              {mostUsed.map((skill, i) => (
                 <div key={skill.id} className="flex items-center gap-3">
                   <span className="text-muted-foreground text-xs w-4 font-mono">{i + 1}</span>
                   <span className="text-sm">{skill.emoji}</span>
@@ -83,7 +98,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                       <div
                         className="h-full bg-primary rounded-full"
                         style={{
-                          width: `${Math.min(100, ((skill.usageCount ?? 0) / (stats.mostUsed[0]?.usageCount ?? 1)) * 100)}%`
+                          width: `${Math.min(100, ((skill.usageCount ?? 0) / (mostUsed[0]?.usageCount ?? 1)) * 100)}%`
                         }}
                       />
                     </div>
@@ -93,7 +108,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                   </div>
                 </div>
               ))}
-              {stats.mostUsed.length === 0 && (
+              {mostUsed.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">No usage data yet</p>
               )}
             </div>
@@ -110,7 +125,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
-              {stats.recentlyAdded.map(skill => (
+              {recentlyAdded.map(skill => (
                 <div key={skill.id} className="flex items-center gap-2">
                   <span className="text-sm">{skill.emoji}</span>
                   <div className="flex-1 min-w-0">
@@ -184,7 +199,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
               ))}
 
               {/* Never used */}
-              {stats.neverUsed.filter(s => s.type === 'custom').slice(0, 2).map(skill => (
+              {neverUsed.filter(s => s.type === 'custom').slice(0, 2).map(skill => (
                 <div key={skill.id} className="flex items-center gap-2">
                   <span className="text-sm">{skill.emoji}</span>
                   <span className="text-sm flex-1 truncate">{skill.name}</span>
@@ -192,7 +207,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                 </div>
               ))}
 
-              {stats.neverUsed.length === 0 && skills.filter(s => s.status === 'needs-setup').length === 0 && (
+              {neverUsed.length === 0 && skills.filter(s => s.status === 'needs-setup').length === 0 && (
                 <p className="text-sm text-emerald-600 text-center py-4">
                   ✅ All skills are healthy
                 </p>
