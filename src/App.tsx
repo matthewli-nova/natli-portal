@@ -6,6 +6,7 @@ import { InvitationManager } from './components/invitations/InvitationManager';
 import { RegistrationLinkManager } from './components/registration-links/RegistrationLinkManager';
 import { NatliSettingsPage } from './components/natli-settings/NatliSettingsPage';
 import { NatliDashboard } from './components/natli-dashboard/NatliDashboard';
+import { NatliSkillsPage } from './components/natli-skills/NatliSkillsPage';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -521,6 +522,8 @@ export default function App() {
                   <NatliDashboard />
                 ) : platform === 'natli' && activeItem === 'natli-settings' ? (
                   <NatliSettingsPage />
+                ) : platform === 'natli' && activeItem === 'natli-skills' ? (
+                  <NatliSkillsPage />
                 ) : platform === 'natli' ? (
                   <PagePlaceholder />
                 ) : activeItem === 'dashboard' ? (

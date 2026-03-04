@@ -14,6 +14,7 @@ import {
   Calendar,
   Clock,
   FolderOpen,
+  Wrench,
 } from 'lucide-react';
 
 export const natliMenuItems = [
@@ -31,6 +32,11 @@ export const natliMenuItems = [
     id: 'natli-agent',
     label: 'Agent',
     icon: Bot,
+  },
+  {
+    id: 'natli-skills',
+    label: 'Skills',
+    icon: Wrench,
   },
   {
     id: 'natli-research',

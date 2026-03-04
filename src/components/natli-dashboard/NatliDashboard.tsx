@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-const SkillsTab = lazy(() => import('./skills/SkillsTab').then(m => ({ default: m.SkillsTab })));
+// SkillsTab moved to natli-skills sidebar page
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -232,7 +232,7 @@ export function NatliDashboard() {
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
           <TabsTrigger value="task" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Task</TabsTrigger>
           <TabsTrigger value="research" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">Research</TabsTrigger>
-          <TabsTrigger value="skills" className="shrink-0 data-[state=active]:bg-[#023F59] data-[state=active]:text-white text-sm px-4 py-1.5">🛠 Skills</TabsTrigger>
+
         </TabsList>
 
         {/* ─── Overview Tab ──────────────────────────────────── */}
@@ -829,11 +829,7 @@ export function NatliDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="skills" className="space-y-4">
-          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Skills...</div>}>
-            <SkillsTab />
-          </Suspense>
-        </TabsContent>
+
       </Tabs>
     </div>
   );
