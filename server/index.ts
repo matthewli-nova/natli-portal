@@ -162,6 +162,58 @@ app.get('/api/agents', async (_req, res) => {
   }
 });
 
+// ─── Model Config ────────────────────────────────────────────
+
+const OPENCLAW_CONFIG_PATH = '/Users/natlee/.openclaw/openclaw.json';
+
+const AVAILABLE_MODELS = [
+  { id: 'anthropic/claude-opus-4-6', alias: 'opus', label: 'Claude Opus 4.6' },
+  { id: 'anthropic/claude-sonnet-4-6', alias: 'sonnet', label: 'Claude Sonnet 4.6' },
+  { id: 'anthropic/claude-haiku-4-5', alias: 'haiku', label: 'Claude Haiku 4.5' },
+  { id: 'openrouter/google/gemini-2.5-pro', alias: 'gemini-pro', label: 'Gemini 2.5 Pro' },
+  { id: 'openrouter/google/gemini-2.5-flash', alias: 'gemini-flash', label: 'Gemini 2.5 Flash' },
+  { id: 'openrouter/google/gemini-3-pro-preview', alias: 'gemini3-pro', label: 'Gemini 3 Pro' },
+  { id: 'openrouter/deepseek/deepseek-r1', alias: 'deepseek-r1', label: 'DeepSeek R1' },
+  { id: 'openrouter/x-ai/grok-4', alias: 'grok4', label: 'Grok 4' },
+  { id: 'openrouter/x-ai/grok-3', alias: 'grok3', label: 'Grok 3' },
+  { id: 'moonshot/kimi-latest', alias: 'kimi', label: 'Kimi Latest' },
+  { id: 'moonshot/kimi-k2-thinking-turbo', alias: 'kimi-thinking', label: 'Kimi K2 Thinking' },
+];
+
+app.get('/api/config/model', async (_req, res) => {
+  try {
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    const modelDefaults = data.agents?.defaults?.model ?? {};
+    const primary: string = modelDefaults.primary ?? '';
+    const fallbacks: string[] = modelDefaults.fallbacks ?? [];
+    res.json({ primary, fallbacks, availableModels: AVAILABLE_MODELS });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.post('/api/config/model', async (req, res) => {
+  try {
+    const { primary, fallbacks } = req.body as { primary: string; fallbacks: string[] };
+    if (!primary || !Array.isArray(fallbacks)) {
+      res.status(400).json({ error: 'primary (string) and fallbacks (string[]) are required' });
+      return;
+    }
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    if (!data.agents) data.agents = {};
+    if (!data.agents.defaults) data.agents.defaults = {};
+    if (!data.agents.defaults.model) data.agents.defaults.model = {};
+    data.agents.defaults.model.primary = primary;
+    data.agents.defaults.model.fallbacks = fallbacks;
+    await fs.writeFile(OPENCLAW_CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    res.json({ ok: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
 // Files listing
 app.get('/api/files', async (req, res) => {
   try {

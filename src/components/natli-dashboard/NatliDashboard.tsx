@@ -79,6 +79,12 @@ interface SessionEntry {
   status?: string;
 }
 
+interface ModelConfig {
+  primary: string;
+  fallbacks: string[];
+  availableModels: Array<{ id: string; alias: string; label: string }>;
+}
+
 // ─── API Fetching ────────────────────────────────────────────
 
 async function fetchApi<T>(path: string): Promise<T | null> {
@@ -99,22 +105,25 @@ export function NatliDashboard() {
   const [tasks, setTasks] = useState<ClickUpTask[]>([]);
   const [memory, setMemory] = useState<MemoryStats | null>(null);
   const [sessions, setSessions] = useState<SessionEntry[]>([]);
+  const [modelConfig, setModelConfig] = useState<ModelConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [h, c, t, m, s] = await Promise.all([
+    const [h, c, t, m, s, mc] = await Promise.all([
       fetchApi<HealthData>('/api/health'),
       fetchApi<CronJob[] | { crons: CronJob[] }>('/api/crons'),
       fetchApi<{ tasks: ClickUpTask[] }>('/api/tasks'),
       fetchApi<MemoryStats>('/api/memory/stats'),
       fetchApi<SessionEntry[] | { sessions: SessionEntry[] }>('/api/sessions'),
+      fetchApi<ModelConfig>('/api/config/model'),
     ]);
     setHealth(h);
     setCrons(Array.isArray(c) ? c : c?.crons ?? []);
     setTasks(t?.tasks ?? []);
     setMemory(m);
     setSessions(Array.isArray(s) ? s : s?.sessions ?? []);
+    setModelConfig(mc);
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -143,6 +152,11 @@ export function NatliDashboard() {
     t.status?.status?.toLowerCase() === 'in progress'
   ).length;
 
+  const resolveModelLabel = (id: string) => {
+    const model = modelConfig?.availableModels.find(m => m.id === id);
+    return model?.label ?? id;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -154,6 +168,7 @@ export function NatliDashboard() {
           size="sm"
           onClick={handleRefresh}
           disabled={refreshing}
+          className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
         >
           <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
@@ -161,53 +176,78 @@ export function NatliDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="task">Task</TabsTrigger>
-          <TabsTrigger value="research">Research</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 bg-[#023F59]/5">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Overview</TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">System</TabsTrigger>
+          <TabsTrigger value="schedule" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Schedule</TabsTrigger>
+          <TabsTrigger value="task" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Task</TabsTrigger>
+          <TabsTrigger value="research" className="data-[state=active]:bg-[#023F59] data-[state=active]:text-white">Research</TabsTrigger>
         </TabsList>
 
         {/* ─── Overview Tab ──────────────────────────────────── */}
         <TabsContent value="overview" className="space-y-4">
+          {/* Active Model Banner */}
+          <Card className="border-[#31D7DB]/30 bg-gradient-to-r from-[#023F59]/5 to-[#31D7DB]/5">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#023F59]/10">
+                  <Brain className="w-6 h-6 text-[#31D7DB]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Model</p>
+                  <p className="text-xl font-bold text-[#107DAC]">
+                    {modelConfig ? resolveModelLabel(modelConfig.primary) : '—'}
+                  </p>
+                  {modelConfig && modelConfig.fallbacks.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Failover: {modelConfig.fallbacks.map(f => resolveModelLabel(f)).join(', ')}
+                    </p>
+                  )}
+                </div>
+                <Badge className="bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30">
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> Online
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KPICard
               title="Active Sessions"
               value={activeSessions}
-              icon={<Activity className="w-4 h-4 text-emerald-500" />}
+              icon={<Activity className="w-4 h-4 text-[#31D7DB]" />}
               description="Last 60 minutes"
             />
             <KPICard
               title="Cron Jobs"
               value={enabledCrons}
-              icon={<Timer className="w-4 h-4 text-blue-500" />}
+              icon={<Timer className="w-4 h-4 text-[#31D7DB]" />}
               description={`${crons.length} total`}
             />
             <KPICard
               title="Tasks In Progress"
               value={inProgressTasks}
-              icon={<ListTodo className="w-4 h-4 text-amber-500" />}
+              icon={<ListTodo className="w-4 h-4 text-[#31D7DB]" />}
               description={`${tasks.length} total tasks`}
             />
             <KPICard
               title="Memory Files"
               value={memory?.dailyLogs ?? 0}
-              icon={<Brain className="w-4 h-4 text-purple-500" />}
+              icon={<Brain className="w-4 h-4 text-[#31D7DB]" />}
               description={`${memory?.dbSizeMb ?? 0} MB database`}
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* Activity Feed */}
-            <Card>
+            <Card className="border-[#023F59]/20">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+                <CardTitle className="text-sm font-semibold text-[#21262A]">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {sessions.slice(0, 5).map((s, i) => (
                   <div key={i} className="flex items-start gap-3 text-sm">
-                    <Activity className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                    <Activity className="w-3.5 h-3.5 mt-0.5 text-[#31D7DB] shrink-0" />
                     <div className="min-w-0">
                       <p className="font-medium truncate">{s.agent || 'Session'}</p>
                       <p className="text-xs text-muted-foreground">
@@ -224,9 +264,9 @@ export function NatliDashboard() {
             </Card>
 
             {/* Quick Status */}
-            <Card>
+            <Card className="border-[#023F59]/20">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Service Status</CardTitle>
+                <CardTitle className="text-sm font-semibold text-[#21262A]">Service Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ServiceStatusRow
@@ -247,10 +287,44 @@ export function NatliDashboard() {
 
         {/* ─── System Tab ────────────────────────────────────── */}
         <TabsContent value="system" className="space-y-4">
+          {/* Active Model Config Status */}
+          <Card className="border-[#31D7DB]/30 bg-gradient-to-r from-[#023F59]/5 to-[#31D7DB]/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
+                <Brain className="w-4 h-4 text-[#31D7DB]" />
+                Model Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Primary Model</p>
+                  <p className="text-lg font-bold text-[#107DAC]">
+                    {modelConfig ? resolveModelLabel(modelConfig.primary) : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Failover Chain</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {modelConfig && modelConfig.fallbacks.length > 0 ? (
+                      modelConfig.fallbacks.map((f, i) => (
+                        <Badge key={i} className="bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30 text-xs">
+                          {resolveModelLabel(f)}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No failover configured</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 md:grid-cols-3">
-            <GaugeCard label="CPU" value={health?.cpu ?? 0} icon={<Cpu className="w-4 h-4" />} />
-            <GaugeCard label="Memory" value={health?.memory ?? 0} icon={<MemoryStick className="w-4 h-4" />} />
-            <GaugeCard label="Disk" value={health?.disk ?? 0} icon={<HardDrive className="w-4 h-4" />} />
+            <GaugeCard label="CPU" value={health?.cpu ?? 0} icon={<Cpu className="w-4 h-4 text-[#31D7DB]" />} />
+            <GaugeCard label="Memory" value={health?.memory ?? 0} icon={<MemoryStick className="w-4 h-4 text-[#31D7DB]" />} />
+            <GaugeCard label="Disk" value={health?.disk ?? 0} icon={<HardDrive className="w-4 h-4 text-[#31D7DB]" />} />
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -260,9 +334,9 @@ export function NatliDashboard() {
           </div>
 
           {health && health.alerts.length > 0 && (
-            <Card>
+            <Card className="border-red-200">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   Alerts
                 </CardTitle>
@@ -270,7 +344,7 @@ export function NatliDashboard() {
               <CardContent>
                 <div className="space-y-2">
                   {health.alerts.map((alert, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                    <div key={i} className="flex items-center gap-2 text-sm text-red-700">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                       {alert}
                     </div>
@@ -283,9 +357,9 @@ export function NatliDashboard() {
 
         {/* ─── Schedule Tab ──────────────────────────────────── */}
         <TabsContent value="schedule" className="space-y-4">
-          <Card>
+          <Card className="border-[#023F59]/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Cron Jobs</CardTitle>
+              <CardTitle className="text-sm font-semibold text-[#21262A]">Cron Jobs</CardTitle>
             </CardHeader>
             <CardContent>
               {crons.length === 0 ? (
@@ -295,7 +369,7 @@ export function NatliDashboard() {
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-[#023F59]/10">
                       <TableHead>Name</TableHead>
                       <TableHead>Schedule</TableHead>
                       <TableHead>Last Run</TableHead>
@@ -316,12 +390,16 @@ export function NatliDashboard() {
                           {cron.next_run ? new Date(cron.next_run).toLocaleString() : '—'}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={cron.enabled !== false ? 'default' : 'secondary'}>
+                          <Badge className={
+                            cron.enabled !== false
+                              ? 'bg-[#31D7DB]/20 text-[#107DAC] border-0 hover:bg-[#31D7DB]/30'
+                              : 'bg-gray-100 text-gray-500 border-0'
+                          }>
                             {cron.enabled !== false ? 'Enabled' : 'Disabled'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="hover:text-[#31D7DB]">
                             <Play className="w-3 h-3" />
                           </Button>
                         </TableCell>
@@ -345,37 +423,37 @@ export function NatliDashboard() {
             <KPICard
               title="Sessions"
               value={sessions.length}
-              icon={<Activity className="w-4 h-4 text-cyan-500" />}
+              icon={<Activity className="w-4 h-4 text-[#31D7DB]" />}
               description="Total sessions"
             />
             <KPICard
               title="Memory Files"
               value={memory?.totalFiles ?? 0}
-              icon={<FileText className="w-4 h-4 text-blue-500" />}
+              icon={<FileText className="w-4 h-4 text-[#31D7DB]" />}
               description={`${memory?.dailyLogs ?? 0} daily logs`}
             />
             <KPICard
               title="DB Size"
               value={`${memory?.dbSizeMb ?? 0}`}
-              icon={<Database className="w-4 h-4 text-purple-500" />}
+              icon={<Database className="w-4 h-4 text-[#31D7DB]" />}
               description="MB SQLite"
             />
             <KPICard
               title="Archived"
               value={memory?.archived ?? 0}
-              icon={<Brain className="w-4 h-4 text-emerald-500" />}
+              icon={<Brain className="w-4 h-4 text-[#31D7DB]" />}
               description="Archived memories"
             />
           </div>
 
-          <Card>
+          <Card className="border-[#023F59]/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Knowledge Base</CardTitle>
+              <CardTitle className="text-sm font-semibold text-[#21262A]">Knowledge Base</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
                 <div className="text-center space-y-2">
-                  <Brain className="w-8 h-8 mx-auto opacity-50" />
+                  <Brain className="w-8 h-8 mx-auto text-[#31D7DB] opacity-50" />
                   <p>Knowledge growth chart will display here with time-series data</p>
                   {memory?.lastUpdated && (
                     <p className="text-xs">
@@ -401,13 +479,13 @@ function KPICard({ title, value, icon, description }: {
   description: string;
 }) {
   return (
-    <Card>
+    <Card className="border-[#023F59]/20">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold text-[#107DAC]">{value}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
@@ -419,18 +497,18 @@ function GaugeCard({ label, value, icon }: {
   value: number;
   icon: React.ReactNode;
 }) {
-  const color = value > 80 ? 'text-red-500' : value > 60 ? 'text-amber-500' : 'text-emerald-500';
+  const color = value > 80 ? 'text-red-500' : value > 60 ? 'text-amber-500' : 'text-[#107DAC]';
   return (
-    <Card>
+    <Card className="border-[#023F59]/20">
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {icon}
-            <span className="text-sm font-medium">{label}</span>
+            <span className="text-sm font-medium text-[#21262A]">{label}</span>
           </div>
           <span className={`text-2xl font-bold ${color}`}>{value}%</span>
         </div>
-        <Progress value={value} className="h-2" />
+        <Progress value={value} className="h-2 [&>div]:bg-[#31D7DB]" />
       </CardContent>
     </Card>
   );
@@ -442,11 +520,11 @@ function ServiceCard({ name, status, endpoint }: {
   endpoint?: string;
 }) {
   return (
-    <Card>
+    <Card className="border-[#023F59]/20">
       <CardContent className="pt-6 flex items-center gap-3">
-        <Server className="w-5 h-5 text-muted-foreground" />
+        <Server className="w-5 h-5 text-[#31D7DB]" />
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm">{name}</p>
+          <p className="font-medium text-sm text-[#21262A]">{name}</p>
           {endpoint && <p className="text-xs text-muted-foreground">{endpoint}</p>}
         </div>
         <StatusDot status={status} />
@@ -463,7 +541,7 @@ function ServiceStatusRow({ name, status, port }: {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Server className="w-3.5 h-3.5 text-muted-foreground" />
+        <Server className="w-3.5 h-3.5 text-[#31D7DB]" />
         <span className="text-sm">{name}</span>
         {port && <span className="text-xs text-muted-foreground">:{port}</span>}
       </div>
@@ -510,6 +588,7 @@ function TaskTab({ tasks }: { tasks: ClickUpTask[] }) {
             variant={filter === f.value ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter(f.value)}
+            className={filter === f.value ? 'bg-[#023F59] hover:bg-[#022F44] text-white' : 'border-[#023F59]/30 hover:bg-[#023F59]/10'}
           >
             {f.label}
           </Button>
@@ -517,7 +596,7 @@ function TaskTab({ tasks }: { tasks: ClickUpTask[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
+        <Card className="border-[#023F59]/20">
           <CardContent className="py-8 text-center text-muted-foreground text-sm">
             No tasks found
           </CardContent>
@@ -525,22 +604,23 @@ function TaskTab({ tasks }: { tasks: ClickUpTask[] }) {
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map(task => (
-            <Card key={task.id} className="hover:border-primary/30 transition-colors cursor-pointer">
+            <Card key={task.id} className="border-[#023F59]/20 hover:border-[#31D7DB]/50 transition-colors cursor-pointer">
               <CardContent className="pt-4 pb-3 space-y-2">
-                <p className="font-medium text-sm leading-tight line-clamp-2">{task.name}</p>
+                <p className="font-medium text-sm leading-tight line-clamp-2 text-[#21262A]">{task.name}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge
-                    variant={
-                      task.status?.status?.toLowerCase().includes('progress') ? 'default' :
-                      task.status?.status?.toLowerCase() === 'complete' || task.status?.status?.toLowerCase() === 'closed' ? 'secondary' :
-                      'outline'
+                    className={
+                      task.status?.status?.toLowerCase().includes('progress')
+                        ? 'bg-[#31D7DB]/20 text-[#107DAC] border-0'
+                        : task.status?.status?.toLowerCase() === 'complete' || task.status?.status?.toLowerCase() === 'closed'
+                        ? 'bg-emerald-100 text-emerald-700 border-0'
+                        : 'bg-gray-100 text-gray-600 border-0'
                     }
-                    className="text-xs"
                   >
                     {task.status?.status || 'Unknown'}
                   </Badge>
                   {task.priority?.priority && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs border-[#023F59]/20">
                       {task.priority.priority}
                     </Badge>
                   )}
