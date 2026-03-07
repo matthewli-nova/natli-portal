@@ -149,6 +149,7 @@ function AppShell() {
         platform={platform}
         setPlatform={handlePlatformSwitch}
         sseConnected={sseConnected}
+        theme={isDark ? 'dark' : 'light'}
       />
       <SidebarInset>
         <HeaderSlotProvider>
