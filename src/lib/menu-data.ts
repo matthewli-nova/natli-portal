@@ -9,12 +9,18 @@ import {
   Settings,
   Building2,
   Bot,
+  Brain,
   Search,
   ListTodo,
   Calendar,
   Clock,
   FolderOpen,
   Wrench,
+  Mail,
+  Users,
+  FileText,
+  BarChart2,
+  Briefcase,
 } from 'lucide-react';
 
 export const natliMenuItems = [
@@ -29,6 +35,11 @@ export const natliMenuItems = [
     icon: Building2,
   },
   {
+    id: 'natli-model',
+    label: 'Model',
+    icon: Brain,
+  },
+  {
     id: 'natli-agent',
     label: 'Agent',
     icon: Bot,
@@ -37,21 +48,6 @@ export const natliMenuItems = [
     id: 'natli-skills',
     label: 'Skills',
     icon: Wrench,
-  },
-  {
-    id: 'natli-research',
-    label: 'Research',
-    icon: Search,
-  },
-  {
-    id: 'natli-task',
-    label: 'Task',
-    icon: ListTodo,
-  },
-  {
-    id: 'natli-calendar',
-    label: 'Calendar',
-    icon: Calendar,
   },
   {
     id: 'natli-scheduler',
@@ -66,6 +62,54 @@ export const natliMenuItems = [
   {
     id: 'natli-settings',
     label: 'Setting',
+    icon: Settings,
+  },
+];
+
+export const workMenuItems = [
+  {
+    id: 'work-dashboard',
+    label: 'Dashboard',
+    icon: Gauge,
+  },
+  {
+    id: 'work-tasks',
+    label: 'Tasks',
+    icon: ListTodo,
+  },
+  {
+    id: 'work-calendar',
+    label: 'Calendar',
+    icon: Calendar,
+  },
+  {
+    id: 'work-email',
+    label: 'Email',
+    icon: Mail,
+  },
+  {
+    id: 'work-contacts',
+    label: 'Contacts',
+    icon: Users,
+  },
+  {
+    id: 'work-documents',
+    label: 'Documents',
+    icon: FileText,
+  },
+  {
+    id: 'work-projects',
+    label: 'Projects',
+    icon: Briefcase,
+  },
+  {
+    id: 'work-reports',
+    label: 'Reports',
+    icon: BarChart2,
+  },
+  {
+    id: 'work-settings',
+    label: 'Settings',
     icon: Settings,
   },
 ];

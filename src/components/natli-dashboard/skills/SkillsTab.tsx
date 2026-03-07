@@ -2,7 +2,7 @@
 // Features: live /api/skills data, refresh button, resizable left/right splitter
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Search, Plus, LayoutGrid, List, BookOpen, PenLine } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, BookOpen, PenLine, RefreshCw } from 'lucide-react';
 import { Input } from '../../ui/input';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -77,6 +77,8 @@ export function SkillsTab() {
   const [showAddModal, setShowAddModal]             = useState(false);
   const [liveStats, setLiveStats]                   = useState<LiveStats | null>(null);
   const [liveSkills, setLiveSkills]                 = useState<Skill[] | null>(null);
+  const [refreshing, setRefreshing]                 = useState(false);
+  const [lastRefreshed, setLastRefreshed]           = useState<Date | null>(null);
   const { width: leftWidth, onMouseDown: onDragStart } = useResizable(280);
 
   // Live fetch from backend
@@ -93,6 +95,13 @@ export function SkillsTab() {
   }, []);
 
   useEffect(() => { fetchLive(); }, [fetchLive]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchLive();
+    setLastRefreshed(new Date());
+    setRefreshing(false);
+  }, [fetchLive]);
 
   const skills     = liveSkills ?? STATIC_SKILLS;
   const staticStats = useMemo(() => getSkillStats(), []);
@@ -139,9 +148,9 @@ export function SkillsTab() {
       accent: stats.contractCoverage === 100 ? 'text-emerald-600' : 'text-amber-600',
     },
     {
-      label: 'Most Used',
-      value: stats.mostUsed[0]?.name ?? '—',
-      sub: `${stats.mostUsed[0]?.usageCount ?? 0} uses`,
+      label: 'Recently Added',
+      value: stats.recentlyAdded?.[0]?.name ?? '—',
+      sub: stats.recentlyAdded?.[0]?.addedDate ?? '—',
       accent: '',
     },
   ];
@@ -168,10 +177,27 @@ export function SkillsTab() {
           <BookOpen className="w-4 h-4 text-[#107DAC]" />
           <span className="text-base font-semibold text-[#21262A]">Skill Browser</span>
         </div>
-        <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-[#023F59] text-white hover:bg-[#022F44] flex items-center gap-1.5">
-          <Plus className="w-4 h-4" />
-          New Skill
-        </Button>
+        <div className="flex items-center gap-2">
+          {lastRefreshed && !refreshing && (
+            <span className="text-[10px] text-muted-foreground">
+              Updated {lastRefreshed.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="gap-1.5 border-[#023F59]/25 text-[#023F59] hover:bg-[#023F59]/5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-[#023F59] text-white hover:bg-[#022F44] flex items-center gap-1.5">
+            <Plus className="w-4 h-4" />
+            New Skill
+          </Button>
+        </div>
       </div>
 
       {/* ── Skill Browser ──────────────────────────────────────────── */}

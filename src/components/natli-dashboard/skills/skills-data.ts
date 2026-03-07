@@ -9,6 +9,7 @@ export type SkillCategory =
   | 'Infrastructure & Platform'
   | 'Research & Orchestration'
   | 'Business Operations'
+  | 'Scraping & Intelligence'
   | 'System';
 
 export interface SkillUsageEntry {
@@ -520,9 +521,171 @@ export const SYSTEM_SKILLS: Skill[] = [
   },
 ];
 
+// ─── Apify Agent Skills ───────────────────────────────────────────────────────
+// Source: https://github.com/apify/agent-skills (installed 2026-03-06)
+
+export const APIFY_SKILLS: Skill[] = [
+  {
+    id: 'apify-ultimate-scraper',
+    name: 'Apify Ultimate Scraper',
+    emoji: '🕷️',
+    description: 'Universal AI-powered web scraper for any platform — Instagram, Facebook, TikTok, YouTube, Google Maps, Google Search, Google Trends, Booking.com, TripAdvisor. Use for lead generation, brand monitoring, competitor analysis, influencer discovery, trend research, content analytics, or any data extraction task.',
+    path: '~/.openclaw/skills/apify-ultimate-scraper/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['scraping', 'web', 'instagram', 'facebook', 'tiktok', 'youtube', 'google', 'apify', 'data'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-lead-generation',
+    name: 'Apify Lead Generation',
+    emoji: '🎯',
+    description: 'Generates B2B/B2C leads by scraping Google Maps, websites, Instagram, TikTok, Facebook, LinkedIn, YouTube, and Google Search. Use when asked to find leads, prospects, businesses, build lead lists, enrich contacts, or scrape profiles for sales outreach.',
+    path: '~/.openclaw/skills/apify-lead-generation/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['leads', 'b2b', 'b2c', 'linkedin', 'google-maps', 'scraping', 'sales', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-competitor-intelligence',
+    name: 'Apify Competitor Intelligence',
+    emoji: '🔭',
+    description: 'Analyze competitor strategies, content, pricing, ads, and market positioning across Google Maps, Booking.com, Facebook, Instagram, YouTube, and TikTok.',
+    path: '~/.openclaw/skills/apify-competitor-intelligence/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['competitors', 'intelligence', 'pricing', 'strategy', 'social-media', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-market-research',
+    name: 'Apify Market Research',
+    emoji: '📊',
+    description: 'Analyze market conditions, geographic opportunities, pricing, consumer behavior, and product validation across Google Maps, Facebook, Instagram, Booking.com, and TripAdvisor.',
+    path: '~/.openclaw/skills/apify-market-research/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['market-research', 'pricing', 'consumer', 'geographic', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-brand-reputation-monitoring',
+    name: 'Apify Brand Reputation',
+    emoji: '⭐',
+    description: 'Track reviews, ratings, sentiment, and brand mentions across Google Maps, Booking.com, TripAdvisor, Facebook, Instagram, YouTube, and TikTok. Use when monitoring brand reputation, analyzing reviews, tracking mentions, or gathering customer feedback.',
+    path: '~/.openclaw/skills/apify-brand-reputation-monitoring/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['brand', 'reputation', 'reviews', 'sentiment', 'monitoring', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-ecommerce',
+    name: 'Apify E-commerce',
+    emoji: '🛒',
+    description: 'Scrape e-commerce data for pricing intelligence, customer reviews, and seller discovery across Amazon, Walmart, eBay, IKEA, and 50+ marketplaces. Use when monitoring prices, tracking competitors, analyzing reviews, researching products, or finding sellers.',
+    path: '~/.openclaw/skills/apify-ecommerce/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['ecommerce', 'amazon', 'pricing', 'reviews', 'scraping', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-trend-analysis',
+    name: 'Apify Trend Analysis',
+    emoji: '📈',
+    description: 'Discover and track emerging trends across Google Trends, Instagram, Facebook, YouTube, and TikTok to inform content strategy.',
+    path: '~/.openclaw/skills/apify-trend-analysis/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['trends', 'google-trends', 'social-media', 'content-strategy', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-audience-analysis',
+    name: 'Apify Audience Analysis',
+    emoji: '👥',
+    description: 'Understand audience demographics, preferences, behavior patterns, and engagement quality across Facebook, Instagram, YouTube, and TikTok.',
+    path: '~/.openclaw/skills/apify-audience-analysis/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['audience', 'demographics', 'engagement', 'social-media', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-content-analytics',
+    name: 'Apify Content Analytics',
+    emoji: '📉',
+    description: 'Track engagement metrics, measure campaign ROI, and analyze content performance across Instagram, Facebook, YouTube, and TikTok.',
+    path: '~/.openclaw/skills/apify-content-analytics/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['content', 'analytics', 'roi', 'engagement', 'social-media', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-influencer-discovery',
+    name: 'Apify Influencer Discovery',
+    emoji: '🌟',
+    description: 'Find and evaluate influencers for brand partnerships, verify authenticity, and track collaboration performance across Instagram, Facebook, YouTube, and TikTok.',
+    path: '~/.openclaw/skills/apify-influencer-discovery/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['influencers', 'brand', 'partnerships', 'instagram', 'tiktok', 'apify'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-actor-development',
+    name: 'Apify Actor Dev',
+    emoji: '⚙️',
+    description: 'Develop, debug, and deploy Apify Actors — serverless cloud programs for web scraping, automation, and data processing. Use when creating new Actors, modifying existing ones, or troubleshooting Actor code.',
+    path: '~/.openclaw/skills/apify-actor-development/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['apify', 'actor', 'scraping', 'automation', 'serverless', 'development'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+  {
+    id: 'apify-actorization',
+    name: 'Apify Actorization',
+    emoji: '🔄',
+    description: 'Convert existing projects into Apify Actors. Actorize JavaScript/TypeScript (SDK with Actor.init/exit), Python (async context manager), or any language (CLI wrapper). Use when migrating code to Apify, wrapping CLI tools as Actors, or adding Actor SDK to existing projects.',
+    path: '~/.openclaw/skills/apify-actorization/SKILL.md',
+    type: 'custom',
+    category: 'Scraping & Intelligence',
+    status: 'ready',
+    tags: ['apify', 'actor', 'migration', 'javascript', 'python', 'sdk'],
+    hasContract: false,
+    addedDate: '2026-03-06',
+  },
+];
+
 // ─── All Skills Combined ───────────────────────────────────────────────────────
 
-export const ALL_SKILLS: Skill[] = [...CUSTOM_SKILLS, ...SYSTEM_SKILLS];
+export const ALL_SKILLS: Skill[] = [...CUSTOM_SKILLS, ...SYSTEM_SKILLS, ...APIFY_SKILLS];
 
 // ─── Category Colors ───────────────────────────────────────────────────────────
 
@@ -531,6 +694,7 @@ export const CATEGORY_EMOJI: Record<SkillCategory, string> = {
   'Infrastructure & Platform': '🏗️',
   'Research & Orchestration': '🔍',
   'Business Operations': '💼',
+  'Scraping & Intelligence': '🕷️',
   'System': '⚙️',
 };
 
@@ -539,6 +703,7 @@ export const CATEGORY_COLORS: Record<SkillCategory, string> = {
   'Infrastructure & Platform': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   'Research & Orchestration': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
   'Business Operations': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  'Scraping & Intelligence': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   'System': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
 };
 
@@ -591,6 +756,7 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
   'Infrastructure & Platform',
   'Research & Orchestration',
   'Business Operations',
+  'Scraping & Intelligence',
   'System',
 ];
 

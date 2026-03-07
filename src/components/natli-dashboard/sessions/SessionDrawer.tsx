@@ -64,20 +64,27 @@ export function SessionDrawer({ session, onClose }: SessionDrawerProps) {
   const [messages, setMessages] = useState<TranscriptMessage[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!session) return;
     setMessages([]);
+    setFetchError(null);
     setLoading(true);
 
     fetch(`/api/sessions/${session.sessionId}/transcript?agentId=${session.agentId}&limit=20`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(d => {
         setMessages(d.messages || []);
         setTotal(d.total || 0);
       })
-      .catch(() => {})
+      .catch((err) => {
+        setFetchError(err instanceof Error ? err.message : 'Failed to load transcript');
+      })
       .finally(() => setLoading(false));
   }, [session?.sessionId, session?.agentId]);
 
@@ -168,8 +175,17 @@ export function SessionDrawer({ session, onClose }: SessionDrawerProps) {
                 </div>
               )}
 
+              {/* Error state */}
+              {!loading && fetchError && (
+                <div className="text-center py-12">
+                  <p className="text-3xl mb-3">⚠️</p>
+                  <p className="text-sm font-medium text-red-600">Failed to load transcript</p>
+                  <p className="text-xs text-gray-400 mt-1">{fetchError}</p>
+                </div>
+              )}
+
               {/* Empty state */}
-              {!loading && messages.length === 0 && (
+              {!loading && !fetchError && messages.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-3xl mb-3">📭</p>
                   <p className="text-sm font-medium text-gray-600">No messages found</p>

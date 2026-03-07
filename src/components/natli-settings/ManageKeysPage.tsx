@@ -124,7 +124,7 @@ function KeyCard({
   const revealedDisplay = entry.keyPreview || '(no key set)';
 
   return (
-    <Card className="border-[#023F59]/20 p-4">
+    <Card className="border-[#023F59]/25 shadow-sm p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">

@@ -150,15 +150,12 @@ export function InvitationList({ eventId, eventName, onBack, onViewGuest, onEdit
   }
 
   const handleSendInvitations = () => {
-    console.log("Sending invitations:", Array.from(selectedIds))
   }
 
   const handleImportCSV = () => {
-    console.log("Opening CSV import modal")
   }
 
   const handleExport = () => {
-    console.log("Exporting invitation list")
   }
 
   const formatDate = (date: Date | undefined) => {

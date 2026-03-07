@@ -42,7 +42,7 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
     fetch('/api/search/memory?q=')
       .then(r => r.json())
       .then(d => setMemoryResults(d.results || []))
-      .catch(() => {});
+      .catch(() => { /* search failed — silent fallback */ });
   }, [open]);
 
   // Debounced memory re-fetch on query change
@@ -52,7 +52,7 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
       fetch(`/api/search/memory?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
         .then(d => setMemoryResults(d.results || []))
-        .catch(() => {});
+        .catch(() => { /* search failed — silent fallback */ });
     }, 300);
     return () => clearTimeout(timer);
   }, [query, open]);
@@ -212,7 +212,7 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#023F59]/20 text-sm text-muted-foreground bg-white hover:bg-gray-50 hover:border-[#023F59]/40 transition-all w-56"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#023F59]/20 text-sm text-muted-foreground bg-white hover:bg-gray-50 hover:border-[#023F59]/40 transition-all w-120"
       >
         <Search className="w-3.5 h-3.5 shrink-0" />
         <span className="flex-1 text-left">Search anything...</span>

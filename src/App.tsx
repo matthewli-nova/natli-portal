@@ -8,6 +8,7 @@ import { NatliSettingsPage } from './components/natli-settings/NatliSettingsPage
 import { NatliDashboard } from './components/natli-dashboard/NatliDashboard';
 import { NatliSkillsPage } from './components/natli-skills/NatliSkillsPage';
 import { NatliSchedulerPage } from './components/natli-scheduler/NatliSchedulerPage';
+import { ModelTab } from './components/natli-dashboard/model/ModelTab';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -46,24 +47,27 @@ import {
 import { Skeleton } from './components/ui/skeleton';
 import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { PortalHeader } from './components/PortalHeader';
+import { HeaderSlotProvider } from './lib/header-slot-context';
+import { SSEProvider, useSSEContext } from './lib/sse-context';
 import { PageHeader } from './components/PageHeader';
 import { PagePlaceholder } from './components/PagePlaceholder';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { type B2BEvent } from './components/data/b2b-events';
-import { menuItems, natliMenuItems } from './lib/menu-data';
+import { menuItems, natliMenuItems, workMenuItems } from './lib/menu-data';
 
 interface AppSidebarProps {
   activeItem: string;
   setActiveItem: (id: string) => void;
   openMenus: string[];
+  sseConnected?: boolean;
   toggleMenu: (id: string) => void;
   isLoading?: boolean;
-  platform: 'natli' | 'template';
-  setPlatform: (p: 'natli' | 'template') => void;
+  platform: 'natli' | 'work' | 'template';
+  setPlatform: (p: 'natli' | 'work' | 'template') => void;
 }
 
-function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoading = false, platform, setPlatform }: AppSidebarProps) {
+function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoading = false, platform, setPlatform, sseConnected = false }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const isExpanded = state === "expanded";
 
@@ -122,6 +126,13 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                   className="h-[31px] w-[31px] rounded-md object-cover"
                 />
                 <span className="text-white font-semibold text-base whitespace-nowrap">Nat Lee</span>
+                <div className="flex-1" />
+                <div className="flex items-center gap-1.5 text-xs pr-1">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${sseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`} />
+                  <span className={`whitespace-nowrap ${sseConnected ? 'text-emerald-300' : 'text-gray-400'}`}>
+                    {sseConnected ? 'online' : 'offline'}
+                  </span>
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -143,39 +154,56 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
         </div>
       </SidebarHeader>
 
-      {/* Platform Switch: Nat Li | Template */}
+      {/* Platform Switch: Nat Lee | Work | Template */}
       {isExpanded && (
         <div className="px-3 py-2 border-b border-sidebar-border">
-          <div className="flex items-center bg-white/10 rounded-lg p-0.5">
-            <button
-              onClick={() => setPlatform('natli')}
-              className={cn(
-                "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
-                platform === 'natli'
-                  ? "bg-lepos-cyan text-[#023F59] shadow-sm"
-                  : "text-white/60 hover:text-white"
-              )}
-            >
-              Nat Li
-            </button>
-            <button
-              onClick={() => setPlatform('template')}
-              className={cn(
-                "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
-                platform === 'template'
-                  ? "bg-lepos-cyan text-[#023F59] shadow-sm"
-                  : "text-white/60 hover:text-white"
-              )}
-            >
-              Template
-            </button>
+          <div className="flex items-center bg-white/10 rounded-lg p-0.5 gap-0.5">
+            {([ 
+              { id: 'natli', label: 'Agent' },
+              { id: 'work', label: 'Work' },
+              { id: 'template', label: '*' },
+            ] as const).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setPlatform(tab.id)}
+                className={cn(
+                  "flex-1 text-xs font-semibold py-1.5 rounded-md transition-all",
+                  platform === tab.id
+                    ? "bg-lepos-cyan text-[#023F59] shadow-sm"
+                    : "text-white/60 hover:text-white"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
       <SidebarContent>
         <SidebarGroup className="pt-[9px] flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
-          {platform === 'natli' ? (
+          {platform === 'work' ? (
+            <SidebarMenu>
+              {workMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeItem === item.id;
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => setActiveItem(item.id)}
+                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {isExpanded && (
+                        <span className="truncate overflow-hidden">{item.label}</span>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          ) : platform === 'natli' ? (
             <SidebarMenu>
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, index) => (
@@ -412,11 +440,13 @@ export default function App() {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<B2BEvent | null>(null);
-  const [platform, setPlatform] = useState<'natli' | 'template'>('natli');
+  const [platform, setPlatform] = useState<'natli' | 'work' | 'template'>('natli');
+  const { connected: sseConnected } = useSSEContext();
 
-  const handlePlatformSwitch = useCallback((p: 'natli' | 'template') => {
+  const handlePlatformSwitch = useCallback((p: 'natli' | 'work' | 'template') => {
     setPlatform(p);
-    setActiveItem(p === 'natli' ? 'natli-dashboard' : 'dashboard');
+    const defaultItem = p === 'natli' ? 'natli-dashboard' : p === 'work' ? 'work-dashboard' : 'dashboard';
+    setActiveItem(defaultItem);
     setIsPageLoading(true);
     setTimeout(() => setIsPageLoading(false), 800);
   }, []);
@@ -455,9 +485,16 @@ export default function App() {
     if (natliItem) {
       return {
         title: natliItem.label,
-        breadcrumbs: [
-          { label: natliItem.label, active: true }
-        ]
+        breadcrumbs: [{ label: natliItem.label, active: true }]
+      };
+    }
+
+    // Check Work menu items
+    const workItem = workMenuItems.find(item => item.id === activeItem);
+    if (workItem) {
+      return {
+        title: workItem.label,
+        breadcrumbs: [{ label: 'Work', href: '#' }, { label: workItem.label, active: true }]
       };
     }
 
@@ -495,6 +532,7 @@ export default function App() {
   }, [activeItem]);
 
   return (
+    <SSEProvider>
     <SidebarProvider defaultOpen>
       <AppSidebar
         activeItem={activeItem}
@@ -504,8 +542,10 @@ export default function App() {
         isLoading={isSidebarLoading}
         platform={platform}
         setPlatform={handlePlatformSwitch}
+        sseConnected={sseConnected}
       />
       <SidebarInset>
+        <HeaderSlotProvider>
         <PortalHeader 
           breadcrumbs={activePageInfo.breadcrumbs} 
         />
@@ -527,7 +567,11 @@ export default function App() {
                   <NatliSkillsPage />
                 ) : platform === 'natli' && activeItem === 'natli-scheduler' ? (
                   <NatliSchedulerPage />
+                ) : platform === 'natli' && activeItem === 'natli-model' ? (
+                  <ModelTab />
                 ) : platform === 'natli' ? (
+                  <PagePlaceholder />
+                ) : platform === 'work' ? (
                   <PagePlaceholder />
                 ) : activeItem === 'dashboard' ? (
                   <Dashboard />
@@ -574,8 +618,10 @@ export default function App() {
           )}
         </main>
         
+        </HeaderSlotProvider>
       </SidebarInset>
       <Toaster />
     </SidebarProvider>
+    </SSEProvider>
   );
 }

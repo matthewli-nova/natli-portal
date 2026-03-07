@@ -99,7 +99,6 @@ export function ConfirmationPage({ data = mockConfirmationData }: ConfirmationPa
 
   const handleAddToCalendar = () => {
     // TODO: Generate .ics file
-    console.log("Add to calendar")
   }
 
   return (

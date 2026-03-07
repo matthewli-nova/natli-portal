@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { HeaderCenter, HeaderRight } from '../../lib/header-slot-context';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -6,6 +7,7 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Skeleton } from '../ui/skeleton';
 import { OverviewTab } from './overview/OverviewTab';
+import { useSSEContext } from '../../lib/sse-context';
 
 const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
 const LazySessionsTab = lazy(() => import('./sessions/SessionsTab').then(m => ({ default: m.SessionsTab })));
@@ -14,7 +16,7 @@ import { MemoryTab } from './memory/MemoryTab';
 
 import {
   Activity,
-  Bot,
+  Sparkles,
   Clock,
   Database,
   HardDrive,
@@ -30,6 +32,7 @@ import {
   Power,
 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { QuickChatPanel } from './chat/QuickChatPanel';
 import { GlobalSearch } from './search/GlobalSearch';
 
@@ -133,7 +136,7 @@ export function NatliDashboard() {
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatActive] = useState(false);
+  const { subscribe: sseSubscribe, connected: sseConnected } = useSSEContext();
 
   const loadData = useCallback(async () => {
     const [h, c, t, m, s, mc] = await Promise.all([
@@ -157,10 +160,32 @@ export function NatliDashboard() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // ─── Polling fallback (60s — SSE handles real-time) ──────────────────────
   useEffect(() => {
-    const interval = setInterval(loadData, 30_000);
+    const interval = setInterval(loadData, 60_000);
     return () => clearInterval(interval);
   }, [loadData]);
+
+  // ─── SSE real-time pulse (shared connection via SSEContext) ──────────────
+  useEffect(() => {
+    const unsubPulse = sseSubscribe('pulse', () => {
+      Promise.all([
+        fetchApi<CronJob[] | { jobs: CronJob[]; crons: CronJob[] }>('/api/crons'),
+        fetchApi<SessionEntry[] | { sessions: SessionEntry[] }>('/api/sessions'),
+      ]).then(([c, s]) => {
+        setCrons(Array.isArray(c) ? c : (c as any)?.jobs ?? (c as any)?.crons ?? []);
+        setSessions(Array.isArray(s) ? s : (s as any)?.sessions ?? []);
+        setLastUpdated(new Date().toLocaleTimeString());
+      });
+    });
+    const unsubHealth = sseSubscribe('health', (data) => {
+      if (data) {
+        setHealth(data as HealthData);
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+    });
+    return () => { unsubPulse(); unsubHealth(); };
+  }, [sseSubscribe]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -213,78 +238,80 @@ export function NatliDashboard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Live monitoring for Nat Lee AI operations
-        </p>
-
-        {/* Global Search — Cmd+K */}
+      {/* ── Inject Search → header center, Chat → header right ── */}
+      <HeaderCenter>
         <GlobalSearch
           onNavigate={(tab) => setActiveTab(tab)}
           sessions={sessions as Array<Record<string, unknown>>}
           cronJobs={crons as unknown as Array<Record<string, unknown>>}
         />
+      </HeaderCenter>
+      <HeaderRight>
+        <Button
+          onClick={() => setChatOpen(true)}
+          className="h-9 w-9 p-0 rounded-full bg-transparent hover:bg-[#023F59]/10 text-[#023F59] hover:text-[#107DAC] transition-colors"
+          title="Chat with Nat Lee"
+        >
+          <Sparkles className="w-4 h-4" />
+        </Button>
+      </HeaderRight>
 
-        <div className="flex items-center gap-3">
-          {lastUpdated && (
-            <span className="text-xs text-muted-foreground">Last updated: {lastUpdated}</span>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRestartConfirm(true)}
-            disabled={gatewayRestarting}
-            className="border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600"
-          >
-            <Power className={`w-3.5 h-3.5 mr-1.5 ${gatewayRestarting ? 'animate-pulse' : ''}`} />
-            {gatewayRestarting ? 'Restarting…' : 'Restart Gateway'}
-          </Button>
-          <Button
-            onClick={() => setChatOpen(true)}
-            className="h-8 w-8 p-0 rounded-full bg-[#023F59] hover:bg-[#107DAC] text-white shadow-md relative"
-            title="Quick Chat with Nat Lee"
-          >
-            <Bot className="w-4 h-4" />
-            {chatActive && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />}
-          </Button>
-        </div>
+      {/* ── Dashboard controls row ── */}
+      <div className="flex items-center gap-3">
+        <p className="text-sm text-muted-foreground flex-1">
+          Live monitoring for Nat Lee AI operations
+        </p>
 
-        {/* Restart Confirm Dialog */}
-        {showRestartConfirm && (
-          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                  <Power className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-[#21262A]">Restart Gateway?</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">All active sessions will be briefly interrupted. Takes ~5 seconds.</p>
-                </div>
+        {lastUpdated && (
+          <span className="text-xs text-muted-foreground">Last updated: {lastUpdated}</span>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowRestartConfirm(true)}
+          disabled={gatewayRestarting}
+          className="border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+        >
+          <Power className={`w-3.5 h-3.5 mr-1.5 ${gatewayRestarting ? 'animate-pulse' : ''}`} />
+          {gatewayRestarting ? 'Restarting…' : 'Restart Gateway'}
+        </Button>
+      </div>
+
+      {/* Restart Confirm Dialog */}
+      {showRestartConfirm && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Power className="w-5 h-5 text-red-600" />
               </div>
-              <div className="flex justify-end gap-2 pt-1">
-                <Button variant="outline" size="sm" onClick={() => setShowRestartConfirm(false)} className="border-[#023F59]/20">
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={handleGatewayRestart} className="bg-red-600 text-white hover:bg-red-700">
-                  <Power className="w-3.5 h-3.5 mr-1.5" />
-                  Yes, Restart
-                </Button>
+              <div>
+                <p className="font-semibold text-[#21262A]">Restart Gateway?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">All active sessions will be briefly interrupted. Takes ~5 seconds.</p>
               </div>
             </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" size="sm" onClick={() => setShowRestartConfirm(false)} className="border-[#023F59]/25 shadow-sm">
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleGatewayRestart} className="bg-red-600 text-white hover:bg-red-700">
+                <Power className="w-3.5 h-3.5 mr-1.5" />
+                Yes, Restart
+              </Button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex w-full overflow-x-auto bg-[#023F59]/5 h-auto flex-nowrap justify-start gap-0.5 px-1 py-1">
@@ -300,15 +327,18 @@ export function NatliDashboard() {
 
         {/* ─── Overview Tab ──────────────────────────────────── */}
         <TabsContent value="overview" className="space-y-4">
-          <OverviewTab
-            health={health}
-            sessions={sessions as any}
-            crons={crons as any}
-            tasks={tasks}
-            modelConfig={modelConfig}
-            memory={memory}
-            onNavigateTo={setActiveTab}
-          />
+          <ErrorBoundary label="Overview">
+            <OverviewTab
+              health={health}
+              sessions={sessions as any}
+              crons={crons as any}
+              tasks={tasks}
+              modelConfig={modelConfig}
+              memory={memory}
+              onNavigateTo={setActiveTab}
+              sseConnected={sseConnected}
+            />
+          </ErrorBoundary>
         </TabsContent>
 
         {/* ─── System Tab ────────────────────────────────────── */}
@@ -344,7 +374,7 @@ export function NatliDashboard() {
             {/* 3 cards: Gateway | Model + Sessions | Services */}
             <div className="grid gap-4 md:grid-cols-3">
               {/* Gateway */}
-              <Card className="border-[#023F59]/20">
+              <Card className="border-[#023F59]/25 shadow-sm">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -371,7 +401,7 @@ export function NatliDashboard() {
               </Card>
 
               {/* Model & Sessions */}
-              <Card className="border-[#023F59]/20">
+              <Card className="border-[#023F59]/25 shadow-sm">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Brain className="w-4 h-4 text-[#31D7DB]" />
@@ -381,7 +411,7 @@ export function NatliDashboard() {
                     {health?.primaryModel ? resolveModelLabel(health.primaryModel) : '—'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 font-mono">{health?.primaryModel || ''}</p>
-                  <div className="mt-3 pt-3 border-t border-[#023F59]/10 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                  <div className="mt-3 pt-3 border-t border-[#023F59]/12 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                     <div className="text-muted-foreground">Sessions</div>
                     <div className="font-bold text-[#107DAC]">{health?.totalSessions ?? 0}</div>
                     <div className="text-muted-foreground">Last active</div>
@@ -391,7 +421,7 @@ export function NatliDashboard() {
               </Card>
 
               {/* Services */}
-              <Card className="border-[#023F59]/20">
+              <Card className="border-[#023F59]/25 shadow-sm">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Activity className="w-4 h-4 text-[#31D7DB]" />
@@ -401,7 +431,7 @@ export function NatliDashboard() {
                     {[
                       { label: 'Gateway :18789', ok: health?.gatewayReachable },
                       { label: 'Ollama :11434', ok: health?.services?.ollama, sub: health?.ollamaModel },
-                      { label: 'Slack', ok: health?.services?.openclaw, sub: 'via gateway' },
+                      { label: 'OpenClaw', ok: health?.services?.openclaw, sub: 'gateway service' },
                     ].map(({ label, ok, sub }) => (
                       <div key={label} className="flex items-center justify-between text-sm">
                         <div>
@@ -439,7 +469,7 @@ export function NatliDashboard() {
                 { label: 'Disk', value: health?.disk ?? 0, sub: 'system volume' },
                 { label: 'GPU', value: health?.gpuPercent ?? 0, sub: `${health?.gpuFreqMhz ?? 0} MHz · ${health?.gpuTemp ?? 0}°C` },
               ].map(({ label, value, sub }) => (
-                <Card key={label} className="border-[#023F59]/20">
+                <Card key={label} className="border-[#023F59]/25 shadow-sm">
                   <CardContent className="pt-4 pb-4">
                     <div className="flex justify-between items-baseline mb-1.5">
                       <span className="text-sm font-semibold text-[#21262A]">{label}</span>
@@ -454,7 +484,7 @@ export function NatliDashboard() {
 
             {/* Network & Disk I/O */}
             <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border-[#023F59]/20">
+              <Card className="border-[#023F59]/25 shadow-sm">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Activity className="w-4 h-4 text-[#31D7DB]" />
@@ -478,7 +508,7 @@ export function NatliDashboard() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="border-[#023F59]/20">
+              <Card className="border-[#023F59]/25 shadow-sm">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <HardDrive className="w-4 h-4 text-[#31D7DB]" />
@@ -500,7 +530,7 @@ export function NatliDashboard() {
 
             {/* Top Processes */}
             {health?.topProcesses && health.topProcesses.length > 0 && (
-              <Card className="border-[#023F59]/20">
+              <Card className="border-[#023F59]/25 shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold text-[#21262A]">Top Processes</CardTitle>
                 </CardHeader>
@@ -563,37 +593,45 @@ export function NatliDashboard() {
 
         {/* ─── Memory & Knowledge Tab ────────────────────────── */}
         <TabsContent value="memory" className="space-y-4">
-          <MemoryTab health={health} />
+          <ErrorBoundary label="Memory">
+            <MemoryTab health={health} />
+          </ErrorBoundary>
         </TabsContent>
 
         {/* ─── Schedule Tab ──────────────────────────────────── */}
         <TabsContent value="schedule" className="space-y-4">
-          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Scheduler…</div>}>
-            <LazyNatliSchedulerPage embedded={true} />
-          </Suspense>
+          <ErrorBoundary label="Scheduler">
+            <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Scheduler…</div>}>
+              <LazyNatliSchedulerPage embedded={true} />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
 
-        {/* ─── Task Tab ──────────────────────────────────────── */}
         {/* ─── Model Tab ──────────────────────────────────── */}
         <TabsContent value="model" className="space-y-4">
-          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Model stats…</div>}>
-            <LazyModelTab />
-          </Suspense>
+          <ErrorBoundary label="Model">
+            <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Model stats…</div>}>
+              <LazyModelTab mode="dashboard" />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
-
 
         {/* ─── Skill Tab (Tracker, live data) ──────────────────── */}
         <TabsContent value="skill" className="space-y-4">
-          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Skill tracker…</div>}>
-            <LiveSkillTracker />
-          </Suspense>
+          <ErrorBoundary label="Skills">
+            <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Skill tracker…</div>}>
+              <LiveSkillTracker />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
 
         {/* ─── Sessions Tab ──────────────────────────────────── */}
         <TabsContent value="sessions" className="space-y-4">
-          <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Sessions…</div>}>
-            <LazySessionsTab />
-          </Suspense>
+          <ErrorBoundary label="Sessions">
+            <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Sessions…</div>}>
+              <LazySessionsTab />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
 
       </Tabs>
@@ -622,8 +660,8 @@ function LiveSkillTracker() {
       .then(r => r.json())
       .then((data: { skills: Skill[]; stats: { total: number; custom: number; system: number; ready: number; needsSetup: number; withContract: number } }) => {
         setSkills(data.skills);
-        // Build a stats shape compatible with SkillTracker
-        const liveStats = getSkillStats(); // base shape
+        // Build a stats shape compatible with SkillTracker — fully from live API data
+        const liveStats = getSkillStats(); // base shape (provides type structure)
         liveStats.total = data.stats.total;
         liveStats.totalCustom = data.stats.custom;
         liveStats.totalSystem = data.stats.system;
@@ -633,6 +671,12 @@ function LiveSkillTracker() {
         liveStats.contractCoverage = data.stats.custom > 0
           ? Math.round((data.stats.withContract / data.stats.custom) * 100)
           : 0;
+        // recentlyAdded: use live API (reflects new installs like GWS)
+        liveStats.recentlyAdded = [...data.skills]
+          .filter((s: Skill) => s.addedDate)
+          .sort((a: Skill, b: Skill) => (b.addedDate ?? '').localeCompare(a.addedDate ?? ''))
+          .slice(0, 5);
+        // mostUsed / neverUsed removed — usage counts were hardcoded static data, not real usage
         setStats(liveStats);
       })
       .catch(() => {
@@ -688,7 +732,7 @@ function KPICard({ title, value, icon, description }: {
   description: string;
 }) {
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
         {icon}
@@ -764,7 +808,7 @@ function TaskTab({ tasks }: { tasks: ClickUpTask[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardContent className="py-8 text-center text-muted-foreground text-sm">
             No tasks found
           </CardContent>

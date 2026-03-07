@@ -190,7 +190,7 @@ export function SessionsTab() {
 
       {/* [B] Two-column: Model Usage + Session Type */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
@@ -221,7 +221,7 @@ export function SessionsTab() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
@@ -254,7 +254,7 @@ export function SessionsTab() {
       </div>
 
       {/* [C] Live Activity Feed */}
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
             <CardTitle className="text-sm font-semibold text-[#21262A]">Live Activity Feed</CardTitle>
@@ -302,7 +302,7 @@ export function SessionsTab() {
       </Card>
 
       {/* [D] Agent Breakdown */}
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
             <CardTitle className="text-sm font-semibold text-[#21262A]">Agent Breakdown</CardTitle>
@@ -361,7 +361,7 @@ function KPICard({ title, value, dot, valueColor, icon, description }: {
   icon?: React.ReactNode; description?: string;
 }) {
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
         {icon && <span className="text-[#31D7DB]">{icon}</span>}

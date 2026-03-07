@@ -1,7 +1,7 @@
 // SkillTracker.tsx
 // Analytics view — usage stats, most used, recently added, never used, category breakdown
 
-import { TrendingUp, Clock, AlertCircle, Award, Package } from 'lucide-react';
+import { TrendingUp, Clock, AlertCircle, Layers, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { type Skill, type SkillCategory, CATEGORY_COLORS, STATUS_COLORS } from './skills-data';
 
@@ -24,7 +24,8 @@ interface SkillTrackerProps {
 
 export function SkillTracker({ stats, skills }: SkillTrackerProps) {
   const categoryBreakdown = getCategoryBreakdown(skills);
-  const mostUsed    = stats.mostUsed    ?? [];
+  const providerBreakdown = getProviderBreakdown(skills);
+  const topProvider = providerBreakdown[0];
   const recentlyAdded = stats.recentlyAdded ?? [...skills].sort((a,b) => (b.addedDate ?? '').localeCompare(a.addedDate ?? '')).slice(0,5);
   const neverUsed   = stats.neverUsed   ?? skills.filter(s => !s.usageCount);
 
@@ -41,10 +42,10 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
             sub: `${stats.totalCustom} custom · ${stats.totalSystem} system`,
           },
           {
-            icon: TrendingUp,
-            label: 'Most Active',
-            value: mostUsed[0]?.name ?? '—',
-            sub: `${mostUsed[0]?.usageCount ?? 0} uses all time`,
+            icon: Layers,
+            label: 'Top Source',
+            value: topProvider?.name ?? '—',
+            sub: `${topProvider?.count ?? 0} skills`,
           },
           {
             icon: Clock,
@@ -60,7 +61,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
             accent: neverUsed.length > 5 ? 'text-amber-600' : 'text-muted-foreground',
           },
         ].map(kpi => (
-          <Card key={kpi.label} className="border-[#023F59]/20">
+          <Card key={kpi.label} className="border-[#023F59]/25 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <kpi.icon className="w-3.5 h-3.5 text-[#31D7DB]" />
@@ -77,46 +78,42 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* ── Most Used Skills ──────────────────────────────────── */}
-        <Card className="border-[#023F59]/20">
+        {/* ── By Source / Provider ──────────────────────────────── */}
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-[#31D7DB]" />
-              Most Used
+              <Layers className="w-4 h-4 text-[#31D7DB]" />
+              By Source
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-2">
-              {mostUsed.map((skill, i) => (
-                <div key={skill.id} className="flex items-center gap-3 py-1.5 border-b border-[#023F59]/5 last:border-0">
-                  <span className="text-muted-foreground text-xs w-4 font-mono">{i + 1}</span>
-                  <span className="text-sm">{skill.emoji}</span>
-                  <span className="text-sm font-medium flex-1 truncate">{skill.name}</span>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Usage bar */}
-                    <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#023F59] rounded-full"
-                        style={{
-                          width: `${Math.min(100, ((skill.usageCount ?? 0) / (mostUsed[0]?.usageCount ?? 1)) * 100)}%`
-                        }}
-                      />
+            <div className="space-y-2.5">
+              {providerBreakdown.map(p => (
+                <div key={p.name}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{p.emoji}</span>
+                      <span className="text-sm font-medium">{p.name}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground w-16 text-right whitespace-nowrap">
-                      {skill.usageCount ?? 0} uses
-                    </span>
+                    <span className="text-xs text-muted-foreground">{p.count} skills</span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.round((p.count / skills.length) * 100)}%`,
+                        backgroundColor: p.color,
+                      }}
+                    />
                   </div>
                 </div>
               ))}
-              {mostUsed.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">No usage data yet</p>
-              )}
             </div>
           </CardContent>
         </Card>
 
         {/* ── Recently Added ───────────────────────────────────── */}
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-[#31D7DB]" />
@@ -126,7 +123,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
           <CardContent className="pt-0">
             <div className="space-y-2">
               {recentlyAdded.map(skill => (
-                <div key={skill.id} className="flex items-center gap-2 py-1.5 border-b border-[#023F59]/5 last:border-0">
+                <div key={skill.id} className="flex items-center gap-2 py-1.5 border-b border-[#023F59]/8 last:border-0">
                   <span className="text-sm">{skill.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{skill.name}</p>
@@ -142,7 +139,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
         </Card>
 
         {/* ── Category Breakdown ───────────────────────────────── */}
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A]">Category Breakdown</CardTitle>
           </CardHeader>
@@ -169,7 +166,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
         </Card>
 
         {/* ── Never Used / Needs Attention ─────────────────────── */}
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-amber-500" />
@@ -253,6 +250,20 @@ function formatDateTime(dateStr?: string): string {
   } catch {
     return dateStr;
   }
+}
+
+function getProviderBreakdown(skills: Skill[]) {
+  const providers: { name: string; emoji: string; color: string; match: (s: Skill) => boolean }[] = [
+    { name: 'Google Workspace', emoji: '🔵', color: '#4285F4', match: s => s.id.startsWith('gws-') || s.name.toLowerCase().startsWith('gws') },
+    { name: 'Apify',            emoji: '🕷️', color: '#FF7900', match: s => s.id.startsWith('apify') || s.name.toLowerCase().includes('apify') },
+    { name: 'Custom',           emoji: '🧩', color: '#31D7DB', match: s => s.type === 'custom' && !s.id.startsWith('gws-') && !s.id.startsWith('apify') },
+    { name: 'OpenClaw Built-in',emoji: '🦞', color: '#023F59', match: s => s.type === 'system' && !s.id.startsWith('gws-') && !s.id.startsWith('apify') },
+  ];
+
+  return providers
+    .map(p => ({ ...p, count: skills.filter(p.match).length }))
+    .filter(p => p.count > 0)
+    .sort((a, b) => b.count - a.count);
 }
 
 function getCategoryBreakdown(skills: Skill[]) {

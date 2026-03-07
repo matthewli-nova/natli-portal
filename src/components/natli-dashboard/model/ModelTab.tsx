@@ -5,6 +5,7 @@ import { Skeleton } from '../../ui/skeleton';
 import { Button } from '../../ui/button';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 import { ModelIcon, getModelShortName, getModelBrandColor } from '../../../lib/model-icons';
+import { ModelIntelligencePage } from './ModelIntelligencePage';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -159,13 +160,136 @@ function getProviderBorderClass(provider: string, subProvider?: string): string 
 
 // ─── Component ───────────────────────────────────────────────
 
-export function ModelTab() {
+// ─── Running Config Types ────────────────────────────────────
+
+interface ResolvedModel { id: string; label: string; alias: string; }
+interface ChannelOverride {
+  channelId: string;
+  channelName: string;
+  model: ResolvedModel;
+  fallbacks: ResolvedModel[];
+  note: string;
+}
+interface RunningConfig {
+  default: { model: ResolvedModel; fallbacks: ResolvedModel[] };
+  channelOverrides: ChannelOverride[];
+}
+
+// ─── Currently Running Tab ───────────────────────────────────
+
+// Single model card (matches dashboard card style)
+function RunningModelCard({
+  slot, model, accent,
+}: {
+  slot: string;
+  model: ResolvedModel;
+  accent: { bg: string; text: string; badge: string };
+}) {
+  return (
+    <Card className="border-[#023F59]/25 shadow-sm">
+      <CardContent className="pt-5 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <ModelIcon modelId={model.id} size="sm" />
+            <span className="text-sm font-semibold text-[#21262A]">{slot}</span>
+          </div>
+          <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${accent.badge}`}>
+            {slot === 'Primary' ? 'Active' : 'Standby'}
+          </Badge>
+        </div>
+        <p className={`text-lg font-bold leading-tight ${accent.text}`}>{model.label}</p>
+        {model.alias && (
+          <p className="text-xs text-muted-foreground mt-0.5 font-mono">alias: {model.alias}</p>
+        )}
+        <p className="text-[10px] text-muted-foreground mt-1 font-mono truncate">{model.id}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Channel row: primary + 2 fallbacks in 3-col grid
+function ChannelCard({ ch }: { ch: ChannelOverride }) {
+  const allModels = [
+    { slot: 'Primary', model: ch.model, accent: { bg: 'bg-emerald-50', text: 'text-[#107DAC]', badge: 'bg-emerald-100 text-emerald-700' } },
+    ...ch.fallbacks.map((fb, i) => ({
+      slot: `Fallback ${i + 1}`,
+      model: fb,
+      accent: { bg: 'bg-blue-50', text: 'text-[#023F59]', badge: 'bg-blue-100 text-blue-700' },
+    })),
+  ];
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-bold text-[#21262A]">{ch.channelName}</span>
+        <span className="text-[10px] text-muted-foreground bg-[#023F59]/5 border border-[#023F59]/10 rounded px-2 py-0.5">{ch.note}</span>
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        {allModels.map(({ slot, model, accent }) => (
+          <RunningModelCard key={slot} slot={slot} model={model} accent={accent} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CurrentlyRunningTab({ config, loading }: { config: RunningConfig | null; loading: boolean }) {
+
+  if (loading) return <div className="text-muted-foreground text-sm p-8 text-center">Loading…</div>;
+  if (!config) return <div className="text-muted-foreground text-sm p-8 text-center">Failed to load config</div>;
+
+  const defaultModels = [
+    { slot: 'Primary',    model: config.default.model,       accent: { bg: 'bg-emerald-50', text: 'text-[#107DAC]', badge: 'bg-emerald-100 text-emerald-700' } },
+    { slot: 'Fallback 1', model: config.default.fallbacks[0], accent: { bg: 'bg-blue-50',   text: 'text-[#023F59]', badge: 'bg-blue-100 text-blue-700' } },
+    { slot: 'Fallback 2', model: config.default.fallbacks[1], accent: { bg: 'bg-blue-50',   text: 'text-[#023F59]', badge: 'bg-blue-100 text-blue-700' } },
+  ].filter(m => m.model?.id);
+
+  return (
+    <div className="space-y-8">
+      {/* ── Default Chain ─────────────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+          <span className="text-base font-bold text-[#21262A]">🖥️ Main (Default)</span>
+          <span className="text-sm text-muted-foreground">· applies to all unlisted channels</span>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {defaultModels.map(({ slot, model, accent }) => (
+            <RunningModelCard key={slot} slot={slot} model={model} accent={accent} />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Channel Overrides ─────────────────────────── */}
+      <div className="space-y-5">
+        <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+          <span className="text-base font-bold text-[#21262A]">💬 Channel & DM Models</span>
+        </div>
+        {config.channelOverrides.map((ch) => (
+          <ChannelCard key={ch.channelId} ch={ch} />
+        ))}
+      </div>
+
+      <p className="text-[10px] text-muted-foreground border-t border-[#023F59]/10 pt-2">
+        Fallbacks are shared from the default chain. Channel overrides apply when a channel has a specific model configured.
+      </p>
+    </div>
+  );
+}
+
+// ─── Component ───────────────────────────────────────────────
+
+export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
+  const [view, setView] = useState<'usage' | 'intelligence' | 'running'>('usage');
   const [stats, setStats] = useState<ModelStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryDay[]>([]);
-  const [historyPeriod, setHistoryPeriod] = useState(30);
+  const [historyPeriod, setHistoryPeriod] = useState(7);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [runningConfig, setRunningConfig] = useState<RunningConfig | null>(null);
+  const [runningLoading, setRunningLoading] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -192,6 +316,33 @@ export function ModelTab() {
     } catch { /* ignore */ }
     setHistoryLoading(false);
   }, []);
+
+  const fetchRunningConfig = useCallback(async () => {
+    setRunningLoading(true);
+    try {
+      const res = await fetch('/api/config/running');
+      if (res.ok) setRunningConfig(await res.json());
+    } catch { /* ignore */ }
+    setRunningLoading(false);
+  }, []);
+
+  // Pre-fetch running config when switching to that tab
+  useEffect(() => {
+    if (view === 'running' && !runningConfig) fetchRunningConfig();
+  }, [view, runningConfig, fetchRunningConfig]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    if (view === 'usage') {
+      await Promise.all([fetchStats(), fetchHistory(historyPeriod)]);
+    } else if (view === 'running') {
+      await fetchRunningConfig();
+    } else if (view === 'intelligence') {
+      await new Promise(r => setTimeout(r, 400));
+    }
+    setLastRefreshed(new Date());
+    setRefreshing(false);
+  }, [view, fetchStats, fetchHistory, historyPeriod, fetchRunningConfig]);
 
   useEffect(() => {
     fetchStats();
@@ -221,10 +372,54 @@ export function ModelTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-        <span className="text-base font-semibold text-[#21262A]">Model Configuration & Usage</span>
-      </div>
+      {/* View Switcher + Refresh — full/sidebar mode only */}
+      {mode !== 'dashboard' && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex gap-1 p-1 bg-[#023F59]/5 rounded-lg">
+            {([
+              { id: 'usage',        label: '📋 Available Models' },
+              { id: 'intelligence', label: '🧠 Intelligence' },
+              { id: 'running',      label: '▶️ Currently Running' },
+            ] as const).map(v => (
+              <button
+                key={v.id}
+                onClick={() => setView(v.id)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  view === v.id
+                    ? 'bg-[#023F59] text-white shadow-sm'
+                    : 'text-[#023F59] hover:bg-[#023F59]/10'
+                }`}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            {lastRefreshed && !refreshing && (
+              <span className="text-[10px] text-muted-foreground">
+                Updated {lastRefreshed.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="gap-1.5 border-[#023F59]/25 text-[#023F59] hover:bg-[#023F59]/5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {mode !== 'dashboard' && view === 'intelligence' && <ModelIntelligencePage />}
+      {mode !== 'dashboard' && view === 'running' && <CurrentlyRunningTab config={runningConfig} loading={runningLoading || refreshing} />}
+
+      {(mode === 'dashboard' || view === 'usage') && view !== 'intelligence' && view !== 'running' && <>
+      {/* ── Dashboard-only sections: Config + Stats + Charts ── */}
+      {mode === 'dashboard' && <>
 
       {/* [A] Active Config Strip */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -246,17 +441,50 @@ export function ModelTab() {
         <KPICard title="Avg / Session" value={formatTokens(Math.round(avgPerSession))} />
       </div>
 
-      {/* [B2] Historical Token Consumption */}
+      {/* [B2] Today Overview — Grafana-style */}
+      {history.length > 0 && (() => {
+        const today = history[history.length - 1];
+        const totalToday = today.total;
+        const models = Object.entries(today.byModel).sort((a, b) => b[1] - a[1]);
+        const topModel = models[0];
+        const activeModels = models.length;
+        const todayCostEst = models.reduce((sum, [mid, toks]) => {
+          const m = availableModels.find(a => a.id === mid || mid.includes(a.id.split('/').pop() || ''));
+          const price = m ? (m.pricing.input * 0.8 + m.pricing.output * 0.2) / 1_000_000 : 0.003 / 1_000_000;
+          return sum + toks * price;
+        }, 0);
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
+              <span className="text-base font-semibold text-[#21262A]">Overview (Today — {today.date})</span>
+            </div>
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+              <GrafanaKPI label="Tokens Today" value={formatTokens(totalToday)} color="#31D7DB" sparkData={history.slice(-7).map(d => d.total)} />
+              <GrafanaKPI label="Est. Cost Today" value={`~$${todayCostEst.toFixed(3)}`} color="#107DAC" sparkData={history.slice(-7).map(d => {
+                return Object.entries(d.byModel).reduce((s,[mid,t]) => {
+                  const m2 = availableModels.find(a => a.id === mid || mid.includes(a.id.split('/').pop() || ''));
+                  const p2 = m2 ? (m2.pricing.input * 0.8 + m2.pricing.output * 0.2) / 1_000_000 : 0.003 / 1_000_000;
+                  return s + t * p2;
+                }, 0);
+              })} />
+              <GrafanaKPI label="Top Model" value={topModel ? getModelShortName(topModel[0]) : '—'} sub={topModel ? formatTokens(topModel[1]) : ''} color="#023F59" />
+              <GrafanaKPI label="Active Models" value={String(activeModels)} sub={`of ${availableModels.length} configured`} color="#107DAC" />
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* [B3] Historical Token Consumption */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
           <span className="text-base font-semibold text-[#21262A]">Token Consumption History</span>
         </div>
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-[#21262A]">Daily Token Usage</CardTitle>
               <div className="flex gap-1">
-                {[7, 30, 90, 180, 365].map(d => (
+                {[1, 7, 30, 90, 180, 365].map(d => (
                   <button
                     key={d}
                     onClick={() => setHistoryPeriod(d)}
@@ -266,7 +494,7 @@ export function ModelTab() {
                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
-                    {d}D
+                    {d === 1 ? '1D' : `${d}D`}
                   </button>
                 ))}
               </div>
@@ -280,7 +508,7 @@ export function ModelTab() {
                 No historical data available for this period
               </div>
             ) : (
-              <TokenHistoryChart days={history} period={historyPeriod} />
+              <MultiSeriesTokenChart days={history} period={historyPeriod} availableModels={availableModels} />
             )}
             <p className="text-[10px] text-muted-foreground mt-2">
               ⚠ Token counts reflect session lifetime totals attributed to last-active date, not daily consumption
@@ -290,7 +518,7 @@ export function ModelTab() {
       </div>
 
       {/* [C] Token Spend by Model */}
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold text-[#21262A]">Token Spend by Model</CardTitle>
         </CardHeader>
@@ -332,8 +560,10 @@ export function ModelTab() {
         </CardContent>
       </Card>
 
-      {/* [D] Available Models Grid */}
-      <div className="space-y-3">
+      </>}{/* end dashboard-only */}
+
+      {/* [D] Available Models Grid — shown in full/sidebar mode only */}
+      {mode !== 'dashboard' && (<div className="space-y-3">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
           <span className="text-base font-semibold text-[#21262A]">Available Models</span>
         </div>
@@ -403,10 +633,10 @@ export function ModelTab() {
             );
           })}
         </div>
-      </div>
+      </div>)}
 
-      {/* [E] Top Token Consumers */}
-      <Card className="border-[#023F59]/20">
+      {/* [E] Top Token Consumers — dashboard only */}
+      {mode === 'dashboard' && <Card className="border-[#023F59]/25 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold text-[#21262A]">Top Token Consumers</CardTitle>
         </CardHeader>
@@ -459,7 +689,231 @@ export function ModelTab() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
+      </>}
+    </div>
+  );
+}
+
+// ─── Grafana-style KPI Card ───────────────────────────────────
+
+function GrafanaKPI({
+  label, value, color, sub, sparkData,
+}: {
+  label: string; value: string; color: string; sub?: string; sparkData?: number[];
+}) {
+  const W = 120; const H = 32;
+  let sparkPath = '';
+  if (sparkData && sparkData.length > 1) {
+    const max = Math.max(...sparkData, 1);
+    const pts = sparkData.map((v, i) => {
+      const x = (i / (sparkData.length - 1)) * W;
+      const y = H - (v / max) * H * 0.85 - 2;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    sparkPath = pts.join(' ');
+  }
+  return (
+    <div className="rounded-xl border border-[#023F59]/15 bg-white p-3 space-y-1 overflow-hidden relative">
+      <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+      <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
+      {sparkPath && (
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="absolute bottom-0 right-0 opacity-20"
+          style={{ width: 80, height: H }}
+          preserveAspectRatio="none"
+        >
+          <path d={sparkPath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+// ─── Multi-Series Token Chart ─────────────────────────────────
+
+const MODEL_LINE_COLORS = [
+  '#31D7DB', '#107DAC', '#F59E0B', '#10B981', '#8B5CF6',
+  '#EF4444', '#3B82F6', '#F97316', '#EC4899', '#6366F1',
+];
+
+function MultiSeriesTokenChart({
+  days, period, availableModels,
+}: {
+  days: HistoryDay[];
+  period: number;
+  availableModels: AvailableModel[];
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [hiddenModels, setHiddenModels] = useState<Set<string>>(new Set());
+
+  // Collect top models by total usage
+  const modelTotals: Record<string, number> = {};
+  for (const d of days) {
+    for (const [mid, toks] of Object.entries(d.byModel)) {
+      modelTotals[mid] = (modelTotals[mid] || 0) + toks;
+    }
+  }
+  const topModels = Object.entries(modelTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([mid]) => mid);
+
+  const W = 800; const H = 140;
+  const pad = { t: 8, r: 8, b: 4, l: 4 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+
+  const maxVal = Math.max(...days.map(d => d.total), 1);
+  const labelEvery = period <= 7 ? 1 : period <= 30 ? 3 : period <= 90 ? 7 : 14;
+
+  function xOf(i: number) {
+    return pad.l + (days.length === 1 ? plotW / 2 : (i / (days.length - 1)) * plotW);
+  }
+  function yOf(val: number) {
+    return pad.t + plotH - (val / maxVal) * plotH;
+  }
+
+  // Total line points for hover
+  const totalPts = days.map((d, i) => ({ x: xOf(i), y: yOf(d.total), day: d }));
+
+  return (
+    <div>
+      {/* Chart */}
+      <div className="flex gap-1">
+        <div className="flex flex-col justify-between shrink-0 py-[8px]" style={{ width: 40, height: H }}>
+          {[maxVal, maxVal / 2, 0].map((v, i) => (
+            <span key={i} className="text-[9px] text-muted-foreground text-right leading-none block">
+              {formatTokens(Math.round(v))}
+            </span>
+          ))}
+        </div>
+        <div className="flex-1 relative" style={{ height: H }}>
+          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full" style={{ height: H, display: 'block' }}>
+            <defs>
+              {topModels.map((mid, ci) => (
+                <linearGradient key={mid} id={`grad-${ci}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={MODEL_LINE_COLORS[ci % MODEL_LINE_COLORS.length]} stopOpacity="0.15" />
+                  <stop offset="100%" stopColor={MODEL_LINE_COLORS[ci % MODEL_LINE_COLORS.length]} stopOpacity="0.01" />
+                </linearGradient>
+              ))}
+            </defs>
+            {/* Grid lines */}
+            {[0, 0.5, 1].map(frac => (
+              <line key={frac} x1={pad.l} y1={pad.t + plotH * (1 - frac)} x2={W - pad.r} y2={pad.t + plotH * (1 - frac)}
+                stroke="#023F59" strokeOpacity="0.07" strokeWidth="1" />
+            ))}
+            {/* Model lines */}
+            {topModels.map((mid, ci) => {
+              if (hiddenModels.has(mid)) return null;
+              const color = MODEL_LINE_COLORS[ci % MODEL_LINE_COLORS.length];
+              const pts = days.map((d, i) => ({ x: xOf(i), y: yOf(d.byModel[mid] || 0) }));
+              const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+              const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${(pad.t+plotH).toFixed(1)} L${pts[0].x.toFixed(1)},${(pad.t+plotH).toFixed(1)} Z`;
+              return (
+                <g key={mid}>
+                  <path d={area} fill={`url(#grad-${ci})`} />
+                  <path d={line} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+                </g>
+              );
+            })}
+            {/* Hover targets on total line */}
+            {totalPts.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r="12" fill="transparent"
+                onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}
+                style={{ cursor: 'crosshair' }} />
+            ))}
+            {/* Hover dot */}
+            {hoverIdx !== null && (
+              <circle cx={totalPts[hoverIdx].x} cy={totalPts[hoverIdx].y} r={4}
+                fill="#31D7DB" stroke="white" strokeWidth="1.5" style={{ pointerEvents: 'none' }} />
+            )}
+          </svg>
+          {/* Hover tooltip */}
+          {hoverIdx !== null && (() => {
+            const p = totalPts[hoverIdx];
+            const d = p.day;
+            const leftPct = (p.x / W) * 100;
+            return (
+              <div className="absolute z-20 bg-[#21262A] text-white text-[10px] rounded-md px-2.5 py-1.5 whitespace-nowrap shadow-lg pointer-events-none"
+                style={{ bottom: `calc(${100 - (p.y / H) * 100}% + 10px)`, left: `${Math.min(Math.max(leftPct, 5), 75)}%`, transform: 'translateX(-50%)' }}>
+                <p className="font-semibold mb-1">{d.date} — Total: {formatTokens(d.total)}</p>
+                {Object.entries(d.byModel).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([mid, toks]) => {
+                  const ci = topModels.indexOf(mid);
+                  const color = ci >= 0 ? MODEL_LINE_COLORS[ci % MODEL_LINE_COLORS.length] : '#aaa';
+                  return (
+                    <p key={mid} style={{ color }} className="opacity-90">
+                      {getModelShortName(mid)}: {formatTokens(toks)}
+                    </p>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* X-axis labels */}
+      <div className="flex" style={{ paddingLeft: 44, height: 18 }}>
+        <div className="flex-1 relative">
+          {totalPts.map((p, i) => {
+            if (i % labelEvery !== 0) return null;
+            return (
+              <span key={p.day.date} className="absolute text-[9px] text-muted-foreground -translate-x-1/2"
+                style={{ left: `${(p.x / W) * 100}%`, top: 2 }}>
+                {p.day.date.slice(5)}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Legend table — Grafana-style */}
+      <div className="mt-3 border border-[#023F59]/10 rounded-lg overflow-hidden">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-[#023F59]/5 text-muted-foreground">
+              <th className="text-left px-3 py-1.5 font-medium">Model</th>
+              <th className="text-right px-3 py-1.5 font-medium">Total Tokens</th>
+              <th className="text-right px-3 py-1.5 font-medium">Share</th>
+              <th className="text-right px-3 py-1.5 font-medium w-8">Show</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topModels.map((mid, ci) => {
+              const color = MODEL_LINE_COLORS[ci % MODEL_LINE_COLORS.length];
+              const total = modelTotals[mid] || 0;
+              const grandTotal = Object.values(modelTotals).reduce((s, v) => s + v, 0);
+              const pct = grandTotal > 0 ? (total / grandTotal) * 100 : 0;
+              const hidden = hiddenModels.has(mid);
+              return (
+                <tr key={mid} className={`border-t border-[#023F59]/5 ${hidden ? 'opacity-40' : ''}`}>
+                  <td className="px-3 py-1.5 flex items-center gap-2">
+                    <span className="w-3 h-0.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: color }} />
+                    <span className="text-[#21262A] font-medium truncate max-w-[180px]">{getModelShortName(mid)}</span>
+                  </td>
+                  <td className="px-3 py-1.5 text-right text-[#107DAC] font-medium">{formatTokens(total)}</td>
+                  <td className="px-3 py-1.5 text-right text-muted-foreground">{pct.toFixed(1)}%</td>
+                  <td className="px-3 py-1.5 text-right">
+                    <button
+                      onClick={() => setHiddenModels(prev => {
+                        const next = new Set(prev);
+                        if (next.has(mid)) next.delete(mid); else next.add(mid);
+                        return next;
+                      })}
+                      className="text-[10px] text-muted-foreground hover:text-[#023F59] transition-colors"
+                    >
+                      {hidden ? '○' : '●'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -613,7 +1067,7 @@ function TokenHistoryChart({ days, period }: { days: HistoryDay[]; period: numbe
 function ConfigCard({ title, model }: { title: string; model?: AvailableModel }) {
   if (!model) {
     return (
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <CardContent className="p-4">
           <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
           <div className="text-sm text-muted-foreground italic">Not configured</div>
@@ -623,7 +1077,7 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel })
   }
 
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardContent className="p-4">
         <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
         <div className="flex items-center gap-2">
@@ -650,7 +1104,7 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel })
 
 function KPICard({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) {
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardContent className="p-4">
         <div className="text-xs text-muted-foreground font-medium">{title}</div>
         <div className="text-2xl font-bold text-[#107DAC] mt-1">{value}</div>
@@ -681,7 +1135,7 @@ function LoadingSkeleton() {
 
 function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardContent className="p-8 text-center">
         <AlertTriangle className="w-8 h-8 mx-auto text-amber-500 mb-3" />
         <p className="text-sm text-[#21262A] font-medium mb-1">Failed to load model stats</p>

@@ -24,7 +24,6 @@ export function RegistrationLinkManager() {
   }
 
   const handleEditorSave = (config: any) => {
-    console.log("Saving registration link:", config)
     toast.success("Registration link saved successfully!")
     setViewMode('list')
     setSelectedLink(null)

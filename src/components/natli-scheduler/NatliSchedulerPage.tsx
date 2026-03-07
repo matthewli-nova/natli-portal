@@ -218,7 +218,7 @@ function categorizeJobs(jobs: CronJob[]): JobGroup[] {
 export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
-  const [tokenSummary, setTokenSummary] = useState<Record<string, { lastRunTokens: number; estDailyTokens: number }>>({});
+  const [tokenSummary, setTokenSummary] = useState<Record<string, { lastRunTokens: number; estDailyTokens: number; estDailyCost?: number; model?: string }>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -242,7 +242,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
     // Fetch token summary in background (slower, 16 jobs × 1 run each)
     fetchApi<{ summary: Record<string, { lastRunTokens: number; estDailyTokens: number }> }>('/api/cron/jobs/token-summary')
       .then(r => { if (r) setTokenSummary(r.summary); })
-      .catch(() => {});
+      .catch(() => { /* scheduler — silent fallback */ });
   }, [timelineZoom]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -319,7 +319,9 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
       {/* [A] Status Strip — 4 KPI cards */}
       {(() => {
         const totalEstDaily = Object.values(tokenSummary).reduce((s, v) => s + (v.estDailyTokens || 0), 0);
+        const totalEstCost  = Object.values(tokenSummary).reduce((s, v) => s + (v.estDailyCost  || 0), 0);
         const hasTokenData = Object.keys(tokenSummary).length > 0;
+        const fmtCost = (usd: number) => usd < 0.01 ? '<$0.01' : `$${usd.toFixed(usd < 1 ? 3 : 2)}`;
         return (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             <StatusCard
@@ -330,9 +332,9 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
             />
             <StatusCard
               title="Est. Token Spend / Day"
-              value={hasTokenData ? formatTokensShort(totalEstDaily) : '…'}
+              value={hasTokenData ? `${formatTokensShort(totalEstDaily)} · ${fmtCost(totalEstCost)}` : '…'}
               icon={<Zap className="w-4 h-4 text-[#31D7DB]" />}
-              sub={hasTokenData ? 'across all scheduled jobs' : 'loading…'}
+              sub={hasTokenData ? 'tokens · est. cost across all jobs' : 'loading…'}
               variant="cyan"
             />
             <StatusCard
@@ -400,7 +402,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
       </div>
 
       {/* [E] Jobs Table — single card with tabs per group */}
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <CardHeader className="pb-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-[#21262A]">All Jobs</CardTitle>
@@ -623,7 +625,7 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
   }
 
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-[#21262A]">{getTimelineTitle(zoom)}</CardTitle>
@@ -706,7 +708,7 @@ function NextFiringCard({ job, now, onRunNow, running }: {
   const countdown = (job.state.nextRunAtMs || 0) - now;
 
   return (
-    <Card className="border-[#023F59]/20 hover:border-[#31D7DB]/50 transition-colors">
+    <Card className="border-[#023F59]/25 shadow-sm hover:border-[#31D7DB]/50 transition-colors">
       <CardContent className="pt-4 pb-3 flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Next</span>
@@ -919,11 +921,52 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
           </Button>
         </div>
 
-        {/* Runs list */}
+        {/* Last Run Summary — most important thing to see */}
+        {!loadingRuns && runs.length > 0 && (
+          <div className={`mx-5 mt-4 mb-1 rounded-lg border px-4 py-3 ${
+            runs[0].status === 'ok'
+              ? 'bg-emerald-50 border-emerald-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <div className="flex items-center gap-2 mb-2">
+              {runs[0].status === 'ok' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+              )}
+              <span className={`text-xs font-semibold ${runs[0].status === 'ok' ? 'text-emerald-700' : 'text-red-700'}`}>
+                Last Run
+              </span>
+              <span className="text-xs text-muted-foreground ml-auto font-mono">
+                {new Date(runs[0].ts || runs[0].runAtMs || 0).toLocaleString()}
+              </span>
+              {runs[0].durationMs && (
+                <span className="text-xs text-muted-foreground font-mono">
+                  · {formatDuration(runs[0].durationMs)}
+                </span>
+              )}
+            </div>
+            {runs[0].summary ? (
+              <p className="text-sm text-[#21262A] leading-relaxed whitespace-pre-wrap">
+                {runs[0].summary}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No summary available for this run.</p>
+            )}
+            {runs[0].model && (
+              <p className="text-[10px] text-muted-foreground font-mono mt-2">{runs[0].model}</p>
+            )}
+          </div>
+        )}
+        {loadingRuns && (
+          <div className="mx-5 mt-4 mb-1">
+            <Skeleton className="h-24 rounded-lg" />
+          </div>
+        )}
+
+        {/* Run history */}
         <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
-          {loadingRuns ? (
-            Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-md" />)
-          ) : runs.length === 0 ? (
+          {!loadingRuns && runs.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No run history found</p>
           ) : (
             runs.map((run, i) => (
@@ -948,7 +991,7 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
                   )}
                 </div>
                 {run.summary && (
-                  <p className={`text-xs text-muted-foreground mt-1 ${expandedRun === i ? '' : 'line-clamp-2'}`}>
+                  <p className={`text-xs text-muted-foreground mt-1 ${expandedRun === i ? 'whitespace-pre-wrap' : 'line-clamp-1'}`}>
                     {run.summary}
                   </p>
                 )}

@@ -100,6 +100,8 @@ async function ssePulsePoller() {
   } catch { /* silent */ }
 }
 
+// Fire once immediately so new SSE clients get data right away, then every 30s
+ssePulsePoller();
 setInterval(ssePulsePoller, 30_000);
 
 // Health
@@ -298,7 +300,7 @@ app.get('/api/health', async (_req, res) => {
     if (!ollamaOk) alerts.push({ level: 'warning', type: 'Service', message: 'Ollama not responding on :11434', timestamp: fmtAlertTime(now) });
     if (!gatewayOk) alerts.push({ level: 'warning', type: 'Service', message: 'Gateway not responding on :18789', timestamp: fmtAlertTime(now) });
 
-    res.json({
+    const responseData = {
       status: alerts.some(a => a.level === 'critical') ? 'critical' : alerts.length > 0 ? 'warning' : 'ok',
       timestamp: now.toISOString(),
       alerts,
@@ -327,7 +329,7 @@ app.get('/api/health', async (_req, res) => {
 
     res.json(responseData);
 
-    // Broadcast health to SSE clients
+    // Broadcast health to SSE clients (best-effort, no-op if no clients)
     broadcastSSE('health', responseData);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -406,11 +408,12 @@ app.get('/api/cron/jobs/token-summary', async (_req, res) => {
     const data = JSON.parse(listOut);
     const jobs: Record<string, unknown>[] = data.jobs || [];
 
-    const summary: Record<string, { lastRunTokens: number; estDailyTokens: number }> = {};
+    const summary: Record<string, { lastRunTokens: number; estDailyTokens: number; estDailyCost: number; model: string }> = {};
 
     await Promise.all(
       jobs.map(async (job) => {
         const id = job.id as string;
+        const jobModel = (job as Record<string, unknown>).model as string || 'anthropic/claude-sonnet-4-6';
         try {
           const runOut = await execCommand(`openclaw cron runs --id ${id} --limit 3`);
           const runData = JSON.parse(runOut);
@@ -427,20 +430,19 @@ app.get('/api/cron/jobs/token-summary', async (_req, res) => {
             const everyMs = Number(schedule.everyMs || 86400000);
             runsPerDay = (24 * 3600 * 1000) / everyMs;
           } else if (schedule?.kind === 'cron') {
-            // Rough estimate: count fields to guess frequency
             const expr = String(schedule.expr || '0 0 * * *');
             const parts = expr.trim().split(/\s+/);
             const dayPart = parts[4] || '*';
             const hourPart = parts[1] || '*';
-            if (dayPart !== '*') runsPerDay = 1 / 7; // weekly
+            if (dayPart !== '*') runsPerDay = 1 / 7;
             else if (hourPart === '*') runsPerDay = 24;
             else runsPerDay = 1;
           }
 
-          summary[id] = {
-            lastRunTokens,
-            estDailyTokens: Math.round(lastRunTokens * Math.min(runsPerDay, 24)),
-          };
+          const estDailyTokens = Math.round(lastRunTokens * Math.min(runsPerDay, 24));
+          const estDailyCost = estimateModelCost(estDailyTokens, jobModel);
+
+          summary[id] = { lastRunTokens, estDailyTokens, estDailyCost, model: jobModel };
         } catch {
           // ignore per-job errors
         }
@@ -1040,6 +1042,82 @@ app.post('/api/config/model', async (req, res) => {
 
 // ─── Model Stats ─────────────────────────────────────────────
 
+// ─── Running Config (default + known channel overrides) ──────
+
+app.get('/api/config/running', async (_req, res) => {
+  try {
+    const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
+    const modelDefaults = data.agents?.defaults?.model ?? {};
+    const primary: string = modelDefaults.primary ?? '';
+    const fallbacks: string[] = modelDefaults.fallbacks ?? [];
+    const availableModels = await getAvailableModels();
+
+    // Resolve a model ID to its label + alias
+    const resolve = (id: string) => {
+      const m = availableModels.find(a => a.id === id);
+      return { id, label: m?.label ?? id, alias: m?.alias ?? '' };
+    };
+
+    // Channel-specific model overrides (from AGENTS.md + known config)
+    // These are runtime overrides set per-channel — not stored in openclaw.json
+    const channelOverrides = [
+      {
+        channelId: 'C0AE9SMQT8D',
+        channelName: '#nat-1_clawbot-system',
+        model: resolve('anthropic/claude-opus-4-6'),
+        fallbacks: [resolve(fallbacks[0] ?? ''), resolve(fallbacks[1] ?? '')].filter(f => f.id),
+        note: 'Opus — system/ops channel',
+      },
+      {
+        channelId: 'C0AES69KG2D',
+        channelName: '#nat-2_nat-portal',
+        model: resolve('anthropic/claude-sonnet-4-6'),
+        fallbacks: [resolve(fallbacks[0] ?? ''), resolve(fallbacks[1] ?? '')].filter(f => f.id),
+        note: 'Sonnet — portal channel',
+      },
+      {
+        channelId: 'C0AEA7JBGKX',
+        channelName: '#nat-4_deep_research',
+        model: resolve('anthropic/claude-opus-4-6'),
+        fallbacks: [resolve(fallbacks[0] ?? ''), resolve(fallbacks[1] ?? '')].filter(f => f.id),
+        note: 'Opus — deep research (data collection: Qwen3.5-Plus)',
+      },
+      {
+        channelId: 'C0AE78N7GSF',
+        channelName: '#nat-5_personal-assistant',
+        model: resolve('anthropic/claude-sonnet-4-6'),
+        fallbacks: [resolve(fallbacks[0] ?? ''), resolve(fallbacks[1] ?? '')].filter(f => f.id),
+        note: 'Sonnet 4.6 — personal assistant',
+      },
+      {
+        channelId: 'C01MDF81MPG',
+        channelName: '#team_bd-nova',
+        model: resolve('anthropic/claude-sonnet-4-6'),
+        fallbacks: [resolve(fallbacks[0] ?? ''), resolve(fallbacks[1] ?? '')].filter(f => f.id),
+        note: 'Sonnet — BD/NOVA channel',
+      },
+      {
+        channelId: 'DM',
+        channelName: 'Matthew DM (D0AC4HZHD8V)',
+        model: resolve(primary),
+        fallbacks: [resolve(fallbacks[0] ?? ''), resolve(fallbacks[1] ?? '')].filter(f => f.id),
+        note: 'Default — direct messages',
+      },
+    ];
+
+    res.json({
+      default: {
+        model: resolve(primary),
+        fallbacks: fallbacks.map(resolve),
+      },
+      channelOverrides,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
 const MODEL_PRICING: Record<string, { input: number; output: number; free?: boolean }> = {
   'claude-opus-4-6':              { input: 15.0,  output: 75.0 },
   'claude-sonnet-4-6':            { input: 3.0,   output: 15.0 },
@@ -1354,10 +1432,11 @@ app.get('/api/files/content', async (req, res) => {
 // SKILLS API
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CUSTOM_SKILLS_DIR = path.join(OPENCLAW_WORKSPACE, 'skills', 'skills');
-const ALT_SKILLS_DIR    = path.join(OPENCLAW_WORKSPACE, 'skills');
-const SYSTEM_SKILLS_DIR = '/opt/homebrew/lib/node_modules/openclaw/skills';
-const SKILLS_REGISTRY   = path.join(OPENCLAW_WORKSPACE, 'SKILLS-REGISTRY.md');
+const CUSTOM_SKILLS_DIR  = path.join(OPENCLAW_WORKSPACE, 'skills', 'skills');
+const ALT_SKILLS_DIR     = path.join(OPENCLAW_WORKSPACE, 'skills');
+const SYSTEM_SKILLS_DIR  = '/opt/homebrew/lib/node_modules/openclaw/skills';
+const MANAGED_SKILLS_DIR = path.join(os.homedir(), '.openclaw', 'skills'); // clawhub-installed managed skills
+const SKILLS_REGISTRY    = path.join(OPENCLAW_WORKSPACE, 'SKILLS-REGISTRY.md');
 
 type SkillType   = 'custom' | 'system';
 type SkillStatus = 'ready' | 'needs-setup' | 'disabled';
@@ -1381,37 +1460,67 @@ interface SkillMeta {
 async function parseSkillMeta(skillPath: string): Promise<Partial<SkillMeta>> {
   try {
     const content = await fs.readFile(skillPath, 'utf-8');
-    const lines = content.split('\n').slice(0, 40);
+    const lines = content.split('\n').slice(0, 60);
     const meta: Partial<SkillMeta> = {};
 
-    // Title from H1
-    const h1 = lines.find(l => l.startsWith('# '));
-    if (h1) {
-      const title = h1.slice(2).trim();
-      // Extract emoji if present
-      const emojiMatch = title.match(/^([\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}☁️🍎⚙️🔷📡🏗️🗄️📋💬💼✍️📧📰💻💰📊🎼🛠️🤖🔒📬🎬♊️🍌📦🌤️])/u);
-      if (emojiMatch) {
-        meta.emoji = emojiMatch[1];
-        meta.name = title.slice(emojiMatch[1].length).trim();
-      } else {
-        meta.name = title;
+    // ── YAML frontmatter (clawhub/managed skills format) ──────────────────────
+    // Format: starts with ---, has name:/description:/version: keys
+    if (lines[0]?.trim() === '---') {
+      const fmEnd = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
+      const fmLines = fmEnd > 0 ? lines.slice(1, fmEnd) : lines.slice(1, 20);
+
+      for (const line of fmLines) {
+        const nameMatch = line.match(/^name:\s*["']?(.+?)["']?\s*$/);
+        if (nameMatch && !meta.name) {
+          // Convert slug like "gws-admin" → "GWS Admin"
+          meta.name = nameMatch[1]
+            .replace(/^gws-/, 'GWS ')
+            .replace(/-/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase())
+            .trim();
+        }
+        const descMatch = line.match(/^description:\s*["']?(.+?)["']?\s*$/);
+        if (descMatch && !meta.description) {
+          meta.description = descMatch[1].trim().slice(0, 120);
+        }
+        const verMatch = line.match(/^version:\s*["']?(.+?)["']?\s*$/);
+        if (verMatch && !meta.version) {
+          meta.version = verMatch[1].trim();
+        }
       }
     }
 
-    // Version
-    const versionLine = lines.find(l => l.toLowerCase().startsWith('**version:**'));
-    if (versionLine) {
-      meta.version = versionLine.replace(/\*\*version:\*\*/i, '').trim();
+    // ── Markdown H1 (standard skill format) ───────────────────────────────────
+    if (!meta.name) {
+      const h1 = lines.find(l => l.startsWith('# '));
+      if (h1) {
+        const title = h1.slice(2).trim();
+        const emojiMatch = title.match(/^([\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}☁️🍎⚙️🔷📡🏗️🗄️📋💬💼✍️📧📰💻💰📊🎼🛠️🤖🔒📬🎬♊️🍌📦🌤️])/u);
+        if (emojiMatch) {
+          meta.emoji = emojiMatch[1];
+          meta.name = title.slice(emojiMatch[1].length).trim();
+        } else {
+          meta.name = title;
+        }
+      }
     }
 
-    // Has contract
+    // ── Markdown version (**Version:** x.x) ───────────────────────────────────
+    if (!meta.version) {
+      const versionLine = lines.find(l => l.toLowerCase().startsWith('**version:**'));
+      if (versionLine) meta.version = versionLine.replace(/\*\*version:\*\*/i, '').trim();
+    }
+
+    // ── Has contract ──────────────────────────────────────────────────────────
     meta.hasContract = content.includes('## Contract');
 
-    // Description from first non-empty paragraph after metadata
-    const overviewIdx = lines.findIndex(l => l.startsWith('## Overview') || l.startsWith('## Description'));
-    if (overviewIdx > -1) {
-      const descLine = lines.slice(overviewIdx + 1).find(l => l.trim() && !l.startsWith('#'));
-      if (descLine) meta.description = descLine.trim().slice(0, 120);
+    // ── Description fallback from Overview/Description section ────────────────
+    if (!meta.description) {
+      const overviewIdx = lines.findIndex(l => l.startsWith('## Overview') || l.startsWith('## Description'));
+      if (overviewIdx > -1) {
+        const descLine = lines.slice(overviewIdx + 1).find(l => l.trim() && !l.startsWith('#'));
+        if (descLine) meta.description = descLine.trim().slice(0, 120);
+      }
     }
 
     return meta;
@@ -1424,12 +1533,20 @@ async function parseSkillMeta(skillPath: string): Promise<Partial<SkillMeta>> {
 async function discoverSkills(): Promise<SkillMeta[]> {
   const skills: SkillMeta[] = [];
 
-  // Helper: scan a directory for SKILL.md files
+  // Helper: scan a directory for SKILL.md files (handles both real dirs and symlinks)
   async function scanDir(dir: string, type: SkillType, category: string): Promise<void> {
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
       for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
+        // Follow symlinks: a symlink to a directory is valid
+        let isDir = entry.isDirectory();
+        if (!isDir && entry.isSymbolicLink()) {
+          try {
+            const resolved = await fs.stat(path.join(dir, entry.name));
+            isDir = resolved.isDirectory();
+          } catch { /* broken symlink — skip */ }
+        }
+        if (!isDir) continue;
         const skillMdPath = path.join(dir, entry.name, 'SKILL.md');
         try {
           await fs.access(skillMdPath);
@@ -1461,6 +1578,7 @@ async function discoverSkills(): Promise<SkillMeta[]> {
   await Promise.all([
     scanDir(CUSTOM_SKILLS_DIR, 'custom', 'Custom'),
     scanDir(SYSTEM_SKILLS_DIR, 'system', 'System'),
+    scanDir(MANAGED_SKILLS_DIR, 'system', 'Google Workspace'),
   ]);
 
   // Also scan alt custom skill dirs (skills/linkedin, skills/google-workspace, etc.)
@@ -1958,9 +2076,17 @@ app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
       preview = extractedText;
     }
 
+    const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic']);
+    const MIME_MAP: Record<string, string> = {
+      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+      '.gif': 'image/gif', '.webp': 'image/webp', '.heic': 'image/jpeg',
+    };
+
     res.json({
       filename: originalName,
       savedAs: path.basename(destPath),
+      mimeType: MIME_MAP[ext] || 'application/octet-stream',
+      isImage: IMAGE_EXTS.has(ext),
       extractedText: extractedText.slice(0, 8000),
       preview,
       size: req.file.size,
@@ -1971,41 +2097,172 @@ app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+// ─── Chat Helpers ─────────────────────────────────────────────────────────────
+
+async function getProviderKey(provider: string): Promise<string> {
+  try {
+    const configPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
+    const config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
+    return (config?.models?.providers?.[provider]?.apiKey as string) || '';
+  } catch { return ''; }
+}
+
+async function getOpenRouterKey(): Promise<string> {
+  return getProviderKey('openrouter');
+}
+
+// Returns { apiKey, baseUrl } for a given model ID
+async function resolveModelApi(modelId: string): Promise<{ apiKey: string; baseUrl: string; model: string }> {
+  const configPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
+  const config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
+  const providers = config?.models?.providers ?? {};
+
+  // Moonshot/Kimi models
+  if (modelId.startsWith('kimi') || modelId.startsWith('moonshot')) {
+    return {
+      apiKey: providers?.moonshot?.apiKey || '',
+      baseUrl: providers?.moonshot?.baseUrl || 'https://api.moonshot.cn/v1',
+      model: modelId,
+    };
+  }
+
+  // OpenRouter prefix (e.g. openrouter/google/gemini-2.5-flash)
+  if (modelId.startsWith('openrouter/')) {
+    return {
+      apiKey: providers?.openrouter?.apiKey || '',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      model: modelId.replace(/^openrouter\//, ''),
+    };
+  }
+
+  // Default: everything else goes via OpenRouter (handles anthropic/*, google/*, meta-llama/* etc.)
+  return {
+    apiKey: providers?.openrouter?.apiKey || '',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    model: modelId,
+  };
+}
+
+// ─── Chat Models List ──────────────────────────────────────────────────────────
+app.get('/api/chat/models', async (_req, res) => {
+  try {
+    const configPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
+    const config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
+    const providers: Record<string, { apiKey?: string; models?: Array<{ id: string; name?: string }> }> =
+      config?.models?.providers ?? {};
+
+    const chatModels: Array<{ id: string; label: string; provider: string }> = [];
+
+    for (const [providerName, providerConf] of Object.entries(providers)) {
+      if (!providerConf.apiKey) continue;
+      const models = providerConf.models || [];
+      for (const m of models) {
+        // Only include text-capable chat models (skip embedding-only, etc.)
+        chatModels.push({
+          id: m.id,
+          label: m.name || m.id,
+          provider: providerName,
+        });
+      }
+    }
+
+    // Always prepend primary Claude models (accessed via OpenRouter, not in explicit model list)
+    const claudeModels: Array<{ id: string; label: string; provider: string }> = [
+      { id: 'anthropic/claude-opus-4-6', label: 'Claude Opus 4.6', provider: 'openrouter' },
+      { id: 'anthropic/claude-sonnet-4-6', label: 'Claude Sonnet 4.6', provider: 'openrouter' },
+    ];
+    const merged = [
+      ...claudeModels,
+      ...chatModels.filter(m => !claudeModels.some(c => c.id === m.id)),
+    ];
+
+    res.json({ models: merged });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to load models' });
+  }
+});
+
+async function buildPortalSystemPrompt(activeTab?: string): Promise<string> {
+  let memory = '';
+  try {
+    memory = await fs.readFile('/Users/natlee/.openclaw/workspace/MEMORY.md', 'utf-8');
+    memory = memory.slice(0, 6000);
+  } catch { /* no memory */ }
+  const tabCtx = activeTab ? `\nThe user is viewing the "${activeTab}" tab of the portal.` : '';
+  return `You are Nat Lee, Matthew Li's AI strategic partner. You're responding inside natli-portal, Matthew's AI operations dashboard. Be direct, concise, and lead with answers. Use markdown for structured responses.${tabCtx}
+
+## Current memory context
+${memory}`;
+}
+
 // ─── Chat Send ───────────────────────────────────────────────────────────────
 app.post('/api/chat/send', async (req, res) => {
   try {
-    const { message, model } = req.body as { message: string; model?: string };
-    if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
+    const { message, model, history, attachedFile, activeTab } = req.body as {
+      message?: string;
+      model?: string;
+      history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+      attachedFile?: { savedAs: string; mimeType: string; isImage: boolean };
+      activeTab?: string;
+    };
 
-    const escaped = message.replace(/"/g, '\\"').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    const modelFlag = model ? ` --model "${model}"` : '';
-    const output = await execCommandWithTimeout(
-      `openclaw agent --agent main --message "${escaped}"${modelFlag} --json`,
-      120000
-    );
+    const msgText = (message || '').trim();
+    if (!msgText && !attachedFile) return res.status(400).json({ error: 'Message or attachment required' });
 
-    let reply = '';
-    try {
-      const parsed = JSON.parse(output);
-      reply = parsed.result?.reply
-        || parsed.result?.message
-        || parsed.result?.text
-        || parsed.result?.content
-        || parsed.reply
-        || parsed.message
-        || parsed.text
-        || parsed.content
-        || '';
-    } catch {
-      reply = output.trim();
+    const { apiKey, baseUrl, model: resolvedModel } = await resolveModelApi(model || 'anthropic/claude-sonnet-4-6');
+    if (!apiKey) return res.status(500).json({ error: `API key not configured for model: ${model}` });
+
+    const selectedModel = resolvedModel;
+    const systemPrompt = await buildPortalSystemPrompt(activeTab);
+
+    // Build user message content (vision-capable if image attached)
+    type ContentBlock = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
+    let userContent: string | ContentBlock[];
+
+    if (attachedFile?.isImage) {
+      const imgPath = path.join(UPLOAD_DIR, attachedFile.savedAs);
+      const imgBuf = await fs.readFile(imgPath);
+      const b64 = imgBuf.toString('base64');
+      const blocks: ContentBlock[] = [
+        { type: 'image_url', image_url: { url: `data:${attachedFile.mimeType};base64,${b64}` } },
+      ];
+      if (msgText) blocks.push({ type: 'text', text: msgText });
+      else blocks.push({ type: 'text', text: 'Please describe and analyse this image.' });
+      userContent = blocks;
+    } else {
+      userContent = msgText;
     }
 
-    // Strip NO_REPLY sentinel — it's an internal instruction, never show it
-    reply = reply.replace(/^\s*NO_REPLY\s*$/m, '').trim();
+    // Assemble messages: prior history + current user turn
+    type OAIMessage = { role: 'user' | 'assistant' | 'system'; content: string | ContentBlock[] };
+    const messages: OAIMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...(history || []).map(h => ({ role: h.role, content: h.content })),
+      { role: 'user', content: userContent },
+    ];
 
-    if (!reply) {
-      reply = 'Done — Nat Lee processed your request. Check Slack for any delivered output.';
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://natli-portal.local',
+        'X-Title': 'Portal Assistant',
+      },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`OpenRouter: ${response.status} — ${errText.slice(0, 200)}`);
     }
+
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const reply = data.choices?.[0]?.message?.content?.trim() || 'No response received.';
 
     res.json({ reply, ts: Date.now() });
   } catch (err: unknown) {

@@ -6,7 +6,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-0 rounded-xl border overflow-hidden",
+        "bg-card text-card-foreground flex flex-col gap-0 rounded-xl border border-[#023F59]/20 shadow-sm overflow-hidden",
         className,
       )}
       {...props}
@@ -74,7 +74,7 @@ function KPICard({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-0 rounded-xl border overflow-hidden",
+        "bg-card text-card-foreground flex flex-col gap-0 rounded-xl border border-[#023F59]/25 shadow-sm overflow-hidden",
         className,
       )}
       {...props}

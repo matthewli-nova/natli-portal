@@ -136,7 +136,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
       )}
 
       {/* ─── [A] MEMORY.md Capacity Hero Card ─────────────────── */}
-      <Card className="border-[#023F59]/20 overflow-hidden">
+      <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-[#31D7DB] via-[#107DAC] to-[#023F59]" />
         <CardContent className="pt-5 pb-5">
           <div className="flex items-center justify-between mb-4">
@@ -176,7 +176,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
       {/* ─── [B] Three-Layer Memory System ────────────────────── */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Hot — MEMORY.md */}
-        <Card className="border-[#023F59]/20 overflow-hidden">
+        <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
           <div className="h-1.5 bg-[#31D7DB]" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
@@ -193,7 +193,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
         </Card>
 
         {/* Daily Logs */}
-        <Card className="border-[#023F59]/20 overflow-hidden">
+        <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
           <div className="h-1.5 bg-[#107DAC]" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
@@ -210,7 +210,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
         </Card>
 
         {/* Archive */}
-        <Card className="border-[#023F59]/20 overflow-hidden">
+        <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
           <div className="h-1.5 bg-[#023F59]" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
@@ -230,7 +230,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
       {/* ─── [C] Knowledge Base + Search Engine ───────────────── */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Knowledge Base */}
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-4">
               <Database className="w-5 h-5 text-[#31D7DB]" />
@@ -254,7 +254,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
         </Card>
 
         {/* Search Engine */}
-        <Card className="border-[#023F59]/20">
+        <Card className="border-[#023F59]/25 shadow-sm">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-4">
               <Search className="w-5 h-5 text-[#31D7DB]" />
@@ -299,7 +299,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
       </div>
 
       {/* ─── [D] Quick Actions ────────────────────────────────── */}
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <CardContent className="pt-4 pb-4">
           <div className="flex flex-wrap gap-3">
             <Button

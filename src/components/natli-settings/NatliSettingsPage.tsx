@@ -468,7 +468,7 @@ function ComingSoonDetailPage({ card, onBack }: { card: SettingCardData; onBack:
     <div className="space-y-4">
       <BackButton onBack={onBack} />
 
-      <Card className="border-[#023F59]/20">
+      <Card className="border-[#023F59]/25 shadow-sm">
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center space-y-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-[#023F59]/10">
             <Icon className="h-8 w-8 text-[#31D7DB]" />

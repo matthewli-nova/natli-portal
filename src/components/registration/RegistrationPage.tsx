@@ -181,7 +181,6 @@ export function RegistrationPage() {
     setTimeout(() => {
       setIsSubmitting(false)
       // TODO: Navigate to confirmation page
-      console.log("Registration submitted:", {
         eventTicket: selectedEventTicket,
         subEventTickets: Array.from(selectedSubEventTickets),
         formData,

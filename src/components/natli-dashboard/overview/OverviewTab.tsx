@@ -100,6 +100,7 @@ interface OverviewTabProps {
   modelConfig: ModelConfig | null;
   memory: MemoryStats | null;
   onNavigateTo: (tab: string) => void;
+  sseConnected?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -342,7 +343,7 @@ function AgentActivityCard({
   const recent = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6);
 
   return (
-    <Card className="border-[#023F59]/20 col-span-1 lg:col-span-2">
+    <Card className="border-[#023F59]/25 shadow-sm col-span-1 lg:col-span-2">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold text-[#21262A]">Agent Activity</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('sessions')} />
@@ -415,7 +416,7 @@ function CronHealthCard({
     .slice(0, 3);
 
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold text-[#21262A]">Cron Health</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('schedule')} />
@@ -495,7 +496,7 @@ function TasksCard({
   };
 
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold text-[#21262A]">Tasks</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('task')} />
@@ -548,7 +549,7 @@ function MemoryCard({
   const fts = health?.ftsEnabled ?? false;
 
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold text-[#21262A]">Memory</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('memory')} />
@@ -621,7 +622,7 @@ function ModelUsageCard({
     : '—';
 
   return (
-    <Card className="border-[#023F59]/20">
+    <Card className="border-[#023F59]/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('model')} />
@@ -678,6 +679,7 @@ export function OverviewTab({
   modelConfig,
   memory,
   onNavigateTo,
+  sseConnected,
 }: OverviewTabProps) {
   return (
     <div className="space-y-4">
