@@ -451,13 +451,9 @@ export default function App() {
     setTimeout(() => setIsPageLoading(false), 800);
   }, []);
 
-  // Initial Sidebar Load Simulation
+  // Sidebar loads from static data — no delay needed
   useEffect(() => {
-    setIsSidebarLoading(true);
-    const timer = setTimeout(() => {
-      setIsSidebarLoading(false);
-    }, 2000); 
-    return () => clearTimeout(timer);
+    setIsSidebarLoading(false);
   }, []);
 
   const toggleMenu = (id: string) => {
@@ -572,7 +568,7 @@ export default function App() {
                 ) : platform === 'natli' ? (
                   <PagePlaceholder />
                 ) : platform === 'work' ? (
-                  <PagePlaceholder />
+                  <PagePlaceholder message="Work platform — coming soon" />
                 ) : activeItem === 'dashboard' ? (
                   <Dashboard />
                 ) : activeItem === 'invitations' ? (

@@ -10,15 +10,33 @@ import multer from 'multer';
 const app = express();
 const PORT = 3001;
 
-app.use(cors());
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
 app.use(express.json());
 
-const CLICKUP_TOKEN = process.env.CLICKUP_TOKEN || 'pk_107639602_Q8PJNSBF1MGMW9QA0UROQ3B1OIYKPJP6';
+const PORTAL_TOKEN = process.env.PORTAL_TOKEN;
+if (PORTAL_TOKEN) {
+  app.use((req, res, next) => {
+    const skip = req.path === '/api/health' || req.path.startsWith('/api/sse');
+    if (skip) return next();
+    const auth = req.headers.authorization;
+    if (!auth || auth !== `Bearer ${PORTAL_TOKEN}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    next();
+  });
+}
+
+const CLICKUP_TOKEN = process.env.CLICKUP_TOKEN;
+if (!CLICKUP_TOKEN) throw new Error('CLICKUP_TOKEN env var required');
 const CLICKUP_TASK_LIST = process.env.CLICKUP_TASK_LIST || '901815865909';
-const OPENCLAW_WORKSPACE = process.env.OPENCLAW_WORKSPACE || '/Users/natlee/.openclaw/workspace';
+
+const HOME = os.homedir();
+const OPENCLAW_DIR = path.join(HOME, '.openclaw');
+const WORKSPACE = process.env.WORKSPACE || path.join(OPENCLAW_DIR, 'workspace');
+const OPENCLAW_CONFIG_PATH = path.join(OPENCLAW_DIR, 'openclaw.json');
 
 // ─── File Upload Config ──────────────────────────────────────────────────────
-const UPLOAD_DIR = '/Users/natlee/.openclaw/workspace/uploads/chat';
+const UPLOAD_DIR = path.join(WORKSPACE, 'uploads', 'chat');
 fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(() => {});
 
 const upload = multer({
@@ -83,7 +101,7 @@ async function ssePulsePoller() {
   try {
     const [cronOut, sessionOut] = await Promise.all([
       execCommand('openclaw cron list --json').catch(() => '[]'),
-      execCommand('openclaw session list --json').catch(() => '[]'),
+      execCommand('openclaw sessions --json --all-agents').catch(() => '[]'),
     ]);
 
     const combined = cronOut + sessionOut;
@@ -142,10 +160,10 @@ app.get('/api/health', async (_req, res) => {
       })(),
       // 3. Filesystem stats
       (async () => {
-        const memoryMdPath = path.join(OPENCLAW_WORKSPACE, 'MEMORY.md');
-        const memoryDir = path.join(OPENCLAW_WORKSPACE, 'memory');
-        const archiveDir = path.join(OPENCLAW_WORKSPACE, 'memory', 'archive');
-        const dbPath = '/Users/natlee/.openclaw/memory/main.sqlite';
+        const memoryMdPath = path.join(WORKSPACE, 'MEMORY.md');
+        const memoryDir = path.join(WORKSPACE, 'memory');
+        const archiveDir = path.join(WORKSPACE, 'memory', 'archive');
+        const dbPath = path.join(OPENCLAW_DIR, 'memory', 'main.sqlite');
 
         const [mdLines, dailyLogs, archiveCount, dbSize, dbMtime, p0, p1, p2] = await Promise.all([
           execCommand(`wc -l < "${memoryMdPath}"`).then(s => parseInt(s.trim(), 10)).catch(() => 0),
@@ -621,6 +639,17 @@ app.get('/api/cron/timeline', async (req, res) => {
   }
 });
 
+// Input validation for cron job fields — reject shell injection characters
+const UNSAFE_PATTERN = /[`$;|&\n\r]/;
+function validateCronInput(fields: Record<string, string | undefined>): string | null {
+  for (const [key, val] of Object.entries(fields)) {
+    if (val && UNSAFE_PATTERN.test(val)) {
+      return `Invalid characters in ${key} — backticks, $(), semicolons, pipes, and newlines are not allowed`;
+    }
+  }
+  return null;
+}
+
 // POST /api/cron/jobs — create new job
 app.post('/api/cron/jobs', async (req, res) => {
   try {
@@ -636,17 +665,27 @@ app.post('/api/cron/jobs', async (req, res) => {
     };
     if (!name || !message) return res.status(400).json({ error: 'name and message are required' });
 
-    const parts: string[] = ['openclaw cron add'];
-    parts.push(`--name "${name}"`);
-    if (scheduleKind === 'every' && every) parts.push(`--every "${every}"`);
-    if (scheduleKind === 'cron' && cronExpr) parts.push(`--cron "${cronExpr}"`);
-    parts.push(`--message "${message.replace(/"/g, '\\"')}"`);
-    if (model) parts.push(`--model "${model}"`);
-    parts.push(`--session "${sessionTarget || 'isolated'}"`);
-    if (announce) parts.push('--announce');
-    parts.push('--json');
+    const validationError = validateCronInput({ name, every, cronExpr, message, model, sessionTarget });
+    if (validationError) return res.status(400).json({ error: validationError });
 
-    const output = await execCommand(parts.join(' '));
+    const args: string[] = ['cron', 'add'];
+    args.push('--name', name);
+    if (scheduleKind === 'every' && every) args.push('--every', every);
+    if (scheduleKind === 'cron' && cronExpr) args.push('--cron', cronExpr);
+    args.push('--message', message);
+    if (model) args.push('--model', model);
+    args.push('--session', sessionTarget || 'isolated');
+    if (announce) args.push('--announce');
+    args.push('--json');
+
+    const output = await new Promise<string>((resolve, reject) => {
+      const child = spawn('openclaw', args, { timeout: 15000 });
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
+      child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+      child.on('close', (code) => code === 0 ? resolve(stdout.trim()) : reject(new Error(stderr || `Exit code ${code}`)));
+    });
     res.json({ ok: true, result: JSON.parse(output) });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -666,15 +705,26 @@ app.put('/api/cron/jobs/:id', async (req, res) => {
       model?: string;
       sessionTarget?: string;
     };
-    const parts: string[] = [`openclaw cron edit ${req.params.id}`];
-    if (name) parts.push(`--name "${name}"`);
-    if (scheduleKind === 'every' && every) parts.push(`--every "${every}"`);
-    if (scheduleKind === 'cron' && cronExpr) parts.push(`--cron "${cronExpr}"`);
-    if (message) parts.push(`--message "${message.replace(/"/g, '\\"')}"`);
-    if (model) parts.push(`--model "${model}"`);
-    if (sessionTarget) parts.push(`--session "${sessionTarget}"`);
 
-    const output = await execCommand(parts.join(' '));
+    const validationError = validateCronInput({ name, every, cronExpr, message, model, sessionTarget });
+    if (validationError) return res.status(400).json({ error: validationError });
+
+    const args: string[] = ['cron', 'edit', req.params.id];
+    if (name) args.push('--name', name);
+    if (scheduleKind === 'every' && every) args.push('--every', every);
+    if (scheduleKind === 'cron' && cronExpr) args.push('--cron', cronExpr);
+    if (message) args.push('--message', message);
+    if (model) args.push('--model', model);
+    if (sessionTarget) args.push('--session', sessionTarget);
+
+    const output = await new Promise<string>((resolve, reject) => {
+      const child = spawn('openclaw', args, { timeout: 15000 });
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
+      child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+      child.on('close', (code) => code === 0 ? resolve(stdout.trim()) : reject(new Error(stderr || `Exit code ${code}`)));
+    });
     res.json({ ok: true, output });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -828,9 +878,9 @@ app.get('/api/tasks', async (_req, res) => {
 // Memory Stats
 app.get('/api/memory/stats', async (_req, res) => {
   try {
-    const memoryDir = path.join(OPENCLAW_WORKSPACE, 'memory');
-    const archiveDir = path.join(OPENCLAW_WORKSPACE, 'memory', 'archive');
-    const dbPath = '/Users/natlee/.openclaw/memory/main.sqlite';
+    const memoryDir = path.join(WORKSPACE, 'memory');
+    const archiveDir = path.join(WORKSPACE, 'memory', 'archive');
+    const dbPath = path.join(OPENCLAW_DIR, 'memory', 'main.sqlite');
 
     let dailyLogs = 0;
     let archived = 0;
@@ -879,7 +929,7 @@ app.post('/api/memory/reindex', async (_req, res) => {
 // Memory — Run Janitor
 app.post('/api/memory/janitor', async (_req, res) => {
   try {
-    const janitorPath = '/Users/natlee/.openclaw/workspace/scripts/memory-janitor.py';
+    const janitorPath = path.join(WORKSPACE, 'scripts', 'memory-janitor.py');
     const output = await execCommand(
       `PATH=/opt/homebrew/bin:$PATH python3 "${janitorPath}"`
     );
@@ -893,7 +943,7 @@ app.post('/api/memory/janitor', async (_req, res) => {
 // Memory — Read MEMORY.md content
 app.get('/api/memory/file', async (_req, res) => {
   try {
-    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    const memPath = path.join(WORKSPACE, 'MEMORY.md');
     const content = await fs.readFile(memPath, 'utf-8');
     res.json({ ok: true, content, path: memPath });
   } catch (e) {
@@ -909,7 +959,7 @@ app.put('/api/memory/file', async (req, res) => {
     if (typeof content !== 'string') {
       return res.status(400).json({ ok: false, error: 'content is required' });
     }
-    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    const memPath = path.join(WORKSPACE, 'MEMORY.md');
     // Backup before overwrite
     const backupPath = memPath + '.bak';
     try { await fs.copyFile(memPath, backupPath); } catch { /* ok if no existing file */ }
@@ -939,7 +989,7 @@ app.post('/api/gateway/restart', async (_req, res) => {
 // Agents
 app.get('/api/agents', async (_req, res) => {
   try {
-    const configPath = '/Users/natlee/.openclaw/openclaw.json';
+    const configPath = OPENCLAW_CONFIG_PATH;
     const data = JSON.parse(await fs.readFile(configPath, 'utf-8'));
     const agents = (data.agents?.list || []).map((a: Record<string, unknown>) => ({
       name: a.name,
@@ -956,8 +1006,6 @@ app.get('/api/agents', async (_req, res) => {
 });
 
 // ─── Model Config ────────────────────────────────────────────
-
-const OPENCLAW_CONFIG_PATH = '/Users/natlee/.openclaw/openclaw.json';
 
 function generateModelLabel(modelId: string): string {
   // Extract the last segment after all slashes (e.g. 'claude-sonnet-4-6', 'gemini-2.5-pro')
@@ -1125,25 +1173,25 @@ const MODEL_PRICING: Record<string, { input: number; output: number; free?: bool
   'claude-opus-4-5':              { input: 15.0,  output: 75.0 },
   'claude-sonnet-4-5':            { input: 3.0,   output: 15.0 },
   'gemini-3-pro-preview':         { input: 1.25,  output: 10.0 },
-  'google/gemini-2.5-pro':        { input: 1.25,  output: 10.0 },
-  'google/gemini-2.5-flash':      { input: 0.15,  output: 0.60 },
-  'google/gemini-3-pro-preview':  { input: 1.25,  output: 10.0 },
-  'deepseek/deepseek-r1':         { input: 0.55,  output: 2.19 },
-  'x-ai/grok-4':                  { input: 3.0,   output: 15.0 },
-  'x-ai/grok-3':                  { input: 3.0,   output: 9.0  },
-  'moonshot/kimi-latest':         { input: 0.14,  output: 0.56 },
-  'moonshot/kimi-k2-thinking-turbo': { input: 0.14, output: 0.56 },
-  'minimax/minimax-m2.5':         { input: 0.20,  output: 1.10 },
-  'minimax/minimax-m1':           { input: 0.30,  output: 1.10 },
-  'qwen/qwen3-coder:free':        { input: 0, output: 0, free: true },
-  'meta-llama/llama-3.3-70b-instruct:free': { input: 0, output: 0, free: true },
-  'google/gemma-3-27b-it:free':   { input: 0, output: 0, free: true },
+  'gemini-2.5-pro':               { input: 1.25,  output: 10.0 },
+  'gemini-2.5-flash':             { input: 0.15,  output: 0.60 },
+  'deepseek-r1':                  { input: 0.55,  output: 2.19 },
+  'grok-4':                       { input: 3.0,   output: 15.0 },
+  'grok-3':                       { input: 3.0,   output: 9.0  },
+  'kimi-latest':                  { input: 0.14,  output: 0.56 },
+  'kimi-k2-thinking-turbo':       { input: 0.14,  output: 0.56 },
+  'minimax-m2.5':                 { input: 0.20,  output: 1.10 },
+  'minimax-m1':                   { input: 0.30,  output: 1.10 },
+  'qwen3-coder:free':             { input: 0, output: 0, free: true },
+  'llama-3.3-70b-instruct:free':  { input: 0, output: 0, free: true },
+  'gemma-3-27b-it:free':          { input: 0, output: 0, free: true },
 };
 
 function getModelPrice(modelId: string): { input: number; output: number; free?: boolean } {
+  // Strip provider prefix (e.g. 'google/gemini-2.5-pro' → 'gemini-2.5-pro')
+  const short = modelId.includes('/') ? modelId.split('/').slice(1).join('/') : modelId;
+  if (MODEL_PRICING[short]) return MODEL_PRICING[short];
   if (MODEL_PRICING[modelId]) return MODEL_PRICING[modelId];
-  const short = modelId.split('/').slice(1).join('/');
-  if (short && MODEL_PRICING[short]) return MODEL_PRICING[short];
   return { input: 3.0, output: 15.0 };
 }
 
@@ -1336,9 +1384,13 @@ app.put('/api/config/keys/:provider', async (req, res) => {
   }
 });
 
-// Return full key for copy (owner-only local portal)
+// Return full key for copy — requires explicit auth even if PORTAL_TOKEN is unset
 app.get('/api/config/keys/:provider/value', async (req, res) => {
   try {
+    const auth = req.headers.authorization;
+    if (!auth || auth !== `Bearer ${PORTAL_TOKEN ?? ''}`) {
+      return res.status(401).json({ error: 'Unauthorized — this endpoint requires PORTAL_TOKEN' });
+    }
     const { provider } = req.params;
     const data = JSON.parse(await fs.readFile(OPENCLAW_CONFIG_PATH, 'utf-8'));
     const apiKey = data.models?.providers?.[provider]?.apiKey || '';
@@ -1383,9 +1435,9 @@ app.post('/api/config/restart', (_req, res) => {
 // Files listing
 app.get('/api/files', async (req, res) => {
   try {
-    const requestedPath = (req.query.path as string) || OPENCLAW_WORKSPACE;
+    const requestedPath = (req.query.path as string) || WORKSPACE;
     const resolved = path.resolve(requestedPath);
-    if (!resolved.startsWith(OPENCLAW_WORKSPACE)) {
+    if (!resolved.startsWith(WORKSPACE)) {
       res.status(403).json({ error: 'Access restricted to workspace directory' });
       return;
     }
@@ -1411,7 +1463,7 @@ app.get('/api/files/content', async (req, res) => {
       return;
     }
     const resolved = path.resolve(filePath);
-    if (!resolved.startsWith(OPENCLAW_WORKSPACE)) {
+    if (!resolved.startsWith(WORKSPACE)) {
       res.status(403).json({ error: 'Access restricted to workspace directory' });
       return;
     }
@@ -1432,11 +1484,11 @@ app.get('/api/files/content', async (req, res) => {
 // SKILLS API
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CUSTOM_SKILLS_DIR  = path.join(OPENCLAW_WORKSPACE, 'skills', 'skills');
-const ALT_SKILLS_DIR     = path.join(OPENCLAW_WORKSPACE, 'skills');
+const CUSTOM_SKILLS_DIR  = path.join(WORKSPACE, 'skills', 'skills');
+const ALT_SKILLS_DIR     = path.join(WORKSPACE, 'skills');
 const SYSTEM_SKILLS_DIR  = '/opt/homebrew/lib/node_modules/openclaw/skills';
 const MANAGED_SKILLS_DIR = path.join(os.homedir(), '.openclaw', 'skills'); // clawhub-installed managed skills
-const SKILLS_REGISTRY    = path.join(OPENCLAW_WORKSPACE, 'SKILLS-REGISTRY.md');
+const SKILLS_REGISTRY    = path.join(WORKSPACE, 'SKILLS-REGISTRY.md');
 
 type SkillType   = 'custom' | 'system';
 type SkillStatus = 'ready' | 'needs-setup' | 'disabled';
@@ -1847,7 +1899,7 @@ app.delete('/api/skills/:id', async (req, res) => {
     }
 
     // Move to trash instead of delete
-    const trashDir = path.join(OPENCLAW_WORKSPACE, 'skills', '.trash');
+    const trashDir = path.join(WORKSPACE, 'skills', '.trash');
     await fs.mkdir(trashDir, { recursive: true });
     const skillDir = path.dirname(skill.path);
     const trashDest = path.join(trashDir, `${req.params.id}-${Date.now()}`);
@@ -1899,7 +1951,6 @@ app.get('/api/sessions/:sessionId/transcript', async (req, res) => {
     const agentId = (req.query.agentId as string) || 'main';
     const limit = parseInt(req.query.limit as string) || 20;
 
-    const OPENCLAW_DIR = '/Users/natlee/.openclaw';
     const jsonlPath = path.join(OPENCLAW_DIR, 'agents', agentId, 'sessions', `${sessionId}.jsonl`);
 
     const fileExists = await fs.access(jsonlPath).then(() => true).catch(() => false);
@@ -1982,7 +2033,7 @@ function execCommandWithTimeout(cmd: string, timeoutMs: number): Promise<string>
 // ─── Nat Lee Avatar ──────────────────────────────────────────────────────────
 app.get('/api/assets/nat-lee-avatar', async (_req, res) => {
   try {
-    const avatarPath = '/Users/natlee/.openclaw/workspace/assets/images/nat-lee-profile.jpg';
+    const avatarPath = path.join(WORKSPACE, 'assets', 'images', 'nat-lee-profile.jpg');
     const data = await fs.readFile(avatarPath);
     res.set('Content-Type', 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=86400');
@@ -2044,18 +2095,18 @@ app.post('/api/chat/upload', upload.single('file'), async (req, res) => {
 
     try {
       if (ext === '.pdf') {
-        const pdfParse = require('pdf-parse');
+        const { default: pdfParse } = await import('pdf-parse');
         const buf = await fs.readFile(destPath);
         const data = await pdfParse(buf);
         extractedText = data.text;
         preview = extractedText.slice(0, 500);
       } else if (ext === '.docx' || ext === '.doc') {
-        const mammoth = require('mammoth');
+        const { default: mammoth } = await import('mammoth');
         const result = await mammoth.extractRawText({ path: destPath });
         extractedText = result.value;
         preview = extractedText.slice(0, 500);
       } else if (ext === '.xlsx' || ext === '.xls') {
-        const XLSX = require('xlsx');
+        const XLSX = await import('xlsx');
         const wb = XLSX.readFile(destPath);
         const sheets = wb.SheetNames.map((name: string) => {
           const ws = wb.Sheets[name];
@@ -2185,7 +2236,7 @@ app.get('/api/chat/models', async (_req, res) => {
 async function buildPortalSystemPrompt(activeTab?: string): Promise<string> {
   let memory = '';
   try {
-    memory = await fs.readFile('/Users/natlee/.openclaw/workspace/MEMORY.md', 'utf-8');
+    memory = await fs.readFile(path.join(WORKSPACE, 'MEMORY.md'), 'utf-8');
     memory = memory.slice(0, 6000);
   } catch { /* no memory */ }
   const tabCtx = activeTab ? `\nThe user is viewing the "${activeTab}" tab of the portal.` : '';
@@ -2275,7 +2326,7 @@ app.post('/api/chat/send', async (req, res) => {
 app.get('/api/search/memory', async (req, res) => {
   try {
     const q = (req.query.q as string || '').toLowerCase().trim();
-    const memPath = '/Users/natlee/.openclaw/workspace/MEMORY.md';
+    const memPath = path.join(WORKSPACE, 'MEMORY.md');
     const content = await fs.readFile(memPath, 'utf8');
 
     const sections = content.split(/^## /m).filter(Boolean);

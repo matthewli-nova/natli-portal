@@ -385,7 +385,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
         setLoading(false);
       }
     },
-    [input, selectedFile, selectedModel, typewriterEffect]
+    [input, selectedFile, selectedModel, messages, typewriterEffect]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -455,7 +455,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
     <div
       className={`fixed z-50 flex flex-col overflow-hidden transition-all duration-300 ease-out
         bg-white border border-gray-200/80 shadow-2xl rounded-2xl
-        ${expanded ? 'w-[720px] h-[700px]' : 'w-[600px] h-[500px]'}
+        ${expanded ? 'max-w-[min(720px,92vw)] h-[700px]' : 'max-w-[min(600px,90vw)] h-[500px]'} w-full
         bottom-6 right-6
         ${animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}
       `}

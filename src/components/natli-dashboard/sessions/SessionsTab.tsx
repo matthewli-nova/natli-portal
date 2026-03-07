@@ -44,12 +44,7 @@ interface SessionsResponse {
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-function formatTokens(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-  return String(n);
-}
+import { formatTokens } from '../../../lib/formatters';
 
 function formatRelativeTime(ageMs: number): string {
   if (ageMs < 30_000) return 'just now';

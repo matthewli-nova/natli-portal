@@ -1,3 +1,4 @@
+// MOCK DATA — Replace with real API calls before production use
 import { formatCompactCurrency } from "./mock-data";
 
 // Product KPI Data

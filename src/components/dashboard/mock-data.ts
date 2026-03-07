@@ -1,3 +1,4 @@
+// MOCK DATA — Replace with real API calls before production use
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 export const TIME_PERIODS = [
