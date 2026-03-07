@@ -61,13 +61,13 @@ export function AppSidebar({
       collapsible="icon"
       style={
         isDark ? {
-          "--sidebar": "var(--lepos-dark)",
-          "--sidebar-foreground": "#ffffff",
+          "--sidebar": "#0F1923",
+          "--sidebar-foreground": "rgba(255,255,255,0.85)",
           "--sidebar-primary": "var(--lepos-cyan)",
-          "--sidebar-primary-foreground": "var(--lepos-dark)",
-          "--sidebar-accent": "#023F59",
+          "--sidebar-primary-foreground": "#0F1923",
+          "--sidebar-accent": "#1A2D3D",
           "--sidebar-accent-foreground": "#ffffff",
-          "--sidebar-border": "rgba(255,255,255,0.1)",
+          "--sidebar-border": "rgba(255,255,255,0.08)",
           "--sidebar-ring": "var(--lepos-cyan)",
         } as React.CSSProperties : {
           "--sidebar": "#F8FAFC",

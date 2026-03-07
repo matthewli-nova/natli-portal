@@ -34,9 +34,11 @@ import { menuItems, natliMenuItems, workMenuItems } from './lib/menu-data';
 
 // ─── Theme Hook ──────────────────────────────────────────────
 function useTheme() {
-  const [isDark, setIsDark] = useState(() =>
-    document.documentElement.classList.contains('dark')
-  );
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return document.documentElement.classList.contains('dark');
+  });
 
   useEffect(() => {
     if (isDark) {
