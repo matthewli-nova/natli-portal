@@ -10,7 +10,7 @@ import { NatliSkillsPage } from './components/natli-skills/NatliSkillsPage';
 import { NatliSchedulerPage } from './components/natli-scheduler/NatliSchedulerPage';
 import { ModelTab } from './components/natli-dashboard/model/ModelTab';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sidebar,
@@ -45,7 +45,7 @@ import {
   TooltipTrigger,
 } from './components/ui/tooltip';
 import { Skeleton } from './components/ui/skeleton';
-import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ChevronRight, LogOut, PanelLeftClose, PanelLeftOpen, Moon, Sun } from 'lucide-react';
 import { PortalHeader } from './components/PortalHeader';
 import { HeaderSlotProvider } from './lib/header-slot-context';
 import { SSEProvider, useSSEContext } from './lib/sse-context';
@@ -405,13 +405,41 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
 }
 
 
-export default function App() {
+// ─── Theme Hook ──────────────────────────────────────────────
+function useTheme() {
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  );
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
+  // Initialise from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') setIsDark(true);
+    else if (saved === 'light') setIsDark(false);
+  }, []);
+
+  return { isDark, toggle: () => setIsDark(d => !d) };
+}
+
+// ─── App Shell (needs to be inside SSEProvider) ───────────────
+function AppShell() {
   const [activeItem, setActiveItem] = useState('natli-dashboard');
   const [openMenus, setOpenMenus] = useState<string[]>(['products']);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<B2BEvent | null>(null);
   const [platform, setPlatform] = useState<'natli' | 'work' | 'template'>('natli');
   const { connected: sseConnected } = useSSEContext();
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   const handlePlatformSwitch = useCallback((p: 'natli' | 'work' | 'template') => {
     setPlatform(p);
@@ -484,7 +512,6 @@ export default function App() {
   }, [activeItem]);
 
   return (
-    <SSEProvider>
     <SidebarProvider defaultOpen>
       <AppSidebar
         activeItem={activeItem}
@@ -498,8 +525,10 @@ export default function App() {
       />
       <SidebarInset>
         <HeaderSlotProvider>
-        <PortalHeader 
-          breadcrumbs={activePageInfo.breadcrumbs} 
+        <PortalHeader
+          breadcrumbs={activePageInfo.breadcrumbs}
+          isDark={isDark}
+          onToggleTheme={toggleTheme}
         />
         <main className="flex-1 p-6 relative min-w-0 w-full overflow-y-auto">
             <div className="flex flex-col w-full min-w-0 max-w-[1136px] 2xl:max-w-[1400px] mx-auto">
@@ -539,7 +568,7 @@ export default function App() {
                       }}
                     />
                   ) : showEventForm ? (
-                    <CreateEventForm 
+                    <CreateEventForm
                       onCancel={() => setShowEventForm(false)}
                       onSubmit={() => {
                         setShowEventForm(false);
@@ -548,7 +577,7 @@ export default function App() {
                       }}
                     />
                   ) : (
-                    <EventsList 
+                    <EventsList
                       onCreateEvent={() => {
                         setShowEventForm(true);
                         setSelectedEvent(null);
@@ -565,11 +594,18 @@ export default function App() {
               </div>
             </div>
         </main>
-        
         </HeaderSlotProvider>
       </SidebarInset>
       <Toaster />
     </SidebarProvider>
+  );
+}
+
+// ─── App Root (provides SSEProvider) ─────────────────────────
+export default function App() {
+  return (
+    <SSEProvider>
+      <AppShell />
     </SSEProvider>
   );
 }

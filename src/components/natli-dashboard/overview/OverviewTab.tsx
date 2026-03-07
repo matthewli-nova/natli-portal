@@ -34,7 +34,19 @@ import { timeUntil, relativeTime, estimateCost } from '../../../lib/portal-utils
 
 // ─── View All Link ───────────────────────────────────────────
 
-function ViewAllLink({ onClick, label = 'View All →' }: { onClick: () => void; label?: string }) {
+function ViewAllLink({ onClick, label = 'View All →', href }: { onClick?: () => void; label?: string; href?: string }) {
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-lepos-cyan-text hover:underline cursor-pointer font-medium"
+      >
+        {label}
+      </a>
+    );
+  }
   return (
     <button
       onClick={onClick}
@@ -372,7 +384,7 @@ function TasksCard({
     <Card className="border-primary/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold text-foreground">Tasks</CardTitle>
-        <ViewAllLink onClick={() => onNavigateTo('task')} />
+        <ViewAllLink href="https://app.clickup.com/3722138/v/l/901815865909" label="Open ClickUp →" />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div className="flex gap-3 text-xs text-muted-foreground">

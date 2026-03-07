@@ -7,12 +7,17 @@ import {
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 import { useHeaderSlot } from "../lib/header-slot-context";
+import { Moon, Sun } from "lucide-react";
+import { Button } from "./ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 interface PortalHeaderProps {
   breadcrumbs: { label: string; href?: string; active?: boolean }[];
+  isDark?: boolean;
+  onToggleTheme?: () => void;
 }
 
-export function PortalHeader({ breadcrumbs }: PortalHeaderProps) {
+export function PortalHeader({ breadcrumbs, isDark, onToggleTheme }: PortalHeaderProps) {
   const { centerSlot, rightSlot } = useHeaderSlot();
 
   const items = [];
@@ -47,12 +52,32 @@ export function PortalHeader({ breadcrumbs }: PortalHeaderProps) {
         </div>
       )}
 
-      {/* Right — injected slot (e.g. Chat button) */}
-      {rightSlot && (
-        <div className="flex items-center gap-2 ml-auto">
-          {rightSlot}
-        </div>
-      )}
+      {/* Right — injected slots + dark mode toggle */}
+      <div className="flex items-center gap-1 ml-auto">
+        {rightSlot && (
+          <div className="flex items-center gap-1">
+            {rightSlot}
+          </div>
+        )}
+        {onToggleTheme && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleTheme}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {isDark ? 'Light mode' : 'Dark mode'}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
     </header>
   );
 }
