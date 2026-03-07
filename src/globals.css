@@ -1,0 +1,449 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 14px;
+  
+  /* Updated Lepos Brand Colors */
+  --lepos-dark: #21262a;
+  --lepos-dark-brand: #023F59;
+  --lepos-cyan: #31D7DB;
+  --lepos-cyan-light: #5DE4E8;
+  --lepos-cyan-dark: #28BDC1;
+  --lepos-cyan-text: #107DAC;
+  --lepos-cyan-subtle: #A5F3FC;
+  
+  /* Extended Palette */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  
+  /* Light Theme */
+  --background: #ffffff;
+  --foreground: var(--lepos-dark);
+  --card: #ffffff;
+  --card-foreground: var(--lepos-dark);
+  --popover: #ffffff;
+  --popover-foreground: var(--lepos-dark);
+  --primary: var(--lepos-dark-brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--lepos-cyan);
+  --secondary-foreground: var(--lepos-dark);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
+  --accent: var(--lepos-cyan-subtle);
+  --accent-foreground: var(--lepos-dark-brand);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: var(--gray-200);
+  --input: var(--gray-100);
+  --input-background: var(--gray-50);
+  --switch-background: var(--gray-300);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --ring: var(--lepos-cyan);
+  --chart-1: var(--lepos-cyan);
+  --chart-2: var(--lepos-cyan-dark);
+  --chart-3: var(--gray-600);
+  --chart-4: var(--gray-400);
+  --chart-5: var(--gray-500);
+  --radius: 0.75rem;
+  --sidebar: var(--gray-50);
+  --sidebar-foreground: var(--lepos-dark);
+  --sidebar-primary: var(--lepos-dark);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--lepos-cyan);
+  --sidebar-accent-foreground: var(--lepos-dark);
+  --sidebar-border: var(--gray-200);
+  --sidebar-ring: var(--lepos-cyan);
+  
+  /* Success & Warning Colors */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --info: var(--lepos-cyan);
+  --info-foreground: var(--lepos-dark);
+}
+
+.dark {
+  --background: var(--lepos-dark);
+  --foreground: #ffffff;
+  --card: var(--gray-800);
+  --card-foreground: #ffffff;
+  --popover: var(--gray-800);
+  --popover-foreground: #ffffff;
+  --primary: var(--lepos-dark);
+  --primary-foreground: #ffffff;
+  --secondary: var(--lepos-cyan);
+  --secondary-foreground: var(--lepos-dark);
+  --muted: var(--gray-700);
+  --muted-foreground: var(--gray-400);
+  --accent: var(--lepos-cyan-subtle);
+  --accent-foreground: var(--lepos-cyan);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: var(--gray-700);
+  --input: var(--gray-700);
+  --input-background: var(--gray-800);
+  --switch-background: var(--gray-600);
+  --ring: var(--lepos-cyan);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --chart-1: var(--lepos-cyan);
+  --chart-2: var(--lepos-cyan-light);
+  --chart-3: var(--gray-400);
+  --chart-4: var(--gray-500);
+  --chart-5: var(--gray-600);
+  --sidebar: var(--gray-800);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: var(--lepos-dark);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--lepos-cyan);
+  --sidebar-accent-foreground: var(--lepos-dark);
+  --sidebar-border: var(--gray-700);
+  --sidebar-ring: var(--lepos-cyan);
+  
+  --lepos-cyan-subtle: #0E7490; /* NEW - Stronger teal for dark mode subtle backgrounds */
+  
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --info: var(--lepos-cyan);
+  --info-foreground: var(--lepos-dark);
+}
+
+@theme inline {
+  --font-family-sans: 'Noto Sans', system-ui, -apple-system, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-lepos-dark: var(--lepos-dark);
+  --color-lepos-cyan: var(--lepos-cyan);
+  --color-lepos-cyan-light: var(--lepos-cyan-light);
+  --color-lepos-cyan-dark: var(--lepos-cyan-dark);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Noto Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/**
+ * Enhanced typography system with responsive scaling
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 3rem);
+      font-weight: var(--font-weight-bold);
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: var(--font-weight-semibold);
+      line-height: 1.3;
+      letter-spacing: -0.015em;
+    }
+
+    h3 {
+      font-size: clamp(1.25rem, 2.5vw, 1.875rem);
+      font-weight: var(--font-weight-semibold);
+      line-height: 1.4;
+    }
+
+    h4 {
+      font-size: clamp(1.125rem, 2vw, 1.5rem);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.4;
+    }
+
+    h5 {
+      font-size: clamp(1rem, 1.5vw, 1.25rem);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h6 {
+      font-size: 1.125rem;
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: 1rem;
+      font-weight: var(--font-weight-normal);
+      line-height: 1.6;
+    }
+
+    label {
+      font-size: 0.875rem;
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: 0.875rem;
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input, textarea, select {
+      font-size: 1rem;
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    small {
+      font-size: 0.75rem;
+      font-weight: var(--font-weight-normal);
+      line-height: 1.4;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Updated utility classes for new Lepos brand colors */
+@layer utilities {
+  .text-lepos-cyan {
+    color: var(--lepos-cyan);
+  }
+  
+  .text-lepos-cyan-dark {
+    color: var(--lepos-cyan-dark);
+  }
+  
+  .text-lepos-cyan-text {
+    color: var(--lepos-cyan-text);
+  }
+  
+  .bg-lepos-cyan {
+    background-color: var(--lepos-cyan);
+  }
+  
+  .bg-lepos-cyan-light {
+    background-color: var(--lepos-cyan-light);
+  }
+  
+  .bg-lepos-cyan-dark {
+    background-color: var(--lepos-cyan-dark);
+  }
+  
+  .border-lepos-cyan {
+    border-color: var(--lepos-cyan);
+  }
+  
+  .text-lepos-dark {
+    color: var(--lepos-dark);
+  }
+  
+  .bg-lepos-dark {
+    background-color: var(--lepos-dark);
+  }
+  
+  .text-lepos-dark-brand {
+    color: var(--lepos-dark-brand);
+  }
+  
+  .bg-lepos-dark-brand {
+    background-color: var(--lepos-dark-brand);
+  }
+  
+  .border-lepos-dark-brand {
+    border-color: var(--lepos-dark-brand);
+  }
+  
+  .text-lepos-link {
+    color: var(--lepos-cyan-dark);
+  }
+  
+  .text-lepos-link:hover {
+    color: var(--foreground);
+  }
+  
+  .gradient-lepos {
+    background: linear-gradient(135deg, var(--lepos-cyan) 0%, var(--lepos-cyan-dark) 100%);
+  }
+  
+  .shadow-lepos {
+    box-shadow: 0 10px 25px -5px rgba(49, 215, 219, 0.1), 0 4px 6px -2px rgba(49, 215, 219, 0.05);
+  }
+  
+  .shadow-lepos-lg {
+    box-shadow: 0 25px 50px -12px rgba(49, 215, 219, 0.25), 0 10px 10px -5px rgba(49, 215, 219, 0.04);
+  }
+  
+  /* Custom sub-tab styling for component categories */
+  .sub-tabs-container {
+    background: linear-gradient(to right, var(--muted), var(--muted/0.8));
+    backdrop-filter: blur(10px);
+  }
+  
+  .sub-tab-active {
+    background: linear-gradient(135deg, var(--lepos-cyan), var(--lepos-cyan-dark));
+    box-shadow: 0 4px 12px rgba(49, 215, 219, 0.3);
+    transform: translateY(-1px);
+  }
+  
+  .sub-tab-hover {
+    background: linear-gradient(135deg, var(--lepos-cyan-light), var(--lepos-cyan));
+    opacity: 0.1;
+  }
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  :root {
+    --font-size: 16px; /* Better for mobile readability */
+    --radius: 0.5rem; /* Smaller radius on mobile */
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --font-size: 15px; /* iPad sizing */
+    --radius: 0.625rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1920px) {
+  :root {
+    --font-size: 14px; /* Desktop sizing */
+    --radius: 0.75rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --font-size: 18px; /* Large touch display sizing */
+    --radius: 1rem; /* Larger radius for touch displays */
+  }
+}
+
+/* Quill Editor Styles */
+.ql-container {
+  font-family: 'Noto Sans', system-ui, -apple-system, sans-serif !important;
+  font-size: 14px !important;
+}
+
+.ql-editor {
+  min-height: 300px;
+  padding: 16px !important;
+}
+
+.ql-editor.ql-blank::before {
+  font-style: normal;
+  color: var(--muted-foreground);
+}
+
+.ql-toolbar {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  background: var(--muted);
+  border-color: var(--border) !important;
+}
+
+.ql-container {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border-color: var(--border) !important;
+}
+
+.ql-snow .ql-stroke {
+  stroke: var(--foreground);
+}
+
+.ql-snow .ql-fill {
+  fill: var(--foreground);
+}
+
+.ql-snow .ql-picker-label {
+  color: var(--foreground);
+}
+
+.ql-snow .ql-picker-options {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+.ql-toolbar button:hover,
+.ql-toolbar button.ql-active {
+  color: var(--lepos-cyan-text);
+}
+
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--lepos-cyan-text);
+}
+
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button.ql-active .ql-fill {
+  fill: var(--lepos-cyan-text);
+}

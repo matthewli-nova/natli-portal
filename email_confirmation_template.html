@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Registration Confirmed — {{event_name}}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">
+    /* Reset */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .card-bg { background-color: #16213e !important; }
+      .text-dark { color: #e0e0e0 !important; }
+      .text-muted { color: #a0a0a0 !important; }
+      .qr-bg { background-color: #ffffff !important; }
+    }
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; max-width: 100% !important; }
+      .fluid { width: 100% !important; max-width: 100% !important; height: auto !important; }
+      .stack-column { display: block !important; width: 100% !important; max-width: 100% !important; }
+      .mobile-padding { padding-left: 20px !important; padding-right: 20px !important; }
+      .mobile-center { text-align: center !important; }
+      .qr-img { width: 200px !important; height: 200px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f0f4f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+
+  <!-- Preview text -->
+  <div style="display:none; font-size:1px; color:#f0f4f8; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
+    You're registered for {{event_name}}! Here's your QR code and ticket details. Registration #{{registration_number}}
+  </div>
+
+  <!-- Outer wrapper -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f0f4f8;" class="email-bg">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+
+        <!-- Email container -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="max-width:600px; width:100%;">
+
+          <!-- ========== SUCCESS TOP BAR ========== -->
+          <tr>
+            <td style="background-color:#00B5AD; border-radius:12px 12px 0 0; padding:12px 32px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="left" style="color:#ffffff; font-size:11px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase;">
+                    Registration Confirmed ✓
+                  </td>
+                  <td align="right" style="color:rgba(255,255,255,0.8); font-size:11px;">
+                    {{registration_date}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== LOGO HEADER ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:28px 32px 16px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="left" valign="middle" width="50%">
+                    <img src="https://lepos.ai/logo-dark.png" alt="{{organizer_name}}" width="120" style="display:block; width:120px; max-width:120px; height:auto;" />
+                  </td>
+                  <td align="right" valign="middle" width="50%">
+                    <span style="font-size:10px; color:#999999; vertical-align:middle;">Powered by</span>
+                    <img src="https://lepos.ai/logo-dark.png" alt="Lepōs" width="48" style="display:inline-block; width:48px; height:auto; vertical-align:middle; margin-left:4px;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== BANNER IMAGE ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px;" class="card-bg mobile-padding">
+              <img src="https://placehold.co/536x200/00B5AD/ffffff?text={{event_name}}" alt="{{event_name}}" width="536" style="display:block; width:100%; max-width:536px; height:auto; border-radius:8px; object-fit:cover;" class="fluid" />
+            </td>
+          </tr>
+
+          <!-- ========== SUCCESS HEADING ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:28px 32px 8px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <!-- Success checkmark circle -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#e6f9f7; border-radius:50%; width:64px; height:64px; text-align:center; vertical-align:middle;">
+                          <span style="font-size:32px; line-height:64px; color:#00B5AD;">✓</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top:16px;">
+                    <h1 style="margin:0 0 8px 0; font-size:26px; line-height:1.25; color:#1a1a2e; font-weight:700;" class="text-dark">
+                      You're Registered!
+                    </h1>
+                    <p style="margin:0; font-size:15px; line-height:1.5; color:#666666;" class="text-muted">
+                      {{salutation}} {{guest_name}}, your registration for <strong style="color:#1a1a2e;">{{event_name}}</strong> is confirmed.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== QR CODE SECTION ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:24px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color:#f8fafb; border-radius:12px; border:2px dashed #d0d8e0;">
+                      <tr>
+                        <td align="center" style="padding:24px 32px;" class="qr-bg">
+                          <p style="margin:0 0 8px 0; font-size:11px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                            Your Entry QR Code
+                          </p>
+                          <!-- QR Code — generated server-side or client-side from registration_number -->
+                          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{registration_number}}&bgcolor=f8fafb&color=1a1a2e" alt="QR Code: {{registration_number}}" width="200" height="200" style="display:block; width:200px; height:200px; margin:0 auto;" class="qr-img" />
+                          <p style="margin:12px 0 0 0; font-size:18px; color:#1a1a2e; font-weight:700; font-family:'Courier New', Courier, monospace; letter-spacing:2px;" class="text-dark">
+                            {{registration_number}}
+                          </p>
+                          <p style="margin:4px 0 0 0; font-size:11px; color:#999999;">
+                            Present this code at the event entrance
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== REGISTRATION DETAILS ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f8fafb; border-radius:8px; border:1px solid #e8ecf0;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 14px 0; font-size:13px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                      Event Details
+                    </p>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <!-- Event Name -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:12px;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/star--v1.png" alt="" width="18" height="18" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:12px;">
+                          <p style="margin:0; font-size:11px; color:#888888; font-weight:600;">EVENT</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{event_name}}</p>
+                        </td>
+                      </tr>
+                      <!-- Date -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:12px;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/calendar--v1.png" alt="" width="18" height="18" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:12px;">
+                          <p style="margin:0; font-size:11px; color:#888888; font-weight:600;">DATE</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{event_date}}</p>
+                        </td>
+                      </tr>
+                      <!-- Time -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:12px;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/clock--v1.png" alt="" width="18" height="18" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:12px;">
+                          <p style="margin:0; font-size:11px; color:#888888; font-weight:600;">TIME</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{event_time}}</p>
+                        </td>
+                      </tr>
+                      <!-- Venue -->
+                      <tr>
+                        <td width="32" valign="top" style="padding-right:12px; padding-bottom:0;">
+                          <img src="https://img.icons8.com/fluency-systems-regular/32/00B5AD/marker--v1.png" alt="" width="18" height="18" style="display:block;" />
+                        </td>
+                        <td valign="top" style="padding-bottom:0;">
+                          <p style="margin:0; font-size:11px; color:#888888; font-weight:600;">VENUE</p>
+                          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{venue_name}}</p>
+                          <p style="margin:2px 0 0 0; font-size:13px; color:#666666;">{{venue_address}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== YOUR TICKETS (WALLET SUMMARY) ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <p style="margin:0 0 12px 0; font-size:13px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                🎫 Your Tickets
+              </p>
+
+              <!-- Ticket row — REPEAT for each ticket type in the registration -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:8px;">
+                <tr>
+                  <td style="background-color:#f0faf9; border-radius:8px; border-left:4px solid {{ticket_colour_hex}}; padding:14px 16px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td valign="middle">
+                          <p style="margin:0; font-size:15px; color:#1a1a2e; font-weight:600;" class="text-dark">{{ticket_type_name}}</p>
+                          <p style="margin:3px 0 0 0; font-size:12px; color:#666666;">{{ticket_scope_label}}</p>
+                        </td>
+                        <td align="right" valign="middle" width="80">
+                          <!-- Ticket scope icon/badge -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="background-color:{{ticket_colour_hex}}; border-radius:4px; padding:4px 10px;">
+                                <p style="margin:0; font-size:11px; color:#ffffff; font-weight:600; text-transform:uppercase;">{{ticket_scope_short}}</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <!-- END REPEAT -->
+
+              <!-- Example: second ticket (sub-event) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:8px;">
+                <tr>
+                  <td style="background-color:#f0faf9; border-radius:8px; border-left:4px solid #8B0000; padding:14px 16px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td valign="middle">
+                          <p style="margin:0; font-size:15px; color:#1a1a2e; font-weight:600;" class="text-dark">Red Wine Tasting Masterclass</p>
+                          <p style="margin:3px 0 0 0; font-size:12px; color:#666666;">Sub-Event · 26 Oct 2026, 2:00 PM – 3:30 PM</p>
+                        </td>
+                        <td align="right" valign="middle" width="80">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="background-color:#8B0000; border-radius:4px; padding:4px 10px;">
+                                <p style="margin:0; font-size:11px; color:#ffffff; font-weight:600; text-transform:uppercase;">Session</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ========== BRING-ALONG COMPANIONS (conditional) ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <p style="margin:0 0 12px 0; font-size:13px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                👥 Your Companions
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f8fafb; border-radius:8px; border:1px solid #e8ecf0;">
+                <!-- REPEAT: one row per bring-along guest -->
+                <tr>
+                  <td style="padding:12px 16px; border-bottom:1px solid #e8ecf0;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td valign="middle">
+                          <p style="margin:0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">{{bring_along_name}}</p>
+                        </td>
+                        <td align="right" valign="middle">
+                          <p style="margin:0; font-size:12px; color:#999999; font-family:'Courier New', Courier, monospace;">{{bring_along_registration_number}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- END REPEAT -->
+                <!-- Example companion -->
+                <tr>
+                  <td style="padding:12px 16px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td valign="middle">
+                          <p style="margin:0; font-size:14px; color:#1a1a2e; font-weight:500;" class="text-dark">Emily Chen</p>
+                        </td>
+                        <td align="right" valign="middle">
+                          <p style="margin:0; font-size:12px; color:#999999; font-family:'Courier New', Courier, monospace;">P9O8I7U6Y5T4R3E2</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:8px 0 0 0; font-size:12px; color:#999999;">
+                Each companion has their own QR code for entry.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ========== WHAT'S NEXT SECTION ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <p style="margin:0 0 12px 0; font-size:13px; color:#888888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                What's Next
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <!-- Step 1 -->
+                <tr>
+                  <td width="36" valign="top" style="padding-bottom:12px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#00B5AD; border-radius:50%; width:28px; height:28px;">
+                          <p style="margin:0; font-size:13px; color:#ffffff; font-weight:700; line-height:28px;">1</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td valign="top" style="padding-bottom:12px;">
+                    <p style="margin:0; font-size:14px; color:#1a1a2e; font-weight:600;" class="text-dark">Save your QR code</p>
+                    <p style="margin:2px 0 0 0; font-size:13px; color:#666666;">Screenshot or bookmark this email for easy access at the event</p>
+                  </td>
+                </tr>
+                <!-- Step 2 -->
+                <tr>
+                  <td width="36" valign="top" style="padding-bottom:12px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#00B5AD; border-radius:50%; width:28px; height:28px;">
+                          <p style="margin:0; font-size:13px; color:#ffffff; font-weight:700; line-height:28px;">2</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td valign="top" style="padding-bottom:12px;">
+                    <p style="margin:0; font-size:14px; color:#1a1a2e; font-weight:600;" class="text-dark">Arrive at the venue</p>
+                    <p style="margin:2px 0 0 0; font-size:13px; color:#666666;">Head to the registration desk at {{venue_name}}</p>
+                  </td>
+                </tr>
+                <!-- Step 3 -->
+                <tr>
+                  <td width="36" valign="top" style="padding-bottom:0;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#00B5AD; border-radius:50%; width:28px; height:28px;">
+                          <p style="margin:0; font-size:13px; color:#ffffff; font-weight:700; line-height:28px;">3</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td valign="top" style="padding-bottom:0;">
+                    <p style="margin:0; font-size:14px; color:#1a1a2e; font-weight:600;" class="text-dark">Scan & collect your badge</p>
+                    <p style="margin:2px 0 0 0; font-size:13px; color:#666666;">Show your QR code at the entrance — your badge prints instantly</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== VIEW REGISTRATION CTA ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 28px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{confirmation_page_url}}" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="12%" strokecolor="#e8ecf0" fillcolor="#f8fafb">
+                      <w:anchorlock/>
+                      <center style="color:#1a1a2e;font-family:sans-serif;font-size:14px;font-weight:bold;">View My Registration</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="{{confirmation_page_url}}" target="_blank" style="display:inline-block; background-color:#f8fafb; color:#1a1a2e; font-size:14px; font-weight:600; text-decoration:none; padding:14px 36px; border-radius:8px; border:1px solid #d0d8e0; mso-hide:all;">
+                      View My Registration →
+                    </a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== CONTACT / HELP ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px 24px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f8fafb; border-radius:8px; padding:16px 20px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0; font-size:13px; color:#666666; line-height:1.5;">
+                      Need to make changes? Contact the event organizer at
+                      <a href="mailto:{{organizer_email}}" style="color:#00B5AD; text-decoration:none; font-weight:500;">{{organizer_email}}</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== DIVIDER ========== -->
+          <tr>
+            <td style="background-color:#ffffff; padding:0 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="border-top:1px solid #e8ecf0; height:1px; font-size:1px; line-height:1px;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== FOOTER ========== -->
+          <tr>
+            <td style="background-color:#ffffff; border-radius:0 0 12px 12px; padding:24px 32px 28px 32px;" class="card-bg mobile-padding">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <img src="https://lepos.ai/logo-dark.png" alt="Lepōs" width="72" style="display:block; width:72px; height:auto; margin-bottom:12px;" />
+                    <p style="margin:0 0 4px 0; font-size:12px; color:#999999; line-height:1.5;">
+                      Powered by <strong style="color:#666666;">Lepōs</strong> — The One Behind Greatest Events
+                    </p>
+                    <p style="margin:0 0 4px 0; font-size:11px; color:#bbbbbb; line-height:1.5;">
+                      Nebulae Technology Limited
+                    </p>
+                    <p style="margin:0 0 4px 0; font-size:11px; color:#bbbbbb; line-height:1.5;">
+                      Unit 601, The Mills, 45 Pak Tin Par Street, Tsuen Wan, Hong Kong
+                    </p>
+                    <p style="margin:0; font-size:11px; color:#bbbbbb; line-height:1.5;">
+                      <a href="https://www.lepos.ai" style="color:#00B5AD; text-decoration:none;">www.lepos.ai</a>
+                      &nbsp;·&nbsp;
+                      <a href="mailto:sales@lepos.ai" style="color:#00B5AD; text-decoration:none;">sales@lepos.ai</a>
+                      &nbsp;·&nbsp;
+                      +852 3180 7863
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== BOTTOM SPACER ========== -->
+          <tr>
+            <td style="padding:16px 32px;" class="mobile-padding">
+              <p style="margin:0; font-size:11px; color:#aaaaaa; text-align:center; line-height:1.5;">
+                This confirmation was sent to <strong>{{guest_email}}</strong> for your registration at {{event_name}}.
+                <br>Registration #{{registration_number}}
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Email container -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Outer wrapper -->
+
+</body>
+</html>
