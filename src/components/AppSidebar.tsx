@@ -136,12 +136,22 @@ export function AppSidebar({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="w-full h-[31px] flex justify-center items-center"
+                className="w-full h-[31px] flex justify-center items-center relative"
               >
                 <img
                   src="https://avatars.slack-edge.com/2026-02-01/10412965046197_5784d6adc887705ae15e_512.png"
                   alt="Nat Lee"
                   className="h-[31px] w-[31px] rounded-md object-cover"
+                />
+                {/* Platform indicator dot when collapsed */}
+                <div
+                  className={cn(
+                    "absolute bottom-0 right-2 w-2.5 h-2.5 rounded-full border-2 border-background",
+                    platform === 'natli' ? "bg-emerald-400" :
+                    platform === 'work' ? "bg-amber-400" :
+                    "bg-lepos-cyan"
+                  )}
+                  title={platform === 'natli' ? 'Agent' : platform === 'work' ? 'Work' : 'Template'}
                 />
               </motion.div>
             )}
@@ -181,29 +191,45 @@ export function AppSidebar({
         <SidebarGroup className="pt-[9px] flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
           {platform === 'work' ? (
             <SidebarMenu>
-              {workMenuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeItem === item.id;
-                return (
-                  <SidebarMenuItem key={item.id}>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, index) => (
+                  <SidebarMenuItem key={index}>
                     <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setActiveItem(item.id)}
-                      className={cn(
-                        "text-sidebar-foreground",
-                        isDark
-                          ? "hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
-                          : "hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-lepos-cyan data-[active=true]:text-lepos-dark"
-                      )}
+                      className="pointer-events-none transition-none"
+                      isActive={false}
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
+                      <Skeleton className={cn("w-4 h-4 shrink-0 rounded-sm", isDark ? "bg-white/10" : "bg-slate-200")} />
                       {isExpanded && (
-                        <span className="truncate overflow-hidden">{item.label}</span>
+                        <Skeleton className={cn("h-4 w-24 ml-2 rounded-sm", isDark ? "bg-white/10" : "bg-slate-200")} />
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
+                ))
+              ) : (
+                workMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeItem === item.id;
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => setActiveItem(item.id)}
+                        className={cn(
+                          "text-sidebar-foreground",
+                          isDark
+                            ? "hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                            : "hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-lepos-cyan data-[active=true]:text-lepos-dark"
+                        )}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {isExpanded && (
+                          <span className="truncate overflow-hidden">{item.label}</span>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              )}
             </SidebarMenu>
           ) : platform === 'natli' ? (
             <SidebarMenu>
