@@ -467,7 +467,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
     >
       {/* ─── Drag overlay ───────────────────────────────── */}
       {isDragOver && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-[#023F59]/80 backdrop-blur-sm pointer-events-none">
+        <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-primary/80 backdrop-blur-sm pointer-events-none">
           <div className="flex flex-col items-center gap-2 text-white">
             <Plus className="w-10 h-10" />
             <span className="text-sm font-medium">Drop file to attach</span>
@@ -484,13 +484,13 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
             alt="Nat Lee"
             className="w-6 h-6 rounded-full object-cover"
           />
-          <span className="font-medium text-sm text-[#21262A]">Nat Lee</span>
+          <span className="font-medium text-sm text-foreground">Nat Lee</span>
 
           {/* Model selector dropdown */}
           <div className="relative" ref={modelDropdownRef}>
             <button
               onClick={() => setModelDropdownOpen(prev => !prev)}
-              className="inline-flex items-center gap-1 text-[10px] text-[#107DAC] bg-[#107DAC]/10
+              className="inline-flex items-center gap-1 text-[10px] text-lepos-cyan-text bg-[#107DAC]/10
                 px-2 py-0.5 rounded-full font-mono hover:bg-[#107DAC]/20
                 transition-colors duration-150 cursor-pointer select-none"
             >
@@ -511,13 +511,13 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
                     className={`w-full text-left px-3 py-1.5 text-xs font-mono
                       transition-colors duration-100
                       ${opt.id === selectedModel
-                        ? 'text-[#107DAC] bg-[#107DAC]/10 font-semibold'
-                        : 'text-[#21262A] hover:bg-gray-50'
+                        ? 'text-lepos-cyan-text bg-[#107DAC]/10 font-semibold'
+                        : 'text-foreground hover:bg-gray-50'
                       }`}
                   >
                     {opt.label}
                     {opt.id === selectedModel && (
-                      <span className="ml-2 text-[#31D7DB]">✓</span>
+                      <span className="ml-2 text-secondary">✓</span>
                     )}
                   </button>
                 ))}
@@ -551,7 +551,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
         {!hasMessages && !loading && (
           <div className="flex-1 flex flex-col items-center justify-center px-6">
             <Sparkles className="w-8 h-8 mb-3" style={{ color: '#107DAC' }} />
-            <h2 className="text-xl font-semibold text-[#21262A] mb-1">
+            <h2 className="text-xl font-semibold text-foreground mb-1">
               Welcome, Matthew Li
             </h2>
             <p className="text-sm text-gray-500 mb-6">How can I help you today?</p>
@@ -564,12 +564,12 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
                   onClick={() => handleSend(prompt)}
                   disabled={loading || isTyping}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full
-                    text-sm text-[#21262A] bg-white border border-gray-200
+                    text-sm text-foreground bg-white border border-gray-200
                     hover:bg-gray-50 hover:border-gray-300
                     disabled:opacity-40 disabled:cursor-not-allowed
                     transition-colors duration-150 shadow-sm"
                 >
-                  <Icon className="w-3.5 h-3.5 text-[#107DAC]" />
+                  <Icon className="w-3.5 h-3.5 text-lepos-cyan-text" />
                   {label}
                 </button>
               ))}
@@ -593,7 +593,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
                   className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5"
                 />
                 <div className="bg-white rounded-2xl rounded-tl-sm px-3 py-2 border border-gray-100">
-                  <span className="flex gap-1 text-[#31D7DB]">
+                  <span className="flex gap-1 text-secondary">
                     <span className="animate-bounce" style={{ animationDelay: '0ms' }}>●</span>
                     <span className="animate-bounce" style={{ animationDelay: '150ms' }}>●</span>
                     <span className="animate-bounce" style={{ animationDelay: '300ms' }}>●</span>
@@ -635,7 +635,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
             onKeyDown={handleKeyDown}
             placeholder="How can I help you today?"
             rows={1}
-            className="w-full resize-none border-0 px-3.5 pt-3 pb-1 text-sm text-[#21262A]
+            className="w-full resize-none border-0 px-3.5 pt-3 pb-1 text-sm text-foreground
               placeholder:text-gray-400 focus:outline-none focus:ring-0 bg-transparent"
             style={{ minHeight: '36px', maxHeight: '120px' }}
             disabled={loading || isTyping}
@@ -666,7 +666,7 @@ export function QuickChatPanel({ open, onClose, activeTab }: QuickChatPanelProps
               onClick={() => handleSend()}
               disabled={(!input.trim() && !selectedFile) || loading || isTyping}
               className="h-7 w-7 flex items-center justify-center rounded-full
-                bg-[#023F59] text-white
+                bg-primary text-white
                 hover:bg-[#034A6C]
                 disabled:opacity-30 disabled:cursor-not-allowed
                 transition-colors duration-150"
@@ -703,7 +703,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     return (
       <div className="flex justify-end">
         <div
-          className={`bg-[#023F59] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-sm max-w-[80%] ${
+          className={`bg-primary text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-sm max-w-[80%] ${
             message.status === 'error' ? 'opacity-60 ring-1 ring-red-400' : ''
           }`}
         >
@@ -724,7 +724,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         alt="Nat Lee"
         className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5"
       />
-      <div className="bg-white text-[#21262A] rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-sm max-w-[80%] border border-gray-100">
+      <div className="bg-white text-foreground rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-sm max-w-[80%] border border-gray-100">
         <p className="whitespace-pre-wrap break-words">
           {message.content}
           {message.isTyping && (

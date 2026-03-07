@@ -248,7 +248,7 @@ function DevicePreviewToolbar({
                             className={cn(
                               "w-full flex items-center justify-between px-3 py-1.5 text-xs transition-colors",
                               selectedPresetId === preset.id
-                                ? "bg-[#107DAC]/10 text-[#107DAC] font-medium"
+                                ? "bg-[#107DAC]/10 text-lepos-cyan-text font-medium"
                                 : "text-gray-700 hover:bg-gray-50"
                             )}
                           >
@@ -256,7 +256,7 @@ function DevicePreviewToolbar({
                             <span className={cn(
                               "text-[10px] tabular-nums px-1.5 py-0.5 rounded flex-shrink-0",
                               selectedPresetId === preset.id
-                                ? "bg-[#107DAC]/15 text-[#107DAC]"
+                                ? "bg-[#107DAC]/15 text-lepos-cyan-text"
                                 : "bg-gray-100 text-gray-500"
                             )}>
                               {preset.width ? `${preset.width}px` : '100%'}
@@ -2340,7 +2340,7 @@ export function RegistrationLinkEditor({
                 className={cn(
                   "w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold",
                   currentStep === step.number
-                    ? "bg-white text-[#107DAC]"
+                    ? "bg-white text-lepos-cyan-text"
                     : step.completed
                     ? "bg-green-600 text-white"
                     : "bg-gray-300 text-gray-600"
@@ -2367,7 +2367,7 @@ export function RegistrationLinkEditor({
                 {/* Select Event */}
                 <Card className="p-4 bg-white space-y-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <CalendarDays className="h-4 w-4 text-[#107DAC]" />
+                    <CalendarDays className="h-4 w-4 text-lepos-cyan-text" />
                     <Label className="text-base font-semibold">Select Event</Label>
                   </div>
                   <RadioGroup value={selectedEventId} onValueChange={(value) => { setSelectedEventId(value); setSelectedTicketId(""); }}>
@@ -2405,7 +2405,7 @@ export function RegistrationLinkEditor({
                 {selectedEventId && (
                   <Card className="p-4 bg-white space-y-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Ticket className="h-4 w-4 text-[#107DAC]" />
+                      <Ticket className="h-4 w-4 text-lepos-cyan-text" />
                       <Label className="text-base font-semibold">Select Ticket Type</Label>
                     </div>
                     <RadioGroup value={selectedTicketId} onValueChange={setSelectedTicketId}>
@@ -2464,7 +2464,7 @@ export function RegistrationLinkEditor({
               <>
                 <Card className="p-4 bg-white space-y-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <CalendarDays className="h-4 w-4 text-[#107DAC]" />
+                    <CalendarDays className="h-4 w-4 text-lepos-cyan-text" />
                     <Label className="text-base font-semibold">Apply to Sessions (Optional)</Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -2506,7 +2506,7 @@ export function RegistrationLinkEditor({
 
                 {/* Summary of selections */}
                 <Card className="p-4 bg-blue-50/60 border-[#107DAC]/20 space-y-2">
-                  <p className="text-xs font-semibold text-[#107DAC] uppercase tracking-wider">Selection Summary</p>
+                  <p className="text-xs font-semibold text-lepos-cyan-text uppercase tracking-wider">Selection Summary</p>
                   <div className="text-sm space-y-1">
                     <div className="flex items-start gap-2">
                       <span className="text-muted-foreground w-16 flex-shrink-0">Event:</span>
@@ -3534,7 +3534,7 @@ export function RegistrationLinkEditor({
                 {/* Send Test Email Card */}
                 <Card className="p-5 bg-white">
                   <div className="flex items-center gap-2 mb-4">
-                    <Mail className="h-5 w-5 text-[#107DAC]" />
+                    <Mail className="h-5 w-5 text-lepos-cyan-text" />
                     <h3 className="font-semibold text-base">Send Test Email</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
@@ -3582,7 +3582,7 @@ export function RegistrationLinkEditor({
                   <Card className="p-5 bg-white">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-[#107DAC]" />
+                        <Clock className="h-5 w-5 text-lepos-cyan-text" />
                         <h3 className="font-semibold text-base">Delivery Timeline</h3>
                       </div>
                       <span className="text-xs text-muted-foreground">{testEmailRecords.length} email(s) tracked</span>
@@ -3625,7 +3625,7 @@ export function RegistrationLinkEditor({
                                   : Clock
 
                                 const iconColor = step.status === 'completed' ? 'text-green-500'
-                                  : step.status === 'in_progress' ? 'text-[#107DAC] animate-spin'
+                                  : step.status === 'in_progress' ? 'text-lepos-cyan-text animate-spin'
                                   : step.status === 'failed' ? 'text-red-500'
                                   : 'text-gray-300'
 
@@ -3647,7 +3647,7 @@ export function RegistrationLinkEditor({
                                         <span className={cn(
                                           "text-sm",
                                           step.status === 'completed' ? "text-gray-900 font-medium" :
-                                          step.status === 'in_progress' ? "text-[#107DAC] font-medium" :
+                                          step.status === 'in_progress' ? "text-lepos-cyan-text font-medium" :
                                           "text-gray-400"
                                         )}>
                                           {step.label}

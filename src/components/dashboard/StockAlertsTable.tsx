@@ -28,13 +28,13 @@ export function StockAlertsTable() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b bg-muted/50">
-                <TableHead className="w-[100px] text-[#21262A] pl-[21px]">Status</TableHead>
-                <TableHead className="text-[#21262A]">SKU</TableHead>
-                <TableHead className="text-[#21262A]">Product/Variant</TableHead>
-                <TableHead className="text-[#21262A]">Category</TableHead>
-                <TableHead className="text-center text-[#21262A]">Stock</TableHead>
-                <TableHead className="text-center text-[#21262A]">Reorder</TableHead>
-                <TableHead className="text-right text-[#21262A] pr-[21px]">Last Sale</TableHead>
+                <TableHead className="w-[100px] text-foreground pl-[21px]">Status</TableHead>
+                <TableHead className="text-foreground">SKU</TableHead>
+                <TableHead className="text-foreground">Product/Variant</TableHead>
+                <TableHead className="text-foreground">Category</TableHead>
+                <TableHead className="text-center text-foreground">Stock</TableHead>
+                <TableHead className="text-center text-foreground">Reorder</TableHead>
+                <TableHead className="text-right text-foreground pr-[21px]">Last Sale</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

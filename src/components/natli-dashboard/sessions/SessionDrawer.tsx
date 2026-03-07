@@ -142,7 +142,7 @@ export function SessionDrawer({ session, onClose }: SessionDrawerProps) {
               {/* Session meta card */}
               <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#21262A] text-sm truncate">{session.key}</span>
+                  <span className="font-semibold text-foreground text-sm truncate">{session.key}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${session.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                     {session.isActive ? '● Active' : formatAge(session.ageMs)}
                   </span>
@@ -197,7 +197,7 @@ export function SessionDrawer({ session, onClose }: SessionDrawerProps) {
               {messages.map((msg) => (
                 msg.role === 'user' ? (
                   <div key={msg.id} className="flex justify-end">
-                    <div className="max-w-[85%] bg-[#023F59] text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm">
+                    <div className="max-w-[85%] bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm">
                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                       {msg.timestamp && (
                         <p className="text-[10px] text-white/50 mt-1 text-right">{formatTime(msg.timestamp)}</p>

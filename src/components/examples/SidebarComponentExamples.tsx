@@ -161,7 +161,7 @@ export function SidebarExamples() {
                         <DropdownMenuTrigger asChild>
                           <SidebarMenuButton
                             isActive={isActive}
-                            className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                            className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                           >
                             <Icon className="w-4 h-4 shrink-0" />
                           </SidebarMenuButton>
@@ -193,7 +193,7 @@ export function SidebarExamples() {
                         setActiveItem(item.id);
                         toggleMenu(item.id);
                       }}
-                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                       tooltip={!isExpandedState ? item.label : undefined}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
@@ -218,7 +218,7 @@ export function SidebarExamples() {
                             <SidebarMenuSubButton
                               isActive={activeItem === subItem.id}
                               onClick={() => setActiveItem(subItem.id)}
-                              className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                              className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                             >
                               <span className="ml-1">{subItem.label}</span>
                             </SidebarMenuSubButton>
@@ -235,7 +235,7 @@ export function SidebarExamples() {
                   <SidebarMenuButton
                     isActive={isActive}
                     onClick={() => setActiveItem(item.id)}
-                    className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                    className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                     tooltip={!isExpandedState ? item.label : undefined}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -442,14 +442,14 @@ export function SidebarExamples() {
                         }>
                             <SidebarMenu>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white">
+                                    <SidebarMenuButton isActive className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white">
                                         <Settings className="w-4 h-4" />
                                         <span>Settings</span>
                                         <ChevronRight className="ml-auto w-4 h-4 rotate-90" />
                                     </SidebarMenuButton>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton isActive className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white">
+                                            <SidebarMenuSubButton isActive className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white">
                                                 <span className="ml-1">Devices Navigation Settings</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -492,7 +492,7 @@ export function SidebarExamples() {
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton isActive className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white">
+                                            <SidebarMenuSubButton isActive className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white">
                                                 <span>Security</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>

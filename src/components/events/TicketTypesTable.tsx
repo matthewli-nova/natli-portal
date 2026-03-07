@@ -230,9 +230,9 @@ export function TicketTypesTable({
                     </Label>
                     <Tabs value={nameLang} onValueChange={setNameLang}>
                       <TabsList className="h-8 bg-muted/50 p-0.5">
-                        <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                        <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                        <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                        <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                        <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                        <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                       </TabsList>
                       <TabsContent value="en" className="mt-2">
                         <Input
@@ -291,9 +291,9 @@ export function TicketTypesTable({
                   <Label className="text-xs">Description</Label>
                   <Tabs value={descLang} onValueChange={setDescLang}>
                     <TabsList className="h-8 bg-muted/50 p-0.5">
-                      <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                      <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                      <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                      <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                      <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                      <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                     </TabsList>
                     <TabsContent value="en" className="mt-2">
                       <Textarea

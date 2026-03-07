@@ -10,7 +10,7 @@ import { NatliSkillsPage } from './components/natli-skills/NatliSkillsPage';
 import { NatliSchedulerPage } from './components/natli-scheduler/NatliSchedulerPage';
 import { ModelTab } from './components/natli-dashboard/model/ModelTab';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sidebar,
@@ -192,7 +192,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => setActiveItem(item.id)}
-                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                     >
                       <Icon className="w-4 h-4 shrink-0" />
                       {isExpanded && (
@@ -229,7 +229,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                       <SidebarMenuButton
                         isActive={isActive}
                         onClick={() => setActiveItem(item.id)}
-                        className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                        className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                       >
                         <Icon className="w-4 h-4 shrink-0" />
                         {isExpanded && (
@@ -280,7 +280,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                           <DropdownMenuTrigger asChild>
                             <SidebarMenuButton
                               isActive={isActive}
-                              className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                              className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                             >
                               <Icon className="w-4 h-4 shrink-0" />
                             </SidebarMenuButton>
@@ -311,7 +311,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                         onClick={() => {
                           toggleMenu(item.id);
                         }}
-                        className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                        className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                       >
                         <Icon className="w-4 h-4 shrink-0" />
                         {isExpanded && (
@@ -337,7 +337,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                               <SidebarMenuSubButton
                                 isActive={activeItem === subItem.id}
                                 onClick={() => setActiveItem(subItem.id)}
-                                className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                                className="text-sidebar-foreground/80 hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                               >
                                 <span className="ml-1 whitespace-normal break-words">{subItem.label}</span>
                               </SidebarMenuSubButton>
@@ -354,7 +354,7 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => setActiveItem(item.id)}
-                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-[#023F59] data-[active=true]:text-white"
+                      className="text-sidebar-foreground hover:bg-[#034A6C] hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white"
                     >
                       <Icon className="w-4 h-4 shrink-0" />
                       {isExpanded && (
@@ -404,40 +404,10 @@ function AppSidebar({ activeItem, setActiveItem, openMenus, toggleMenu, isLoadin
   );
 }
 
-// Loading Skeleton for Page Content
-function PageContentSkeleton() {
-  return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex items-center space-x-4">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-[250px]" />
-          <Skeleton className="h-4 w-[200px]" />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-[90%]" />
-        <Skeleton className="h-4 w-[80%]" />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 pt-4">
-        <Skeleton className="h-[125px] rounded-xl" />
-        <Skeleton className="h-[125px] rounded-xl" />
-        <Skeleton className="h-[125px] rounded-xl" />
-        <Skeleton className="h-[125px] rounded-xl" />
-      </div>
-      <div className="pt-4">
-        <Skeleton className="h-[300px] w-full rounded-xl" />
-      </div>
-    </div>
-  );
-}
 
 export default function App() {
   const [activeItem, setActiveItem] = useState('natli-dashboard');
   const [openMenus, setOpenMenus] = useState<string[]>(['products']);
-  const [isSidebarLoading, setIsSidebarLoading] = useState(true);
-  const [isPageLoading, setIsPageLoading] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<B2BEvent | null>(null);
   const [platform, setPlatform] = useState<'natli' | 'work' | 'template'>('natli');
@@ -447,13 +417,6 @@ export default function App() {
     setPlatform(p);
     const defaultItem = p === 'natli' ? 'natli-dashboard' : p === 'work' ? 'work-dashboard' : 'dashboard';
     setActiveItem(defaultItem);
-    setIsPageLoading(true);
-    setTimeout(() => setIsPageLoading(false), 800);
-  }, []);
-
-  // Sidebar loads from static data — no delay needed
-  useEffect(() => {
-    setIsSidebarLoading(false);
   }, []);
 
   const toggleMenu = (id: string) => {
@@ -462,16 +425,9 @@ export default function App() {
     );
   };
 
-  // Handler for navigation - triggers page loading simulation
   const handleNavigate = (id: string) => {
     setActiveItem(id);
-    setIsPageLoading(true);
-    setShowEventForm(false); // Reset form state when navigating
-    
-    // Simulate API call for page data
-    setTimeout(() => {
-      setIsPageLoading(false);
-    }, 800); // 0.8s loading delay
+    setShowEventForm(false);
   };
 
   // Find the current page info based on activeItem
@@ -535,7 +491,7 @@ export default function App() {
         setActiveItem={handleNavigate}
         openMenus={openMenus}
         toggleMenu={toggleMenu}
-        isLoading={isSidebarLoading}
+        isLoading={false}
         platform={platform}
         setPlatform={handlePlatformSwitch}
         sseConnected={sseConnected}
@@ -546,12 +502,9 @@ export default function App() {
           breadcrumbs={activePageInfo.breadcrumbs} 
         />
         <main className="flex-1 p-6 relative min-w-0 w-full overflow-y-auto">
-          {isPageLoading ? (
-            <PageContentSkeleton />
-          ) : (
             <div className="flex flex-col w-full min-w-0 max-w-[1136px] 2xl:max-w-[1400px] mx-auto">
-              <PageHeader 
-                title={activePageInfo.title} 
+              <PageHeader
+                title={activePageInfo.title}
                 actions={null}
               />
               <div className="grid grid-cols-1 w-full min-w-0">
@@ -611,7 +564,6 @@ export default function App() {
                 )}
               </div>
             </div>
-          )}
         </main>
         
         </HeaderSlotProvider>

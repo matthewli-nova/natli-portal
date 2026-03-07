@@ -411,7 +411,7 @@ export function ReviewPublishTab({
           onClick={handlePublish} 
           disabled={isPublishing}
           size="lg"
-          className="gap-2 bg-[#023F59] hover:bg-[#023F59]/90"
+          className="gap-2 bg-primary hover:bg-primary/90"
         >
           {isPublishing ? "Publishing..." : "Publish Event"}
         </Button>

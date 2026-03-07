@@ -296,7 +296,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
           <div className="flex gap-2">
             <Button
               size="sm"
-              className="bg-[#023F59] text-white hover:bg-[#022F44]"
+              className="bg-primary text-white hover:bg-[#022F44]"
               onClick={() => setShowAddModal(true)}
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />
@@ -307,7 +307,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
               size="sm"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white"
+              className="border-primary/30 hover:bg-primary hover:text-white"
             >
               <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
@@ -327,13 +327,13 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
             <StatusCard
               title="Total Jobs"
               value={String(jobs.length)}
-              icon={<Timer className="w-4 h-4 text-[#31D7DB]" />}
+              icon={<Timer className="w-4 h-4 text-secondary" />}
               sub={`${jobs.filter(j => j.enabled).length} enabled`}
             />
             <StatusCard
               title="Est. Token Spend / Day"
               value={hasTokenData ? `${formatTokensShort(totalEstDaily)} · ${fmtCost(totalEstCost)}` : '…'}
-              icon={<Zap className="w-4 h-4 text-[#31D7DB]" />}
+              icon={<Zap className="w-4 h-4 text-secondary" />}
               sub={hasTokenData ? 'tokens · est. cost across all jobs' : 'loading…'}
               variant="cyan"
             />
@@ -357,7 +357,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
 
       {/* [B] Alert Banner */}
       {failedJobs.length > 0 && !alertDismissed && (
-        <div className="flex items-center gap-3 bg-amber-50 border border-[#023F59]/20 rounded-lg px-4 py-3">
+        <div className="flex items-center gap-3 bg-amber-50 border border-primary/20 rounded-lg px-4 py-3">
           <span className="text-amber-700 font-semibold text-sm flex-1">
             ⚠ {failedJobs.length} job{failedJobs.length > 1 ? 's' : ''} failed · {failedJobs[0].name} · {failedJobs[0].state.lastRunAtMs ? formatRelativeTime(failedJobs[0].state.lastRunAtMs) : ''}
           </span>
@@ -402,19 +402,19 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
       </div>
 
       {/* [E] Jobs Table — single card with tabs per group */}
-      <Card className="border-[#023F59]/25 shadow-sm">
+      <Card className="border-primary/25 shadow-sm">
         <CardHeader className="pb-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-[#21262A]">All Jobs</CardTitle>
-            <Badge className="bg-[#023F59]/10 text-[#023F59] border-0 text-xs">{jobs.length} total</Badge>
+            <CardTitle className="text-sm font-semibold text-foreground">All Jobs</CardTitle>
+            <Badge className="bg-primary/10 text-[#023F59] border-0 text-xs">{jobs.length} total</Badge>
           </div>
           <Tabs value={activeGroup} onValueChange={setActiveGroup} className="mt-3">
-            <TabsList className="bg-[#023F59]/5 h-auto flex-wrap gap-0.5">
+            <TabsList className="bg-primary/5 h-auto flex-wrap gap-0.5">
               {jobGroups.map(g => (
                 <TabsTrigger
                   key={g.id}
                   value={g.id}
-                  className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white px-3 py-1.5"
+                  className="flex items-center gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-white px-3 py-1.5"
                 >
                   {g.icon}
                   {g.label.split(' ').slice(1).join(' ')}
@@ -429,7 +429,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-[#023F59]/5 text-xs text-muted-foreground">
+                  <tr className="bg-primary/5 text-xs text-muted-foreground">
                     <th className="text-left py-2 px-3 font-medium rounded-l">Status</th>
                     <th className="text-left py-2 px-3 font-medium">Job Name</th>
                     <th className="text-left py-2 px-3 font-medium">Schedule</th>
@@ -502,16 +502,16 @@ function StatusCard({ title, value, icon, sub, variant }: {
   variant?: 'success' | 'error' | 'cyan';
 }) {
   return (
-    <Card className={`border-[#023F59]/20 ${variant === 'error' ? 'border-red-200 bg-red-50/30' : ''}`}>
+    <Card className={`border-primary/20 ${variant === 'error' ? 'border-red-200 bg-red-50/30' : ''}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
-        <span className={variant === 'error' ? 'text-red-500' : variant === 'success' ? 'text-emerald-500' : 'text-[#31D7DB]'}>
+        <CardTitle className="text-sm font-medium text-foreground">{title}</CardTitle>
+        <span className={variant === 'error' ? 'text-red-500' : variant === 'success' ? 'text-emerald-500' : 'text-secondary'}>
           {icon}
         </span>
       </CardHeader>
       <CardContent>
         <p className={`text-2xl font-bold truncate ${
-          variant === 'error' ? 'text-red-600' : variant === 'success' ? 'text-emerald-600' : 'text-[#107DAC]'
+          variant === 'error' ? 'text-red-600' : variant === 'success' ? 'text-emerald-600' : 'text-lepos-cyan-text'
         }`}>
           {value}
         </p>
@@ -625,17 +625,17 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
   }
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">{getTimelineTitle(zoom)}</CardTitle>
+          <CardTitle className="text-sm font-semibold text-foreground">{getTimelineTitle(zoom)}</CardTitle>
           <div className="flex gap-1">
             {ZOOM_OPTIONS.map(z => (
               <Button
                 key={z.value}
                 variant={zoom === z.value ? 'default' : 'outline'}
                 size="sm"
-                className={`h-6 px-2 text-xs ${zoom === z.value ? 'bg-[#023F59] text-white' : 'border-[#023F59]/20'}`}
+                className={`h-6 px-2 text-xs ${zoom === z.value ? 'bg-primary text-white' : 'border-primary/20'}`}
                 onClick={() => onZoomChange(z.value)}
               >
                 {z.label}
@@ -659,7 +659,7 @@ function TimelineSection({ timeline, now, zoom, onZoomChange }: {
             ))}
 
             {/* Baseline */}
-            <div className="absolute top-5 left-0 right-0 h-px bg-[#023F59]/10" />
+            <div className="absolute top-5 left-0 right-0 h-px bg-primary/10" />
 
             {/* NOW line */}
             <div
@@ -708,16 +708,16 @@ function NextFiringCard({ job, now, onRunNow, running }: {
   const countdown = (job.state.nextRunAtMs || 0) - now;
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm hover:border-[#31D7DB]/50 transition-colors">
+    <Card className="border-primary/25 shadow-sm hover:border-[#31D7DB]/50 transition-colors">
       <CardContent className="pt-4 pb-3 flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Next</span>
-          <Badge className="bg-[#107DAC]/15 text-[#107DAC] border-0 text-[10px] shrink-0">
+          <Badge className="bg-[#107DAC]/15 text-lepos-cyan-text border-0 text-[10px] shrink-0">
             {job.scheduleDescription}
           </Badge>
         </div>
-        <p className="font-semibold text-[#21262A] text-sm truncate">{job.name.replace(/_/g, ' ')}</p>
-        <p className="text-2xl font-bold text-[#107DAC] mt-1">{formatCountdown(Math.max(0, countdown))}</p>
+        <p className="font-semibold text-foreground text-sm truncate">{job.name.replace(/_/g, ' ')}</p>
+        <p className="text-2xl font-bold text-lepos-cyan-text mt-1">{formatCountdown(Math.max(0, countdown))}</p>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-1">
           <span>{job.sessionTarget}</span>
           {job.payload.model && <span>· {formatModelShort(job.payload.model)}</span>}
@@ -725,7 +725,7 @@ function NextFiringCard({ job, now, onRunNow, running }: {
         <Button
           variant="outline"
           size="sm"
-          className="mt-3 w-full border-[#023F59]/20 hover:bg-[#023F59] hover:text-white text-xs"
+          className="mt-3 w-full border-primary/20 hover:bg-primary hover:text-white text-xs"
           onClick={onRunNow}
           disabled={running}
         >
@@ -762,17 +762,17 @@ function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, r
 
   return (
     <tr
-      className="border-b border-[#023F59]/5 hover:bg-[#023F59]/[0.02] transition-colors"
+      className="border-b border-primary/5 hover:bg-primary/[0.02] transition-colors"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <td className="py-2 pr-3">{statusPill()}</td>
       <td className="py-2 pr-3">
         <div className="flex items-center gap-1.5">
-          <span className="font-medium text-[#21262A]">{job.name.replace(/_/g, ' ')}</span>
+          <span className="font-medium text-foreground">{job.name.replace(/_/g, ' ')}</span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-[#107DAC] cursor-help shrink-0" />
+              <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-lepos-cyan-text cursor-help shrink-0" />
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-xs">
               {job.payload?.message ? job.payload.message.slice(0, 200) + (job.payload.message.length > 200 ? '…' : '') : 'No description'}
@@ -789,15 +789,15 @@ function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, r
       </td>
       <td className="py-2 pr-3 text-xs text-muted-foreground">
         {tokenData ? (
-          <span className="text-[#107DAC] font-medium">{formatTokensShort(tokenData.lastRunTokens)}</span>
+          <span className="text-lepos-cyan-text font-medium">{formatTokensShort(tokenData.lastRunTokens)}</span>
         ) : <span className="opacity-40">…</span>}
       </td>
       <td className="py-2 pr-3 text-xs text-muted-foreground">
         {tokenData ? (
-          <span className="text-[#107DAC] font-medium">{formatTokensShort(tokenData.estDailyTokens)}</span>
+          <span className="text-lepos-cyan-text font-medium">{formatTokensShort(tokenData.estDailyTokens)}</span>
         ) : <span className="opacity-40">…</span>}
       </td>
-      <td className="py-2 pr-3 text-xs text-[#107DAC] font-medium">
+      <td className="py-2 pr-3 text-xs text-lepos-cyan-text font-medium">
         {job.state.nextRunAtMs ? `in ${formatCountdown(Math.max(0, (job.state.nextRunAtMs || 0) - now))}` : '—'}
       </td>
       <td className="py-2 pr-3 text-xs text-muted-foreground">{job.sessionTarget}</td>
@@ -814,7 +814,7 @@ function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, r
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:text-[#31D7DB]"
+                className="h-7 w-7 p-0 hover:text-secondary"
                 onClick={onRunNow}
                 disabled={running}
               >
@@ -828,7 +828,7 @@ function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, r
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:text-[#107DAC]"
+                className="h-7 w-7 p-0 hover:text-lepos-cyan-text"
                 onClick={onViewLogs}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -841,7 +841,7 @@ function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, r
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:text-[#107DAC]"
+                className="h-7 w-7 p-0 hover:text-lepos-cyan-text"
                 onClick={onViewLogs}
               >
                 <FileText className="w-3.5 h-3.5" />
@@ -911,7 +911,7 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
         className="fixed right-0 top-0 bottom-0 w-[420px] max-w-[90vw] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10 bg-[#022F44]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-primary/10 bg-[#022F44]">
           <div className="min-w-0">
             <p className="font-semibold text-white truncate">{job?.name.replace(/_/g, ' ') || jobId}</p>
             <p className="text-xs text-white/60">{job?.scheduleDescription}</p>
@@ -947,7 +947,7 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
               )}
             </div>
             {runs[0].summary ? (
-              <p className="text-sm text-[#21262A] leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {runs[0].summary}
               </p>
             ) : (
@@ -972,7 +972,7 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
             runs.map((run, i) => (
               <div
                 key={i}
-                className="border border-[#023F59]/10 rounded-md p-3 cursor-pointer hover:bg-[#023F59]/[0.02]"
+                className="border border-primary/10 rounded-md p-3 cursor-pointer hover:bg-primary/[0.02]"
                 onClick={() => setExpandedRun(expandedRun === i ? null : i)}
               >
                 <div className="flex items-center gap-2">
@@ -1004,9 +1004,9 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#023F59]/10">
+        <div className="px-5 py-3 border-t border-primary/10">
           <Button
-            className="w-full bg-[#023F59] hover:bg-[#022F44] text-white"
+            className="w-full bg-primary hover:bg-[#022F44] text-white"
             onClick={onRunNow}
             disabled={running}
           >
@@ -1092,8 +1092,8 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
     <div ref={overlayRef} className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#023F59]/10">
-          <h2 className="font-semibold text-[#21262A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-primary/10">
+          <h2 className="font-semibold text-foreground">
             {isEdit ? `Edit: ${job?.name?.replace(/_/g, ' ')}` : 'Add New Cron Job'}
           </h2>
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
@@ -1105,25 +1105,25 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
         <div className="px-6 py-5 space-y-5">
           {/* Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Job Name</label>
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wide">Job Name</label>
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. daily_report_check"
-              className="border-[#023F59]/20 focus:ring-[#107DAC]"
+              className="border-primary/20 focus:ring-[#107DAC]"
             />
             <p className="text-[10px] text-muted-foreground">Use snake_case, no spaces</p>
           </div>
 
           {/* Schedule */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Schedule</label>
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wide">Schedule</label>
             <div className="flex gap-2">
               {(['every', 'cron'] as const).map(k => (
                 <button
                   key={k}
                   onClick={() => setScheduleKind(k)}
-                  className={`flex-1 py-1.5 text-xs rounded-md font-medium transition-colors ${scheduleKind === k ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                  className={`flex-1 py-1.5 text-xs rounded-md font-medium transition-colors ${scheduleKind === k ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
                 >
                   {k === 'every' ? 'Every (interval)' : 'Cron expression'}
                 </button>
@@ -1135,7 +1135,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
                   value={every}
                   onChange={e => setEvery(e.target.value)}
                   placeholder="e.g. 4h, 30m, 1h"
-                  className="border-[#023F59]/20"
+                  className="border-primary/20"
                 />
                 <p className="text-[10px] text-muted-foreground">Examples: 15m · 1h · 4h · 24h</p>
               </div>
@@ -1145,7 +1145,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
                   value={cronExpr}
                   onChange={e => setCronExpr(e.target.value)}
                   placeholder="e.g. 0 6 * * 1-5"
-                  className="font-mono border-[#023F59]/20"
+                  className="font-mono border-primary/20"
                 />
                 <p className="text-[10px] text-muted-foreground">5-field cron · min hour day month weekday · Examples: 0 6 * * 1-5 (Mon–Fri 06:00)</p>
               </div>
@@ -1154,13 +1154,13 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
 
           {/* Session Target */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Session Target</label>
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wide">Session Target</label>
             <div className="flex gap-2">
               {(['isolated', 'main'] as const).map(t => (
                 <button
                   key={t}
                   onClick={() => setSessionTarget(t)}
-                  className={`flex-1 py-1.5 text-xs rounded-md font-medium transition-colors ${sessionTarget === t ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                  className={`flex-1 py-1.5 text-xs rounded-md font-medium transition-colors ${sessionTarget === t ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
                 >
                   {t === 'isolated' ? '🔒 Isolated (recommended)' : '🏠 Main session'}
                 </button>
@@ -1170,11 +1170,11 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
 
           {/* Model */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">Model</label>
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wide">Model</label>
             <select
               value={model}
               onChange={e => setModel(e.target.value)}
-              className="w-full text-sm border border-[#023F59]/20 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-[#107DAC]"
+              className="w-full text-sm border border-primary/20 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-[#107DAC]"
             >
               {MODEL_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -1184,7 +1184,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
 
           {/* Message */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#21262A] uppercase tracking-wide">
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
               Agent Prompt / Message
             </label>
             <textarea
@@ -1192,7 +1192,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
               onChange={e => setMessage(e.target.value)}
               rows={5}
               placeholder="Describe what the agent should do when this job runs…"
-              className="w-full text-sm border border-[#023F59]/20 rounded-md px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-[#107DAC] placeholder:text-muted-foreground"
+              className="w-full text-sm border border-primary/20 rounded-md px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-[#107DAC] placeholder:text-muted-foreground"
             />
           </div>
 
@@ -1204,13 +1204,13 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[#023F59]/10">
-          <Button variant="outline" size="sm" onClick={onClose} className="border-[#023F59]/20">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-primary/10">
+          <Button variant="outline" size="sm" onClick={onClose} className="border-primary/20">
             Cancel
           </Button>
           <Button
             size="sm"
-            className="bg-[#023F59] text-white hover:bg-[#022F44]"
+            className="bg-primary text-white hover:bg-[#022F44]"
             onClick={handleSave}
             disabled={saving}
           >
@@ -1252,18 +1252,18 @@ export function CronSummaryCard({ onNavigateToScheduler }: { onNavigateToSchedul
   if (loading) return <Skeleton className="h-[180px] rounded-xl" />;
 
   return (
-    <Card className={`border-[#023F59]/20 ${failedJobs.length > 0 ? 'border-red-300' : ''}`}>
+    <Card className={`border-primary/20 ${failedJobs.length > 0 ? 'border-red-300' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-[#21262A] flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#31D7DB]" />
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Clock className="w-4 h-4 text-secondary" />
             Cron Scheduler
           </CardTitle>
           {onNavigateToScheduler && (
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-[#107DAC] hover:text-[#023F59] h-6 px-2"
+              className="text-xs text-lepos-cyan-text hover:text-[#023F59] h-6 px-2"
               onClick={onNavigateToScheduler}
             >
               View All →
@@ -1272,7 +1272,7 @@ export function CronSummaryCard({ onNavigateToScheduler }: { onNavigateToSchedul
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm text-[#21262A]">
+        <p className="text-sm text-foreground">
           {jobs.length} jobs · {failedJobs.length === 0 ? (
             <span className="text-emerald-600">✅ All Systems OK</span>
           ) : (
@@ -1282,9 +1282,9 @@ export function CronSummaryCard({ onNavigateToScheduler }: { onNavigateToSchedul
         <div className="space-y-1">
           {nextFiring.slice(0, 3).map(job => (
             <p key={job.id} className="text-xs text-muted-foreground">
-              <span className="text-[#107DAC] font-medium">Next:</span>{' '}
+              <span className="text-lepos-cyan-text font-medium">Next:</span>{' '}
               {job.name.replace(/_/g, ' ')}{' '}
-              <span className="text-[#107DAC]">
+              <span className="text-lepos-cyan-text">
                 in {formatCountdown(Math.max(0, (job.state.nextRunAtMs || 0) - now))}
               </span>
             </p>

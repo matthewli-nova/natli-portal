@@ -196,7 +196,7 @@ export function RegistrationLinkList({ onCreateLink, onEditLink }: RegistrationL
                   <TableCell className="text-center font-medium text-red-600">
                     {link.stats.declined}
                   </TableCell>
-                  <TableCell className="text-center font-medium text-[#107DAC]">
+                  <TableCell className="text-center font-medium text-lepos-cyan-text">
                     {link.stats.totalAttendees}
                   </TableCell>
                   <TableCell>{getStatusBadge(link.status)}</TableCell>

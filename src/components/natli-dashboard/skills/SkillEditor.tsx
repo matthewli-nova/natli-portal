@@ -96,7 +96,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
     <div className="flex flex-col h-full">
 
       {/* ── Editor Toolbar ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#023F59]/[0.02] border-b border-[#023F59]/10 gap-3">
+      <div className="flex items-center justify-between px-4 py-2 bg-primary/[0.02] border-b border-primary/10 gap-3">
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <code className="bg-muted px-2 py-0.5 rounded text-xs">{skill.path}</code>
           <span>{lineCount} lines · {charCount} chars</span>
@@ -122,7 +122,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
             variant="outline"
             size="sm"
             onClick={handleDiscard}
-            className="flex items-center gap-1 border-[#023F59]/20"
+            className="flex items-center gap-1 border-primary/20"
           >
             <X className="w-3.5 h-3.5" />
             {isDirty ? 'Discard' : 'Cancel'}
@@ -131,7 +131,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
             size="sm"
             onClick={handleSave}
             disabled={!isDirty || saveState === 'saving'}
-            className="flex items-center gap-1 bg-[#023F59] text-white hover:bg-[#022F44]"
+            className="flex items-center gap-1 bg-primary text-white hover:bg-[#022F44]"
           >
             <Save className="w-3.5 h-3.5" />
             {saveState === 'saving' ? 'Saving...' : 'Save'}
@@ -140,7 +140,7 @@ export function SkillEditor({ skill, onSave, onCancel }: SkillEditorProps) {
       </div>
 
       {/* ── Editor Tips ─────────────────────────────────────────────── */}
-      <div className="px-4 py-1.5 bg-[#023F59]/5 border-b border-[#023F59]/10 text-xs text-[#107DAC] flex items-center gap-2">
+      <div className="px-4 py-1.5 bg-primary/5 border-b border-primary/10 text-xs text-lepos-cyan-text flex items-center gap-2">
         <span>✏️</span>
         <span>
           Editing <strong>{skill.name}</strong> SKILL.md — this is a custom skill.

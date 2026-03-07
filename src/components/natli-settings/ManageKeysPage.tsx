@@ -124,11 +124,11 @@ function KeyCard({
   const revealedDisplay = entry.keyPreview || '(no key set)';
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm p-4">
+    <Card className="border-primary/25 shadow-sm p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-[#21262A]">{entry.label}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{entry.label}</h3>
             {entry.managed && (
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                 System Managed
@@ -138,7 +138,7 @@ function KeyCard({
 
           {entry.managed ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#31D7DB]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
               Configured via OpenClaw auth system
             </div>
           ) : editing ? (
@@ -149,12 +149,12 @@ function KeyCard({
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   placeholder="Enter new API key"
-                  className="pr-9 border-[#023F59]/20 focus-visible:ring-[#31D7DB]/30 text-sm"
+                  className="pr-9 border-primary/20 focus-visible:ring-[#31D7DB]/30 text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowEditPassword(!showEditPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-[#107DAC]"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-lepos-cyan-text"
                 >
                   {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -163,7 +163,7 @@ function KeyCard({
                 size="sm"
                 onClick={handleSaveEdit}
                 disabled={saving || !editValue.trim()}
-                className="bg-[#023F59] text-white hover:bg-[#022F44]"
+                className="bg-primary text-white hover:bg-[#022F44]"
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
               </Button>
@@ -220,7 +220,7 @@ function KeyCard({
                 setEditing(true);
                 setRevealed(false);
               }}
-              className="h-8 w-8 p-0 bg-[#023F59] text-white hover:bg-[#022F44]"
+              className="h-8 w-8 p-0 bg-primary text-white hover:bg-[#022F44]"
               title="Edit"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -318,7 +318,7 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
       <Button
         variant="ghost"
         onClick={onBack}
-        className="text-[#107DAC] hover:text-[#023F59] hover:bg-[#023F59]/5 -ml-2"
+        className="text-lepos-cyan-text hover:text-[#023F59] hover:bg-primary/5 -ml-2"
       >
         <ArrowLeft className="w-4 h-4 mr-1.5" />
         Back to AI Model Config
@@ -327,11 +327,11 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
       <Card className="border-[#31D7DB]/30 bg-gradient-to-br from-[#023F59]/5 to-transparent">
         <div className="p-6 space-y-1">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#023F59]/10">
-              <KeyRound className="h-6 w-6 text-[#31D7DB]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+              <KeyRound className="h-6 w-6 text-secondary" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-[#21262A]">API Keys</h2>
+              <h2 className="text-lg font-semibold text-foreground">API Keys</h2>
               <p className="text-sm text-muted-foreground">
                 Manage API keys for AI model providers. Keys are stored securely in your OpenClaw config.
               </p>
@@ -342,7 +342,7 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-[#31D7DB]" />
+          <Loader2 className="w-6 h-6 animate-spin text-secondary" />
         </div>
       ) : (
         <div className="space-y-3">
@@ -357,13 +357,13 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
 
           {showAdd ? (
             <Card className="border-[#31D7DB]/30 border-dashed p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-[#21262A]">Add New Key</h3>
+              <h3 className="text-sm font-semibold text-foreground">Add New Key</h3>
               <div className="space-y-2">
                 <Input
                   placeholder="Provider name (e.g. openrouter)"
                   value={newProvider}
                   onChange={(e) => setNewProvider(e.target.value)}
-                  className="border-[#023F59]/20 focus-visible:ring-[#31D7DB]/30"
+                  className="border-primary/20 focus-visible:ring-[#31D7DB]/30"
                 />
                 <div className="relative">
                   <Input
@@ -371,12 +371,12 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
                     placeholder="API key"
                     value={newKey}
                     onChange={(e) => setNewKey(e.target.value)}
-                    className="pr-9 border-[#023F59]/20 focus-visible:ring-[#31D7DB]/30"
+                    className="pr-9 border-primary/20 focus-visible:ring-[#31D7DB]/30"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-[#107DAC]"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-lepos-cyan-text"
                   >
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -387,7 +387,7 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
                   size="sm"
                   onClick={handleAddKey}
                   disabled={adding || !newProvider.trim() || !newKey.trim()}
-                  className="bg-[#023F59] text-white hover:bg-[#022F44]"
+                  className="bg-primary text-white hover:bg-[#022F44]"
                 >
                   {adding ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Plus className="w-3.5 h-3.5 mr-1.5" />}
                   Add
@@ -409,7 +409,7 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
             <Button
               variant="outline"
               onClick={() => setShowAdd(true)}
-              className="w-full border-dashed border-[#023F59]/20 text-[#107DAC] hover:bg-[#023F59]/5"
+              className="w-full border-dashed border-primary/20 text-lepos-cyan-text hover:bg-primary/5"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add New Key

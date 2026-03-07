@@ -138,13 +138,13 @@ function providerLabel(provider: string, subProvider?: string): string {
 }
 
 function providerPillClasses(provider: string, subProvider?: string): string {
-  if (provider === 'anthropic') return 'bg-[#023F59] text-white';
+  if (provider === 'anthropic') return 'bg-primary text-white';
   if (provider === 'moonshot') return 'bg-amber-500 text-white';
   if (subProvider === 'x-ai') return 'bg-purple-500 text-white';
   if (subProvider === 'deepseek') return 'bg-rose-500 text-white';
   if (subProvider === 'minimax') return 'bg-orange-400 text-white';
   if (subProvider === 'meta-llama' || subProvider === 'qwen') return 'bg-emerald-500 text-white';
-  return 'bg-[#31D7DB] text-[#023F59]';
+  return 'bg-secondary text-[#023F59]';
 }
 
 function getProviderBorderClass(provider: string, subProvider?: string): string {
@@ -186,12 +186,12 @@ function RunningModelCard({
   accent: { bg: string; text: string; badge: string };
 }) {
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardContent className="pt-5 pb-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <ModelIcon modelId={model.id} size="sm" />
-            <span className="text-sm font-semibold text-[#21262A]">{slot}</span>
+            <span className="text-sm font-semibold text-foreground">{slot}</span>
           </div>
           <Badge className={`text-[10px] font-bold px-2 py-0.5 border-0 ${accent.badge}`}>
             {slot === 'Primary' ? 'Active' : 'Standby'}
@@ -210,7 +210,7 @@ function RunningModelCard({
 // Channel row: primary + 2 fallbacks in 3-col grid
 function ChannelCard({ ch }: { ch: ChannelOverride }) {
   const allModels = [
-    { slot: 'Primary', model: ch.model, accent: { bg: 'bg-emerald-50', text: 'text-[#107DAC]', badge: 'bg-emerald-100 text-emerald-700' } },
+    { slot: 'Primary', model: ch.model, accent: { bg: 'bg-emerald-50', text: 'text-lepos-cyan-text', badge: 'bg-emerald-100 text-emerald-700' } },
     ...ch.fallbacks.map((fb, i) => ({
       slot: `Fallback ${i + 1}`,
       model: fb,
@@ -221,8 +221,8 @@ function ChannelCard({ ch }: { ch: ChannelOverride }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-[#21262A]">{ch.channelName}</span>
-        <span className="text-[10px] text-muted-foreground bg-[#023F59]/5 border border-[#023F59]/10 rounded px-2 py-0.5">{ch.note}</span>
+        <span className="text-sm font-bold text-foreground">{ch.channelName}</span>
+        <span className="text-[10px] text-muted-foreground bg-primary/5 border border-primary/10 rounded px-2 py-0.5">{ch.note}</span>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         {allModels.map(({ slot, model, accent }) => (
@@ -239,7 +239,7 @@ function CurrentlyRunningTab({ config, loading }: { config: RunningConfig | null
   if (!config) return <div className="text-muted-foreground text-sm p-8 text-center">Failed to load config</div>;
 
   const defaultModels = [
-    { slot: 'Primary',    model: config.default.model,       accent: { bg: 'bg-emerald-50', text: 'text-[#107DAC]', badge: 'bg-emerald-100 text-emerald-700' } },
+    { slot: 'Primary',    model: config.default.model,       accent: { bg: 'bg-emerald-50', text: 'text-lepos-cyan-text', badge: 'bg-emerald-100 text-emerald-700' } },
     { slot: 'Fallback 1', model: config.default.fallbacks[0], accent: { bg: 'bg-blue-50',   text: 'text-[#023F59]', badge: 'bg-blue-100 text-blue-700' } },
     { slot: 'Fallback 2', model: config.default.fallbacks[1], accent: { bg: 'bg-blue-50',   text: 'text-[#023F59]', badge: 'bg-blue-100 text-blue-700' } },
   ].filter(m => m.model?.id);
@@ -249,7 +249,7 @@ function CurrentlyRunningTab({ config, loading }: { config: RunningConfig | null
       {/* ── Default Chain ─────────────────────────────── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-          <span className="text-base font-bold text-[#21262A]">🖥️ Main (Default)</span>
+          <span className="text-base font-bold text-foreground">🖥️ Main (Default)</span>
           <span className="text-sm text-muted-foreground">· applies to all unlisted channels</span>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -262,14 +262,14 @@ function CurrentlyRunningTab({ config, loading }: { config: RunningConfig | null
       {/* ── Channel Overrides ─────────────────────────── */}
       <div className="space-y-5">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-          <span className="text-base font-bold text-[#21262A]">💬 Channel & DM Models</span>
+          <span className="text-base font-bold text-foreground">💬 Channel & DM Models</span>
         </div>
         {config.channelOverrides.map((ch) => (
           <ChannelCard key={ch.channelId} ch={ch} />
         ))}
       </div>
 
-      <p className="text-[10px] text-muted-foreground border-t border-[#023F59]/10 pt-2">
+      <p className="text-[10px] text-muted-foreground border-t border-primary/10 pt-2">
         Fallbacks are shared from the default chain. Channel overrides apply when a channel has a specific model configured.
       </p>
     </div>
@@ -375,7 +375,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
       {/* View Switcher + Refresh — full/sidebar mode only */}
       {mode !== 'dashboard' && (
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-1 p-1 bg-[#023F59]/5 rounded-lg">
+          <div className="flex gap-1 p-1 bg-primary/5 rounded-lg">
             {([
               { id: 'usage',        label: '📋 Available Models' },
               { id: 'intelligence', label: '🧠 Intelligence' },
@@ -386,8 +386,8 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                 onClick={() => setView(v.id)}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   view === v.id
-                    ? 'bg-[#023F59] text-white shadow-sm'
-                    : 'text-[#023F59] hover:bg-[#023F59]/10'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-[#023F59] hover:bg-primary/10'
                 }`}
               >
                 {v.label}
@@ -405,7 +405,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
               size="sm"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="gap-1.5 border-[#023F59]/25 text-[#023F59] hover:bg-[#023F59]/5"
+              className="gap-1.5 border-primary/25 text-[#023F59] hover:bg-primary/5"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'Refreshing…' : 'Refresh'}
@@ -456,7 +456,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-              <span className="text-base font-semibold text-[#21262A]">Overview (Today — {today.date})</span>
+              <span className="text-base font-semibold text-foreground">Overview (Today — {today.date})</span>
             </div>
             <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
               <GrafanaKPI label="Tokens Today" value={formatTokens(totalToday)} color="#31D7DB" sparkData={history.slice(-7).map(d => d.total)} />
@@ -477,12 +477,12 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
       {/* [B3] Historical Token Consumption */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-          <span className="text-base font-semibold text-[#21262A]">Token Consumption History</span>
+          <span className="text-base font-semibold text-foreground">Token Consumption History</span>
         </div>
-        <Card className="border-[#023F59]/25 shadow-sm">
+        <Card className="border-primary/25 shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-[#21262A]">Daily Token Usage</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Daily Token Usage</CardTitle>
               <div className="flex gap-1">
                 {[1, 7, 30, 90, 180, 365].map(d => (
                   <button
@@ -490,7 +490,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                     onClick={() => setHistoryPeriod(d)}
                     className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                       historyPeriod === d
-                        ? 'bg-[#023F59] text-white'
+                        ? 'bg-primary text-white'
                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
@@ -518,9 +518,9 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
       </div>
 
       {/* [C] Token Spend by Model */}
-      <Card className="border-[#023F59]/25 shadow-sm">
+      <Card className="border-primary/25 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">Token Spend by Model</CardTitle>
+          <CardTitle className="text-sm font-semibold text-foreground">Token Spend by Model</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {tokenStats.byModel.length === 0 ? (
@@ -530,9 +530,9 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
               const model = availableModels.find(m => m.id === entry.modelId);
               const color = getModelBrandColor(entry.modelId);
               return (
-                <div key={entry.modelId} className="flex items-center gap-3 text-sm py-1.5 border-b border-[#023F59]/5 last:border-0">
+                <div key={entry.modelId} className="flex items-center gap-3 text-sm py-1.5 border-b border-primary/5 last:border-0">
                   <ModelIcon modelId={entry.modelId} size="xs" />
-                  <div className="w-32 shrink-0 truncate font-medium text-[#21262A]">
+                  <div className="w-32 shrink-0 truncate font-medium text-foreground">
                     {entry.label}
                   </div>
                   <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
@@ -544,7 +544,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                       }}
                     />
                   </div>
-                  <div className="w-16 text-right text-[#21262A] font-medium shrink-0">
+                  <div className="w-16 text-right text-foreground font-medium shrink-0">
                     {formatTokens(entry.tokens)}
                   </div>
                   <div className="w-14 text-right text-muted-foreground shrink-0">
@@ -565,19 +565,19 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
       {/* [D] Available Models Grid — shown in full/sidebar mode only */}
       {mode !== 'dashboard' && (<div className="space-y-3">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-          <span className="text-base font-semibold text-[#21262A]">Available Models</span>
+          <span className="text-base font-semibold text-foreground">Available Models</span>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           {availableModels.map((model) => {
             const usage = usageLookup.get(model.id);
             const borderClass = getProviderBorderClass(model.provider, model.subProvider);
             return (
-              <Card key={model.id} className={`border-[#023F59]/20 border-l-4 ${borderClass}`}>
+              <Card key={model.id} className={`border-primary/20 border-l-4 ${borderClass}`}>
                 <CardContent className="p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <ModelIcon modelId={model.id} size="sm" />
-                      <span className="font-semibold text-[#21262A] text-sm">{model.label}</span>
+                      <span className="font-semibold text-foreground text-sm">{model.label}</span>
                     </div>
                     <Badge
                       variant="secondary"
@@ -593,7 +593,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                       </Badge>
                     )}
                     {model.isFallback && (
-                      <Badge variant="secondary" className="text-[10px] bg-[#107DAC]/15 text-[#107DAC] px-1.5 py-0">
+                      <Badge variant="secondary" className="text-[10px] bg-[#107DAC]/15 text-lepos-cyan-text px-1.5 py-0">
                         🔄 FALLBACK {model.fallbackOrder}
                       </Badge>
                     )}
@@ -617,13 +617,13 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                       const added = getModelAddedDate(model.id);
                       if (!added) return null;
                       return (
-                        <div className="pt-0.5 border-t border-[#023F59]/5">
-                          <span>Added: <span className="text-[#21262A] font-medium">{added}</span></span>
+                        <div className="pt-0.5 border-t border-primary/5">
+                          <span>Added: <span className="text-foreground font-medium">{added}</span></span>
                         </div>
                       );
                     })()}
                     {usage && (
-                      <div className="text-[#107DAC] font-medium">
+                      <div className="text-lepos-cyan-text font-medium">
                         {usage.sessions} sessions · {formatTokens(usage.tokens)} tokens
                       </div>
                     )}
@@ -636,9 +636,9 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
       </div>)}
 
       {/* [E] Top Token Consumers — dashboard only */}
-      {mode === 'dashboard' && <Card className="border-[#023F59]/25 shadow-sm">
+      {mode === 'dashboard' && <Card className="border-primary/25 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-[#21262A]">Top Token Consumers</CardTitle>
+          <CardTitle className="text-sm font-semibold text-foreground">Top Token Consumers</CardTitle>
         </CardHeader>
         <CardContent>
           {topSessions.length === 0 ? (
@@ -647,7 +647,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#023F59]/10 text-left text-muted-foreground text-xs">
+                  <tr className="border-b border-primary/10 text-left text-muted-foreground text-xs">
                     <th className="pb-2 pr-3 font-medium">Session</th>
                     <th className="pb-2 pr-3 font-medium">Type</th>
                     <th className="pb-2 pr-3 font-medium">Model</th>
@@ -658,12 +658,12 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                 </thead>
                 <tbody>
                   {topSessions.map((session, i) => (
-                    <tr key={i} className="border-b border-[#023F59]/5 last:border-0">
-                      <td className="py-2 pr-3 text-[#21262A] font-medium max-w-[200px] truncate">
+                    <tr key={i} className="border-b border-primary/5 last:border-0">
+                      <td className="py-2 pr-3 text-foreground font-medium max-w-[200px] truncate">
                         {session.label}
                       </td>
                       <td className="py-2 pr-3">
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[#023F59]/20">
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/20">
                           {session.sessionType}
                         </Badge>
                       </td>
@@ -673,7 +673,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                           <span className="text-muted-foreground truncate max-w-[120px]">{getModelShortName(session.model)}</span>
                         </div>
                       </td>
-                      <td className="py-2 pr-3 text-right font-medium text-[#107DAC]">
+                      <td className="py-2 pr-3 text-right font-medium text-lepos-cyan-text">
                         {formatTokens(session.tokens)}
                       </td>
                       <td className="py-2 pr-3 text-right text-muted-foreground">
@@ -714,7 +714,7 @@ function GrafanaKPI({
     sparkPath = pts.join(' ');
   }
   return (
-    <div className="rounded-xl border border-[#023F59]/15 bg-white p-3 space-y-1 overflow-hidden relative">
+    <div className="rounded-xl border border-primary/15 bg-white p-3 space-y-1 overflow-hidden relative">
       <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold" style={{ color }}>{value}</p>
       {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
@@ -871,10 +871,10 @@ function MultiSeriesTokenChart({
       </div>
 
       {/* Legend table — Grafana-style */}
-      <div className="mt-3 border border-[#023F59]/10 rounded-lg overflow-hidden">
+      <div className="mt-3 border border-primary/10 rounded-lg overflow-hidden">
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#023F59]/5 text-muted-foreground">
+            <tr className="bg-primary/5 text-muted-foreground">
               <th className="text-left px-3 py-1.5 font-medium">Model</th>
               <th className="text-right px-3 py-1.5 font-medium">Total Tokens</th>
               <th className="text-right px-3 py-1.5 font-medium">Share</th>
@@ -889,12 +889,12 @@ function MultiSeriesTokenChart({
               const pct = grandTotal > 0 ? (total / grandTotal) * 100 : 0;
               const hidden = hiddenModels.has(mid);
               return (
-                <tr key={mid} className={`border-t border-[#023F59]/5 ${hidden ? 'opacity-40' : ''}`}>
+                <tr key={mid} className={`border-t border-primary/5 ${hidden ? 'opacity-40' : ''}`}>
                   <td className="px-3 py-1.5 flex items-center gap-2">
                     <span className="w-3 h-0.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: color }} />
-                    <span className="text-[#21262A] font-medium truncate max-w-[180px]">{getModelShortName(mid)}</span>
+                    <span className="text-foreground font-medium truncate max-w-[180px]">{getModelShortName(mid)}</span>
                   </td>
-                  <td className="px-3 py-1.5 text-right text-[#107DAC] font-medium">{formatTokens(total)}</td>
+                  <td className="px-3 py-1.5 text-right text-lepos-cyan-text font-medium">{formatTokens(total)}</td>
                   <td className="px-3 py-1.5 text-right text-muted-foreground">{pct.toFixed(1)}%</td>
                   <td className="px-3 py-1.5 text-right">
                     <button
@@ -1067,7 +1067,7 @@ function TokenHistoryChart({ days, period }: { days: HistoryDay[]; period: numbe
 function ConfigCard({ title, model }: { title: string; model?: AvailableModel }) {
   if (!model) {
     return (
-      <Card className="border-[#023F59]/25 shadow-sm">
+      <Card className="border-primary/25 shadow-sm">
         <CardContent className="p-4">
           <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
           <div className="text-sm text-muted-foreground italic">Not configured</div>
@@ -1077,12 +1077,12 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel })
   }
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardContent className="p-4">
         <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
         <div className="flex items-center gap-2">
           <ModelIcon modelId={model.id} size="md" />
-          <div className="text-base font-semibold text-[#21262A]">{model.label}</div>
+          <div className="text-base font-semibold text-foreground">{model.label}</div>
         </div>
         <div className="flex items-center gap-2 mt-1.5">
           <Badge
@@ -1104,10 +1104,10 @@ function ConfigCard({ title, model }: { title: string; model?: AvailableModel })
 
 function KPICard({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) {
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardContent className="p-4">
         <div className="text-xs text-muted-foreground font-medium">{title}</div>
-        <div className="text-2xl font-bold text-[#107DAC] mt-1">{value}</div>
+        <div className="text-2xl font-bold text-lepos-cyan-text mt-1">{value}</div>
         {subtitle && <div className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</div>}
       </CardContent>
     </Card>
@@ -1135,12 +1135,12 @@ function LoadingSkeleton() {
 
 function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardContent className="p-8 text-center">
         <AlertTriangle className="w-8 h-8 mx-auto text-amber-500 mb-3" />
-        <p className="text-sm text-[#21262A] font-medium mb-1">Failed to load model stats</p>
+        <p className="text-sm text-foreground font-medium mb-1">Failed to load model stats</p>
         <p className="text-xs text-muted-foreground mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={onRetry} className="border-[#023F59]/20">
+        <Button variant="outline" size="sm" onClick={onRetry} className="border-primary/20">
           <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Retry
         </Button>
       </CardContent>

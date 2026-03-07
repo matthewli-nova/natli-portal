@@ -12,85 +12,9 @@ import {
 } from 'lucide-react';
 import { ModelIcon, getModelShortName } from '../../../lib/model-icons';
 
-// ─── Types (mirrored from parent / sibling tabs) ────────────
+// ─── Types ───────────────────────────────────────────────────
 
-interface HealthData {
-  status: string;
-  cpu: number;
-  memory: number;
-  disk: number;
-  memTotalGb: number;
-  memUsedGb: number;
-  cpuTemp: number;
-  services: { openclaw: boolean; ollama: boolean; gateway: boolean };
-  gatewayReachable: boolean;
-  gatewayStartTime: string;
-  primaryModel: string;
-  totalSessions: number;
-  memoryFiles: number;
-  memoryChunks: number;
-  vectorEnabled: boolean;
-  ftsEnabled: boolean;
-  memoryMdLines: number;
-  memoryMdCap: number;
-  memoryDailyLogs: number;
-  memoryArchiveCount: number;
-  memoryDbSizeMb: number;
-  [key: string]: unknown;
-}
-
-interface EnrichedSession {
-  key: string;
-  updatedAt: number;
-  ageMs: number;
-  model: string;
-  agentId: string;
-  totalTokens: number | null;
-  sessionType: string;
-  label: string;
-  isActive: boolean;
-  isRecent: boolean;
-  [key: string]: unknown;
-}
-
-interface CronJobState {
-  nextRunAtMs?: number;
-  lastRunAtMs?: number;
-  lastStatus?: string;
-  consecutiveErrors: number;
-  [key: string]: unknown;
-}
-
-interface CronJob {
-  id: string;
-  name: string;
-  enabled: boolean;
-  schedule: unknown;
-  state: CronJobState;
-  [key: string]: unknown;
-}
-
-interface ClickUpTask {
-  id: string;
-  name: string;
-  status: { status: string; color: string };
-  priority?: { priority: string; color: string } | null;
-  [key: string]: unknown;
-}
-
-interface ModelConfig {
-  primary: string;
-  fallbacks: string[];
-  availableModels: Array<{ id: string; alias: string; label: string }>;
-}
-
-interface MemoryStats {
-  dailyLogs: number;
-  archived: number;
-  dbSizeMb: number;
-  totalFiles: number;
-  [key: string]: unknown;
-}
+import type { HealthData, EnrichedSession, CronJob, ClickUpTask, ModelConfig, MemoryStats } from '../../../lib/portal-types';
 
 interface OverviewTabProps {
   health: HealthData | null;
@@ -106,36 +30,7 @@ interface OverviewTabProps {
 // ─── Helpers ─────────────────────────────────────────────────
 
 import { formatTokens, formatUptime } from '../../../lib/formatters';
-
-function timeUntil(ms: number): string {
-  const diff = ms - Date.now();
-  if (diff <= 0) return 'now';
-  if (diff < 60_000) return `${Math.ceil(diff / 1000)}s`;
-  if (diff < 3_600_000) {
-    const mins = Math.floor(diff / 60_000);
-    return `${mins}m`;
-  }
-  if (diff < 86_400_000) {
-    const hrs = Math.floor(diff / 3_600_000);
-    const mins = Math.floor((diff % 3_600_000) / 60_000);
-    return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
-  }
-  return `${Math.floor(diff / 86_400_000)}d`;
-}
-
-function relativeTime(ageMs: number): string {
-  if (ageMs < 30_000) return 'just now';
-  if (ageMs < 60_000) return `${Math.floor(ageMs / 1000)}s ago`;
-  if (ageMs < 3_600_000) return `${Math.floor(ageMs / 60_000)}m ago`;
-  if (ageMs < 86_400_000) return `${Math.floor(ageMs / 3_600_000)}h ago`;
-  return `${Math.floor(ageMs / 86_400_000)}d ago`;
-}
-
-function estimateCost(tokens: number): string {
-  const cost = (tokens / 1_000_000) * 15;
-  if (cost < 0.01) return '<$0.01';
-  return `~$${cost.toFixed(2)}`;
-}
+import { timeUntil, relativeTime, estimateCost } from '../../../lib/portal-utils';
 
 // ─── View All Link ───────────────────────────────────────────
 
@@ -143,7 +38,7 @@ function ViewAllLink({ onClick, label = 'View All →' }: { onClick: () => void;
   return (
     <button
       onClick={onClick}
-      className="text-xs text-[#107DAC] hover:underline cursor-pointer font-medium"
+      className="text-xs text-lepos-cyan-text hover:underline cursor-pointer font-medium"
     >
       {label}
     </button>
@@ -155,7 +50,7 @@ function ViewAllLink({ onClick, label = 'View All →' }: { onClick: () => void;
 function SystemStatusBar({ health }: { health: HealthData | null }) {
   if (!health) {
     return (
-      <div className="bg-[#023F59]/5 rounded-lg px-4 py-2.5 flex items-center justify-center">
+      <div className="bg-primary/5 rounded-lg px-4 py-2.5 flex items-center justify-center">
         <span className="text-sm text-muted-foreground">Loading system status…</span>
       </div>
     );
@@ -168,7 +63,7 @@ function SystemStatusBar({ health }: { health: HealthData | null }) {
   ];
 
   return (
-    <div className="bg-[#023F59]/5 rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+    <div className="bg-primary/5 rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
       {services.map(s => (
         <span key={s.name} className="flex items-center gap-1.5 shrink-0">
           <span
@@ -176,23 +71,23 @@ function SystemStatusBar({ health }: { health: HealthData | null }) {
               s.online ? 'bg-emerald-500' : 'bg-red-500'
             }`}
           />
-          <span className="text-[#21262A] font-medium">{s.name}</span>
+          <span className="text-foreground font-medium">{s.name}</span>
           <span className={`text-xs ${s.online ? 'text-emerald-600' : 'text-red-600'}`}>
             {s.online ? 'ONLINE' : 'OFFLINE'}
           </span>
         </span>
       ))}
 
-      <span className="text-[#21262A]/60">·</span>
-      <span className="text-[#21262A]">CPU {health.cpu}%</span>
-      <span className="text-[#21262A]/60">·</span>
-      <span className="text-[#21262A]">{health.cpuTemp}°C</span>
-      <span className="text-[#21262A]/60">·</span>
-      <span className="text-[#21262A]">RAM {health.memUsedGb}/{health.memTotalGb}GB</span>
-      <span className="text-[#21262A]/60">·</span>
-      <span className="text-[#21262A]">Disk {health.disk}%</span>
-      <span className="text-[#21262A]/60">·</span>
-      <span className="text-[#21262A]">Uptime {formatUptime(health.gatewayStartTime)}</span>
+      <span className="text-foreground/60">·</span>
+      <span className="text-foreground">CPU {health.cpu}%</span>
+      <span className="text-foreground/60">·</span>
+      <span className="text-foreground">{health.cpuTemp}°C</span>
+      <span className="text-foreground/60">·</span>
+      <span className="text-foreground">RAM {health.memUsedGb}/{health.memTotalGb}GB</span>
+      <span className="text-foreground/60">·</span>
+      <span className="text-foreground">Disk {health.disk}%</span>
+      <span className="text-foreground/60">·</span>
+      <span className="text-foreground">Uptime {formatUptime(health.gatewayStartTime)}</span>
     </div>
   );
 }
@@ -242,11 +137,11 @@ function KPIStrip({
 
   const kpis = [
     {
-      icon: primaryId ? <ModelIcon modelId={primaryId} size="sm" /> : <Brain className="w-4 h-4 text-[#31D7DB]" />,
+      icon: primaryId ? <ModelIcon modelId={primaryId} size="sm" /> : <Brain className="w-4 h-4 text-secondary" />,
       label: 'Active Model',
       value: primaryLabel,
       subtitle: modelConfig ? `${modelConfig.fallbacks.length} failover${modelConfig.fallbacks.length !== 1 ? 's' : ''}` : '',
-      badgeColor: 'bg-[#31D7DB]/20 text-[#107DAC]',
+      badgeColor: 'bg-secondary/20 text-lepos-cyan-text',
       badge: 'Online',
     },
     {
@@ -274,7 +169,7 @@ function KPIStrip({
       badge: memAtCap ? 'Full' : 'OK',
     },
     {
-      icon: <Timer className="w-4 h-4 text-[#107DAC]" />,
+      icon: <Timer className="w-4 h-4 text-lepos-cyan-text" />,
       label: 'Next Cron',
       value: nextCron ? timeUntil(nextCron.state.nextRunAtMs!) : 'None scheduled',
       subtitle: nextCron ? nextCron.name.slice(0, 20) + (nextCron.name.length > 20 ? '…' : '') : 'No crons pending',
@@ -288,7 +183,7 @@ function KPIStrip({
       {kpis.map(kpi => (
         <Card
           key={kpi.label}
-          className="border-[#023F59]/20 hover:shadow-md transition-shadow relative"
+          className="border-primary/20 hover:shadow-md transition-shadow relative"
         >
           <CardContent className="pt-4 pb-3 px-4">
             {kpi.badge && (
@@ -299,7 +194,7 @@ function KPIStrip({
               </Badge>
             )}
             <div className="flex items-center gap-2 mb-1.5">{kpi.icon}</div>
-            <p className="text-2xl font-bold text-[#107DAC] leading-tight truncate">{kpi.value}</p>
+            <p className="text-2xl font-bold text-lepos-cyan-text leading-tight truncate">{kpi.value}</p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{kpi.label}</p>
             <p className="text-xs text-muted-foreground truncate">{kpi.subtitle}</p>
           </CardContent>
@@ -321,9 +216,9 @@ function AgentActivityCard({
   const recent = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6);
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm col-span-1 lg:col-span-2">
+    <Card className="border-primary/25 shadow-sm col-span-1 lg:col-span-2">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-[#21262A]">Agent Activity</CardTitle>
+        <CardTitle className="text-sm font-semibold text-foreground">Agent Activity</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('sessions')} />
       </CardHeader>
       <CardContent className="pt-0">
@@ -337,7 +232,7 @@ function AgentActivityCard({
               return (
                 <div
                   key={s.key}
-                  className="flex items-center gap-3 py-2 hover:bg-[#023F59]/[0.02] rounded px-1 -mx-1"
+                  className="flex items-center gap-3 py-2 hover:bg-primary/[0.02] rounded px-1 -mx-1"
                 >
                   <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span
@@ -350,11 +245,11 @@ function AgentActivityCard({
                     )}
                   </span>
 
-                  <span className="text-sm text-[#21262A] truncate flex-1 min-w-0">
+                  <span className="text-sm text-foreground truncate flex-1 min-w-0">
                     {s.label || s.key}
                   </span>
 
-                  <Badge className="text-[10px] font-medium px-1.5 py-0 border-0 bg-[#023F59]/8 text-[#21262A] shrink-0">
+                  <Badge className="text-[10px] font-medium px-1.5 py-0 border-0 bg-primary/8 text-foreground shrink-0">
                     {s.agentId || 'main'}
                   </Badge>
 
@@ -362,7 +257,7 @@ function AgentActivityCard({
                     <ModelIcon modelId={s.model} size="xs" showLabel />
                   </span>
 
-                  <span className="text-xs font-mono text-[#107DAC] shrink-0 w-14 text-right">
+                  <span className="text-xs font-mono text-lepos-cyan-text shrink-0 w-14 text-right">
                     {s.totalTokens ? formatTokens(s.totalTokens) : '—'}
                   </span>
 
@@ -394,14 +289,14 @@ function CronHealthCard({
     .slice(0, 3);
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-[#21262A]">Cron Health</CardTitle>
+        <CardTitle className="text-sm font-semibold text-foreground">Cron Health</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('schedule')} />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        <p className="text-sm text-[#21262A]">
-          <span className="font-bold text-[#107DAC]">{enabled.length}</span>
+        <p className="text-sm text-foreground">
+          <span className="font-bold text-lepos-cyan-text">{enabled.length}</span>
           <span className="text-muted-foreground"> enabled / {crons.length} total</span>
         </p>
 
@@ -414,10 +309,10 @@ function CronHealthCard({
         {nextFiring.length > 0 ? (
           <div className="space-y-2">
             {nextFiring.map(c => (
-              <div key={c.id} className="flex items-center justify-between py-1.5 border-b border-[#023F59]/5 last:border-0">
-                <span className="truncate text-[#21262A] text-sm flex-1 min-w-0 mr-2">{c.name}</span>
+              <div key={c.id} className="flex items-center justify-between py-1.5 border-b border-primary/5 last:border-0">
+                <span className="truncate text-foreground text-sm flex-1 min-w-0 mr-2">{c.name}</span>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[#107DAC] font-medium">
+                  <span className="text-xs text-lepos-cyan-text font-medium">
                     {timeUntil(c.state.nextRunAtMs!)}
                   </span>
                   {c.state.lastStatus === 'ok' || c.state.lastStatus === 'success' ? (
@@ -474,26 +369,26 @@ function TasksCard({
   };
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-[#21262A]">Tasks</CardTitle>
+        <CardTitle className="text-sm font-semibold text-foreground">Tasks</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('task')} />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div className="flex gap-3 text-xs text-muted-foreground">
-          <span>Open <strong className="text-[#21262A]">{statusCounts.open}</strong></span>
+          <span>Open <strong className="text-foreground">{statusCounts.open}</strong></span>
           <span>·</span>
-          <span>Sprint <strong className="text-[#21262A]">{statusCounts.sprint}</strong></span>
+          <span>Sprint <strong className="text-foreground">{statusCounts.sprint}</strong></span>
           <span>·</span>
-          <span>Done <strong className="text-[#21262A]">{statusCounts.completed}</strong></span>
+          <span>Done <strong className="text-foreground">{statusCounts.completed}</strong></span>
         </div>
         <div className="space-y-1.5">
           {openTasks.slice(0, 4).map(t => (
-            <div key={t.id} className="flex items-center gap-2 text-sm py-1.5 border-b border-[#023F59]/5 last:border-0">
+            <div key={t.id} className="flex items-center gap-2 text-sm py-1.5 border-b border-primary/5 last:border-0">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${priorityColor(t.priority?.priority)}`}
               />
-              <span className="truncate text-[#21262A]">{t.name}</span>
+              <span className="truncate text-foreground">{t.name}</span>
             </div>
           ))}
           {openTasks.length === 0 && (
@@ -527,37 +422,37 @@ function MemoryCard({
   const fts = health?.ftsEnabled ?? false;
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-[#21262A]">Memory</CardTitle>
+        <CardTitle className="text-sm font-semibold text-foreground">Memory</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('memory')} />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-muted-foreground">MEMORY.md</span>
-            <span className={`font-mono font-medium ${pct >= 97 ? 'text-red-600' : pct >= 90 ? 'text-amber-600' : 'text-[#107DAC]'}`}>
+            <span className={`font-mono font-medium ${pct >= 97 ? 'text-red-600' : pct >= 90 ? 'text-amber-600' : 'text-lepos-cyan-text'}`}>
               {lines}/{cap}
             </span>
           </div>
           <Progress
             value={pct}
-            className={`h-2 ${pct >= 97 ? '[&>div]:bg-red-500' : pct >= 90 ? '[&>div]:bg-amber-500' : '[&>div]:bg-[#31D7DB]'}`}
+            className={`h-2 ${pct >= 97 ? '[&>div]:bg-red-500' : pct >= 90 ? '[&>div]:bg-amber-500' : '[&>div]:bg-secondary'}`}
           />
         </div>
 
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span>Daily Logs <strong className="text-[#21262A]">{dailyLogs}</strong></span>
+          <span>Daily Logs <strong className="text-foreground">{dailyLogs}</strong></span>
           <span>·</span>
-          <span>Archive <strong className="text-[#21262A]">{archived}</strong></span>
+          <span>Archive <strong className="text-foreground">{archived}</strong></span>
           <span>·</span>
-          <span>DB <strong className="text-[#21262A]">{dbSize}MB</strong></span>
+          <span>DB <strong className="text-foreground">{dbSize}MB</strong></span>
         </div>
 
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span>Files <strong className="text-[#21262A]">{files.toLocaleString()}</strong></span>
+          <span>Files <strong className="text-foreground">{files.toLocaleString()}</strong></span>
           <span>·</span>
-          <span>Chunks <strong className="text-[#21262A]">{chunks.toLocaleString()}</strong></span>
+          <span>Chunks <strong className="text-foreground">{chunks.toLocaleString()}</strong></span>
         </div>
 
         <div className="flex gap-2">
@@ -600,22 +495,22 @@ function ModelUsageCard({
     : '—';
 
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
+        <CardTitle className="text-sm font-semibold text-foreground">Model Usage</CardTitle>
         <ViewAllLink onClick={() => onNavigateTo('model')} />
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div className="flex items-center gap-2">
           {modelConfig?.primary && <ModelIcon modelId={modelConfig.primary} size="sm" />}
-          <span className="text-sm font-medium text-[#21262A]">{primaryLabel}</span>
-          <Badge className="text-[10px] px-1.5 py-0 border-0 bg-[#31D7DB]/20 text-[#107DAC]">
+          <span className="text-sm font-medium text-foreground">{primaryLabel}</span>
+          <Badge className="text-[10px] px-1.5 py-0 border-0 bg-secondary/20 text-lepos-cyan-text">
             Primary
           </Badge>
         </div>
 
         <div>
-          <p className="text-2xl font-bold text-[#107DAC]">{formatTokens(totalTokens)}</p>
+          <p className="text-2xl font-bold text-lepos-cyan-text">{formatTokens(totalTokens)}</p>
           <p className="text-xs text-muted-foreground">total tokens</p>
         </div>
 
@@ -630,11 +525,11 @@ function ModelUsageCard({
                     <ModelIcon modelId={model} size="xs" />
                     <span className="text-muted-foreground truncate">{getModelShortName(model)}</span>
                   </div>
-                  <span className="text-[#21262A] font-mono">{formatTokens(tokens)}</span>
+                  <span className="text-foreground font-mono">{formatTokens(tokens)}</span>
                 </div>
-                <div className="h-1.5 bg-[#023F59]/10 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-primary/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#31D7DB] rounded-full"
+                    className="h-full bg-secondary rounded-full"
                     style={{ width: `${Math.round((tokens / maxModelTokens) * 100)}%` }}
                   />
                 </div>

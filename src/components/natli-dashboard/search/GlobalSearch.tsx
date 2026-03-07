@@ -212,7 +212,7 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#023F59]/20 text-sm text-muted-foreground bg-white hover:bg-gray-50 hover:border-[#023F59]/40 transition-all w-120"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 text-sm text-muted-foreground bg-white hover:bg-gray-50 hover:border-primary/40 transition-all w-120"
       >
         <Search className="w-3.5 h-3.5 shrink-0" />
         <span className="flex-1 text-left">Search anything...</span>

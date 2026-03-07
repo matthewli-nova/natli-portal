@@ -287,9 +287,9 @@ export function SessionFormModal({
               </Label>
               <Tabs value={nameLang} onValueChange={setNameLang}>
                 <TabsList className="h-8 bg-muted/50 p-0.5">
-                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                 </TabsList>
                 <TabsContent value="en" className="mt-2">
                   <div className="flex flex-col gap-1.5">
@@ -353,9 +353,9 @@ export function SessionFormModal({
               <Label>Description</Label>
               <Tabs value={descriptionLang} onValueChange={setDescriptionLang}>
                 <TabsList className="h-8 bg-muted/50 p-0.5">
-                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                 </TabsList>
                 <TabsContent value="en" className="mt-3">
                   <div className="flex flex-col gap-1.5">

@@ -27,7 +27,7 @@ function CategoryIcon({ name, className }: { name: string; className?: string })
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3 mb-4">
-      <span className="text-lg font-bold text-[#21262A]">{children}</span>
+      <span className="text-lg font-bold text-foreground">{children}</span>
     </div>
   );
 }
@@ -73,7 +73,7 @@ function ModelRow({
           </Badge>
         </div>
         {/* Model name */}
-        <p className="text-sm font-semibold text-[#21262A] leading-tight">{entry.label}</p>
+        <p className="text-sm font-semibold text-foreground leading-tight">{entry.label}</p>
         {/* Reason */}
         <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{entry.reason}</p>
         {/* Tags */}
@@ -91,12 +91,12 @@ function ModelRow({
 
 function CategoryCard({ cat }: { cat: CategoryLeader }) {
   return (
-    <Card className="border-[#023F59]/25 shadow-sm rounded-xl">
+    <Card className="border-primary/25 shadow-sm rounded-xl">
       <CardContent className="p-4 space-y-2">
         {/* Header */}
-        <div className="flex items-center gap-2 pb-1 border-b border-[#023F59]/8">
+        <div className="flex items-center gap-2 pb-1 border-b border-primary/8">
           <CategoryIcon name={cat.icon} className={`w-4 h-4 shrink-0 ${cat.color}`} />
-          <span className="text-sm font-bold text-[#21262A]">{cat.name}</span>
+          <span className="text-sm font-bold text-foreground">{cat.name}</span>
         </div>
 
         <ModelRow medal="🥇" entry={cat.best}     rank="gold" />
@@ -114,12 +114,12 @@ function CategoryCard({ cat }: { cat: CategoryLeader }) {
 
 function QuickRefTable() {
   return (
-    <Card className="border-[#023F59]/25 shadow-sm rounded-xl overflow-hidden">
+    <Card className="border-primary/25 shadow-sm rounded-xl overflow-hidden">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#023F59]/10 text-left text-xs text-muted-foreground bg-[#023F59]/5">
+              <tr className="border-b border-primary/10 text-left text-xs text-muted-foreground bg-primary/5">
                 <th className="px-4 py-2.5 font-medium">Task</th>
                 <th className="px-4 py-2.5 font-medium">Best</th>
                 <th className="px-4 py-2.5 font-medium">Free</th>
@@ -129,18 +129,18 @@ function QuickRefTable() {
               {QUICK_REF.map((row, i) => (
                 <tr
                   key={row.task}
-                  className={`border-b border-[#023F59]/5 last:border-0 ${i % 2 === 0 ? 'bg-[#023F59]/[0.03]' : ''}`}
+                  className={`border-b border-primary/5 last:border-0 ${i % 2 === 0 ? 'bg-primary/[0.03]' : ''}`}
                 >
-                  <td className="px-4 py-2.5 font-medium text-[#21262A]">{row.task}</td>
+                  <td className="px-4 py-2.5 font-medium text-foreground">{row.task}</td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <code className="text-[11px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-[#21262A]">{row.best}</code>
+                      <code className="text-[11px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-foreground">{row.best}</code>
                       <span className="text-xs text-muted-foreground">{row.bestLabel}</span>
                     </div>
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <code className="text-[11px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-[#21262A]">{row.free}</code>
+                      <code className="text-[11px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-foreground">{row.free}</code>
                       <span className="text-xs text-muted-foreground">{row.freeLabel}</span>
                       <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-emerald-100 text-emerald-700">Free</Badge>
                     </div>
@@ -161,9 +161,9 @@ function SetupRecommendations() {
   return (
     <div className="space-y-2">
       {SETUP_RECS.map((rec) => (
-        <Card key={rec.context} className="border-[#023F59]/25 shadow-sm rounded-xl">
+        <Card key={rec.context} className="border-primary/25 shadow-sm rounded-xl">
           <CardContent className="p-3 flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-semibold text-[#21262A] min-w-[140px]">{rec.context}</span>
+            <span className="text-sm font-semibold text-foreground min-w-[140px]">{rec.context}</span>
             {rec.current && (
               <>
                 <code className="text-[11px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-muted-foreground">{rec.current}</code>
@@ -172,7 +172,7 @@ function SetupRecommendations() {
             )}
             <Badge variant="secondary" className={`text-[11px] font-mono ${getProviderColor(rec.recommended)}`}>{rec.recommended}</Badge>
             <span className="text-xs text-muted-foreground">{rec.recommendedLabel}</span>
-            <span className="text-xs text-[#107DAC] ml-auto">{rec.reason}</span>
+            <span className="text-xs text-lepos-cyan-text ml-auto">{rec.reason}</span>
           </CardContent>
         </Card>
       ))}
@@ -208,7 +208,7 @@ export function ModelIntelligencePage() {
       </div>
 
       {/* Footer */}
-      <div className="text-xs text-muted-foreground space-y-0.5 pt-2 border-t border-[#023F59]/10">
+      <div className="text-xs text-muted-foreground space-y-0.5 pt-2 border-t border-primary/10">
         <p>Last updated: March 2026</p>
         <p>Source: Internal model evaluation based on OpenClaw usage</p>
         <p className="font-mono text-[10px]">Update model-intelligence-data.ts to refresh</p>

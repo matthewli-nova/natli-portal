@@ -130,13 +130,13 @@ export function CreateRegistrationLinkWizard({ onComplete, onCancel }: CreateReg
           ))}
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className={cn(currentStep === 1 ? "text-[#107DAC] font-medium" : "text-muted-foreground")}>
+          <span className={cn(currentStep === 1 ? "text-lepos-cyan-text font-medium" : "text-muted-foreground")}>
             Select Event
           </span>
-          <span className={cn(currentStep === 2 ? "text-[#107DAC] font-medium" : "text-muted-foreground")}>
+          <span className={cn(currentStep === 2 ? "text-lepos-cyan-text font-medium" : "text-muted-foreground")}>
             Select Ticket
           </span>
-          <span className={cn(currentStep === 3 ? "text-[#107DAC] font-medium" : "text-muted-foreground")}>
+          <span className={cn(currentStep === 3 ? "text-lepos-cyan-text font-medium" : "text-muted-foreground")}>
             Configure
           </span>
         </div>

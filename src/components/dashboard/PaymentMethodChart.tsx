@@ -124,12 +124,12 @@ export function PaymentMethodChart() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b bg-muted/50">
-                <TableHead className="pl-[21px] text-[#21262A]">Method</TableHead>
-                <TableHead className="text-right text-[#21262A]">Current</TableHead>
-                <TableHead className="text-right text-[#21262A]">LP</TableHead>
-                <TableHead className="text-right text-[#21262A]">Chg%</TableHead>
-                <TableHead className="text-right text-[#21262A]">% to Total</TableHead>
-                <TableHead className="text-right pr-[21px] text-[#21262A]">Trans.</TableHead>
+                <TableHead className="pl-[21px] text-foreground">Method</TableHead>
+                <TableHead className="text-right text-foreground">Current</TableHead>
+                <TableHead className="text-right text-foreground">LP</TableHead>
+                <TableHead className="text-right text-foreground">Chg%</TableHead>
+                <TableHead className="text-right text-foreground">% to Total</TableHead>
+                <TableHead className="text-right pr-[21px] text-foreground">Trans.</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -105,14 +105,14 @@ export function SessionsTab() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="border-[#023F59]/20 animate-pulse">
+            <Card key={i} className="border-primary/20 animate-pulse">
               <CardContent className="p-4"><div className="h-12 bg-gray-100 rounded" /></CardContent>
             </Card>
           ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[...Array(2)].map((_, i) => (
-            <Card key={i} className="border-[#023F59]/20 animate-pulse">
+            <Card key={i} className="border-primary/20 animate-pulse">
               <CardContent className="p-6"><div className="h-40 bg-gray-100 rounded" /></CardContent>
             </Card>
           ))}
@@ -165,7 +165,7 @@ export function SessionsTab() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-        <span className="text-base font-semibold text-[#21262A]">Sessions Overview</span>
+        <span className="text-base font-semibold text-foreground">Sessions Overview</span>
       </div>
 
       {/* [A] KPI Strip */}
@@ -179,17 +179,17 @@ export function SessionsTab() {
           icon={<Activity className="w-4 h-4" />}
           description="last 5 minutes"
         />
-        <KPICard title="Tokens Used" value={formatTokens(stats.totalTokens)} valueColor="text-[#107DAC]" icon={<Zap className="w-4 h-4" />} description="total across all sessions" />
+        <KPICard title="Tokens Used" value={formatTokens(stats.totalTokens)} valueColor="text-lepos-cyan-text" icon={<Zap className="w-4 h-4" />} description="total across all sessions" />
         <KPICard title="Sub-agents Run" value={String(subagentCount)} icon={<Bot className="w-4 h-4" />} description="spawned sessions" />
       </div>
 
       {/* [B] Two-column: Model Usage + Session Type */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-[#023F59]/25 shadow-sm">
+        <Card className="border-primary/25 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-                <CardTitle className="text-sm font-semibold text-[#21262A]">Model Usage</CardTitle>
+                <CardTitle className="text-sm font-semibold text-foreground">Model Usage</CardTitle>
               </div>
               <SortToggle value={modelSort} onChange={setModelSort} />
             </div>
@@ -198,10 +198,10 @@ export function SessionsTab() {
             {modelEntries.map((entry) => (
               <div key={entry.model} className="flex items-center gap-3">
                 <ModelIcon modelId={entry.model} size="xs" />
-                <span className="text-xs text-[#21262A] w-24 shrink-0 truncate">{entry.label}</span>
-                <div className="flex-1 h-5 bg-[#023F59]/5 rounded overflow-hidden">
+                <span className="text-xs text-foreground w-24 shrink-0 truncate">{entry.label}</span>
+                <div className="flex-1 h-5 bg-primary/5 rounded overflow-hidden">
                   <div
-                    className="h-full bg-[#023F59] rounded transition-all"
+                    className="h-full bg-primary rounded transition-all"
                     style={{
                       width: `${Math.max(((modelSort === 'tokens' ? entry.tokens : entry.count) / maxModelValue) * 100, 2)}%`,
                       opacity: 0.6 + ((modelSort === 'tokens' ? entry.tokens : entry.count) / maxModelValue) * 0.4,
@@ -216,11 +216,11 @@ export function SessionsTab() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#023F59]/25 shadow-sm">
+        <Card className="border-primary/25 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-                <CardTitle className="text-sm font-semibold text-[#21262A]">Session Types</CardTitle>
+                <CardTitle className="text-sm font-semibold text-foreground">Session Types</CardTitle>
               </div>
               <SortToggle value={typeSort} onChange={setTypeSort} />
             </div>
@@ -231,10 +231,10 @@ export function SessionsTab() {
               const pct = Math.max((val / maxTypeValue) * 100, 2);
               return (
                 <div key={entry.type} className="flex items-center gap-3">
-                  <span className="text-xs text-[#21262A] w-28 shrink-0 truncate">{entry.label}</span>
-                  <div className="flex-1 h-5 bg-[#023F59]/5 rounded overflow-hidden">
+                  <span className="text-xs text-foreground w-28 shrink-0 truncate">{entry.label}</span>
+                  <div className="flex-1 h-5 bg-primary/5 rounded overflow-hidden">
                     <div
-                      className="h-full bg-[#023F59] rounded transition-all"
+                      className="h-full bg-primary rounded transition-all"
                       style={{ width: `${pct}%`, opacity: 0.6 + (val / maxTypeValue) * 0.4 }}
                     />
                   </div>
@@ -249,17 +249,17 @@ export function SessionsTab() {
       </div>
 
       {/* [C] Live Activity Feed */}
-      <Card className="border-[#023F59]/25 shadow-sm">
+      <Card className="border-primary/25 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-            <CardTitle className="text-sm font-semibold text-[#21262A]">Live Activity Feed</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground">Live Activity Feed</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#023F59]/10 text-left text-xs text-muted-foreground">
+                <tr className="border-b border-primary/10 text-left text-xs text-muted-foreground">
                   <th className="px-4 py-2 w-10">Status</th>
                   <th className="px-4 py-2">Session</th>
                   <th className="px-4 py-2">Agent</th>
@@ -270,11 +270,11 @@ export function SessionsTab() {
               </thead>
               <tbody>
                 {recentSessions.map((s) => (
-                  <tr key={s.key} className="border-b border-[#023F59]/5 hover:bg-[#F0F7FF] transition-colors cursor-pointer" onClick={() => setSelectedSession(s)}>
+                  <tr key={s.key} className="border-b border-primary/5 hover:bg-[#F0F7FF] transition-colors cursor-pointer" onClick={() => setSelectedSession(s)}>
                     <td className="px-4 py-2">
                       <StatusDot isActive={s.isActive} isRecent={s.isRecent} />
                     </td>
-                    <td className="px-4 py-2 font-medium text-[#21262A] max-w-[240px] truncate">{s.label}</td>
+                    <td className="px-4 py-2 font-medium text-foreground max-w-[240px] truncate">{s.label}</td>
                     <td className="px-4 py-2">
                       <AgentBadge agent={s.agentId} />
                     </td>
@@ -297,20 +297,20 @@ export function SessionsTab() {
       </Card>
 
       {/* [D] Agent Breakdown */}
-      <Card className="border-[#023F59]/25 shadow-sm">
+      <Card className="border-primary/25 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-            <CardTitle className="text-sm font-semibold text-[#21262A]">Agent Breakdown</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground">Agent Breakdown</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {agentEntries.map(([agent, info]) => {
             const Icon = AGENT_ICONS[agent] || Bot;
             return (
-              <div key={agent} className="flex items-center justify-between py-1.5 border-b border-[#023F59]/5 last:border-0">
+              <div key={agent} className="flex items-center justify-between py-1.5 border-b border-primary/5 last:border-0">
                 <div className="flex items-center gap-2">
                   <Icon className="w-4 h-4 text-[#023F59]" />
-                  <span className="font-medium text-[#21262A] capitalize">{agent}</span>
+                  <span className="font-medium text-foreground capitalize">{agent}</span>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span>{info.count} sessions</span>
@@ -340,7 +340,7 @@ function SortToggle({ value, onChange }: { value: SortMode; onChange: (v: SortMo
           onClick={() => onChange(mode)}
           className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
             value === mode
-              ? 'bg-[#023F59] text-white'
+              ? 'bg-primary text-white'
               : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
@@ -356,13 +356,13 @@ function KPICard({ title, value, dot, valueColor, icon, description }: {
   icon?: React.ReactNode; description?: string;
 }) {
   return (
-    <Card className="border-[#023F59]/25 shadow-sm">
+    <Card className="border-primary/25 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
-        {icon && <span className="text-[#31D7DB]">{icon}</span>}
+        <CardTitle className="text-sm font-medium text-foreground">{title}</CardTitle>
+        {icon && <span className="text-secondary">{icon}</span>}
       </CardHeader>
       <CardContent>
-        <div className={`text-2xl font-bold ${valueColor || 'text-[#107DAC]'} flex items-center gap-2`}>
+        <div className={`text-2xl font-bold ${valueColor || 'text-lepos-cyan-text'} flex items-center gap-2`}>
           {dot === 'emerald' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
           {value}
         </div>
@@ -380,11 +380,11 @@ function StatusDot({ isActive, isRecent }: { isActive: boolean; isRecent: boolea
 
 function AgentBadge({ agent }: { agent: string }) {
   const colors: Record<string, string> = {
-    main: 'bg-[#023F59] text-white',
-    coder: 'bg-[#107DAC]/15 text-[#107DAC]',
-    designer: 'bg-[#31D7DB]/15 text-[#023F59]',
+    main: 'bg-primary text-white',
+    coder: 'bg-[#107DAC]/15 text-lepos-cyan-text',
+    designer: 'bg-secondary/15 text-[#023F59]',
     marketing: 'bg-[#107DAC]/10 text-[#023F59]',
-    strategy: 'bg-[#31D7DB]/20 text-[#023F59]',
+    strategy: 'bg-secondary/20 text-[#023F59]',
   };
   return (
     <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${colors[agent] || 'bg-gray-100 text-gray-700'}`}>

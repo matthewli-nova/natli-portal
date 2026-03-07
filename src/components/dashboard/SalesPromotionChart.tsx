@@ -102,9 +102,9 @@ export function SalesPromotionChart() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b bg-muted/50">
-                <TableHead className="pl-[21px] text-[#21262A]">Promotion</TableHead>
-                <TableHead className="text-right text-[#21262A]">Curr</TableHead>
-                <TableHead className="text-right text-[#21262A]">
+                <TableHead className="pl-[21px] text-foreground">Promotion</TableHead>
+                <TableHead className="text-right text-foreground">Curr</TableHead>
+                <TableHead className="text-right text-foreground">
                   <div className="flex items-center justify-end cursor-pointer hover:text-foreground transition-colors" onClick={handleLPSort}>
                     <span>LP</span>
                     {sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> :
@@ -112,9 +112,9 @@ export function SalesPromotionChart() {
                      <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />}
                   </div>
                 </TableHead>
-                <TableHead className="text-right text-[#21262A]">Chg%</TableHead>
-                <TableHead className="text-right text-[#21262A]">% Total</TableHead>
-                <TableHead className="text-right pr-[21px] text-[#21262A]">Appld</TableHead>
+                <TableHead className="text-right text-foreground">Chg%</TableHead>
+                <TableHead className="text-right text-foreground">% Total</TableHead>
+                <TableHead className="text-right pr-[21px] text-foreground">Appld</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

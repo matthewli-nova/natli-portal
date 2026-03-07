@@ -488,33 +488,33 @@ export function CreateEventForm({ onCancel, onSubmit, initialData, isEdit = fals
             <TabsList className="w-full justify-start h-12 bg-transparent p-0 border-0">
               <TabsTrigger 
                 value="details" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-[#107DAC] bg-transparent px-6 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-lepos-cyan-text bg-transparent px-6 text-base"
               >
                 Details
               </TabsTrigger>
               <TabsTrigger 
                 value="branding" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-[#107DAC] bg-transparent px-6 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-lepos-cyan-text bg-transparent px-6 text-base"
               >
                 Branding
               </TabsTrigger>
               <TabsTrigger 
                 value="sessions" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-[#107DAC] bg-transparent px-6 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-lepos-cyan-text bg-transparent px-6 text-base"
               >Sessions & Sub-Event</TabsTrigger>
               <TabsTrigger 
                 value="tickets" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-[#107DAC] bg-transparent px-6 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-lepos-cyan-text bg-transparent px-6 text-base"
               >Ticket Types</TabsTrigger>
               <TabsTrigger 
                 value="access" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-[#107DAC] bg-transparent px-6 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-lepos-cyan-text bg-transparent px-6 text-base"
               >
                 Access
               </TabsTrigger>
               <TabsTrigger 
                 value="review" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-[#107DAC] bg-transparent px-6 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#107DAC] data-[state=active]:bg-transparent data-[state=active]:text-lepos-cyan-text bg-transparent px-6 text-base"
               >
                 Review & Publish
               </TabsTrigger>
@@ -599,9 +599,9 @@ export function CreateEventForm({ onCancel, onSubmit, initialData, isEdit = fals
                               </Label>
                               <Tabs value={basicInfoLang} onValueChange={setBasicInfoLang}>
                                 <TabsList className="h-8 bg-muted/50 p-0.5">
-                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                                 </TabsList>
                               </Tabs>
                             </div>
@@ -749,9 +749,9 @@ export function CreateEventForm({ onCancel, onSubmit, initialData, isEdit = fals
                               <Label className="text-sm font-medium">Event Description</Label>
                               <Tabs value={descriptionLang} onValueChange={setDescriptionLang}>
                                 <TabsList className="h-8 bg-muted/50 p-0.5">
-                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                                 </TabsList>
                               </Tabs>
                             </div>
@@ -916,9 +916,9 @@ export function CreateEventForm({ onCancel, onSubmit, initialData, isEdit = fals
                               </Label>
                               <Tabs value={venueLang} onValueChange={setVenueLang}>
                                 <TabsList className="h-8 bg-muted/50 p-0.5">
-                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                                 </TabsList>
                               </Tabs>
                             </div>
@@ -989,9 +989,9 @@ export function CreateEventForm({ onCancel, onSubmit, initialData, isEdit = fals
                               <Label className="text-sm font-medium">Address</Label>
                               <Tabs value={addressLang} onValueChange={setAddressLang}>
                                 <TabsList className="h-8 bg-muted/50 p-0.5">
-                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">EN</TabsTrigger>
-                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">繁</TabsTrigger>
-                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-[#023F59] data-[state=active]:text-white">簡</TabsTrigger>
+                                  <TabsTrigger value="en" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">EN</TabsTrigger>
+                                  <TabsTrigger value="tc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">繁</TabsTrigger>
+                                  <TabsTrigger value="sc" className="h-7 px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-white">簡</TabsTrigger>
                                 </TabsList>
                               </Tabs>
                             </div>
@@ -1148,7 +1148,7 @@ export function CreateEventForm({ onCancel, onSubmit, initialData, isEdit = fals
                                   </Button>
                                 </div>
                               ) : (
-                                <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-[#023F59] hover:bg-muted/50 transition-colors">
+                                <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors">
                                   <Plus className="h-8 w-8 text-muted-foreground" />
                                   <input
                                     type="file"

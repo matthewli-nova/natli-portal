@@ -567,7 +567,7 @@ export function FoundationsTab() {
                   </p>
                   <div className="grid gap-2 sm:grid-cols-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-[#31D7DB]/10 text-[#107DAC] border-[#31D7DB]/20">Cyan</Badge>
+                      <Badge variant="outline" className="bg-secondary/10 text-lepos-cyan-text border-[#31D7DB]/20">Cyan</Badge>
                       <span className="text-muted-foreground">Brand moments</span>
                     </div>
                     <div className="flex items-center gap-2">

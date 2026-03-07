@@ -203,28 +203,28 @@ export function SalesCategoryChart() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b bg-muted/50">
-                <TableHead className="w-[20%] pl-[21px] text-[#21262A]">Name</TableHead>
-                <TableHead className="text-right text-[#21262A]">Qty Sold</TableHead>
-                <TableHead className="text-right text-[#21262A]">Product Mix %</TableHead>
-                <TableHead className="text-right text-[#21262A]">Revenue</TableHead>
-                <TableHead className="text-right pr-[21px] text-[#21262A]">Revenue Mix %</TableHead>
+                <TableHead className="w-[20%] pl-[21px] text-foreground">Name</TableHead>
+                <TableHead className="text-right text-foreground">Qty Sold</TableHead>
+                <TableHead className="text-right text-foreground">Product Mix %</TableHead>
+                <TableHead className="text-right text-foreground">Revenue</TableHead>
+                <TableHead className="text-right pr-[21px] text-foreground">Revenue Mix %</TableHead>
               </TableRow>
-              <TableRow className="hover:bg-transparent border-b text-xs text-[#21262A] bg-muted/30">
-                <TableHead className="pl-[21px] text-[#21262A]"></TableHead>
-                <TableHead className="text-right text-[#21262A]">
+              <TableRow className="hover:bg-transparent border-b text-xs text-foreground bg-muted/30">
+                <TableHead className="pl-[21px] text-foreground"></TableHead>
+                <TableHead className="text-right text-foreground">
                     <div className="flex justify-end gap-4">
                         <span className="w-[60px] text-right">Curr</span>
                         <span className="w-[60px] text-right">Chg%</span>
                     </div>
                 </TableHead>
-                <TableHead className="text-right text-[#21262A]">Curr</TableHead>
-                <TableHead className="text-right text-[#21262A]">
+                <TableHead className="text-right text-foreground">Curr</TableHead>
+                <TableHead className="text-right text-foreground">
                     <div className="flex justify-end gap-4">
                         <span className="w-[60px] text-right">Curr</span>
                         <span className="w-[60px] text-right">Chg%</span>
                     </div>
                 </TableHead>
-                <TableHead className="text-right pr-[21px] text-[#21262A]">
+                <TableHead className="text-right pr-[21px] text-foreground">
                     <div className="flex justify-end gap-4">
                         <span className="w-[50px] text-right">Curr</span>
                         <span className="w-[50px] text-right">LP</span>

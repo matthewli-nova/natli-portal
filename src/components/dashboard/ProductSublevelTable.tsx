@@ -84,42 +84,42 @@ export function ProductSublevelTable() {
           <Table className="w-full border-collapse">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b bg-muted/50">
-                <TableHead className="w-[150px] font-medium text-[#21262A] pl-[21px]" rowSpan={2}>Name</TableHead>
-                <TableHead colSpan={3} className="font-medium text-[#21262A] border-l border-border pl-[14px]">Item Sold</TableHead>
-                <TableHead colSpan={5} className="font-medium text-[#21262A] border-l border-border pl-[14px]">Top Product</TableHead>
-                <TableHead colSpan={5} className="font-medium text-[#21262A] border-l border-border pl-[14px]">Top Category</TableHead>
+                <TableHead className="w-[150px] font-medium text-foreground pl-[21px]" rowSpan={2}>Name</TableHead>
+                <TableHead colSpan={3} className="font-medium text-foreground border-l border-border pl-[14px]">Item Sold</TableHead>
+                <TableHead colSpan={5} className="font-medium text-foreground border-l border-border pl-[14px]">Top Product</TableHead>
+                <TableHead colSpan={5} className="font-medium text-foreground border-l border-border pl-[14px]">Top Category</TableHead>
               </TableRow>
-              <TableRow className="hover:bg-transparent border-b text-xs text-[#21262A] bg-muted/30">
+              <TableRow className="hover:bg-transparent border-b text-xs text-foreground bg-muted/30">
                 {/* Item Sold */}
-                <TableHead className="text-right border-l border-border text-[#21262A]">Curr</TableHead>
-                <TableHead className="text-right text-[#21262A]">LP</TableHead>
-                <TableHead className="text-right text-[#21262A]">Chg%</TableHead>
+                <TableHead className="text-right border-l border-border text-foreground">Curr</TableHead>
+                <TableHead className="text-right text-foreground">LP</TableHead>
+                <TableHead className="text-right text-foreground">Chg%</TableHead>
 
                 {/* Top Product */}
-                <TableHead className="text-left border-l border-border text-[#21262A]">Name</TableHead>
-                <TableHead className="text-right text-[#21262A]">Sold</TableHead>
-                <TableHead className="text-right text-[#21262A]">%Item</TableHead>
+                <TableHead className="text-left border-l border-border text-foreground">Name</TableHead>
+                <TableHead className="text-right text-foreground">Sold</TableHead>
+                <TableHead className="text-right text-foreground">%Item</TableHead>
                 <TableHead 
-                  className="text-right text-[#21262A] cursor-pointer hover:bg-muted/30 transition-colors"
+                  className="text-right text-foreground cursor-pointer hover:bg-muted/30 transition-colors"
                   onClick={() => handleSort('topProductAmount')}
                 >
                   Amount
                   <SortIcon column="topProductAmount" />
                 </TableHead>
-                <TableHead className="text-right text-[#21262A]">%Total</TableHead>
+                <TableHead className="text-right text-foreground">%Total</TableHead>
 
                 {/* Top Category */}
-                <TableHead className="text-left border-l border-border text-[#21262A]">Name</TableHead>
-                <TableHead className="text-right text-[#21262A]">Sold</TableHead>
-                <TableHead className="text-right text-[#21262A]">%Item</TableHead>
+                <TableHead className="text-left border-l border-border text-foreground">Name</TableHead>
+                <TableHead className="text-right text-foreground">Sold</TableHead>
+                <TableHead className="text-right text-foreground">%Item</TableHead>
                 <TableHead 
-                  className="text-right text-[#21262A] cursor-pointer hover:bg-muted/30 transition-colors"
+                  className="text-right text-foreground cursor-pointer hover:bg-muted/30 transition-colors"
                   onClick={() => handleSort('topCategoryAmount')}
                 >
                   Amount
                   <SortIcon column="topCategoryAmount" />
                 </TableHead>
-                <TableHead className="text-right text-[#21262A] pr-[21px]">%Total</TableHead>
+                <TableHead className="text-right text-foreground pr-[21px]">%Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="text-xs">

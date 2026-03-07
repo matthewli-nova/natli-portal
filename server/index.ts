@@ -26,6 +26,13 @@ if (PORTAL_TOKEN) {
   });
 }
 
+if (!PORTAL_TOKEN) {
+  console.warn('[portal] PORTAL_TOKEN is not set — API endpoints are unprotected');
+}
+
+const VALID_CRON_ID = /^[a-zA-Z0-9_\-]{1,64}$/;
+function validateCronId(id: string): boolean { return VALID_CRON_ID.test(id); }
+
 const CLICKUP_TOKEN = process.env.CLICKUP_TOKEN;
 if (!CLICKUP_TOKEN) throw new Error('CLICKUP_TOKEN env var required');
 const CLICKUP_TASK_LIST = process.env.CLICKUP_TASK_LIST || '901815865909';
@@ -476,6 +483,7 @@ app.get('/api/cron/jobs/token-summary', async (_req, res) => {
 
 // GET /api/cron/jobs/:id/runs — run history
 app.get('/api/cron/jobs/:id/runs', async (req, res) => {
+  if (!validateCronId(req.params.id)) { return res.status(400).json({ error: "Invalid cron job ID" }); }
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     const output = await execCommand(`openclaw cron runs --id ${req.params.id} --limit ${limit}`);
@@ -488,6 +496,7 @@ app.get('/api/cron/jobs/:id/runs', async (req, res) => {
 
 // POST /api/cron/jobs/:id/run — trigger now
 app.post('/api/cron/jobs/:id/run', async (req, res) => {
+  if (!validateCronId(req.params.id)) { return res.status(400).json({ error: "Invalid cron job ID" }); }
   try {
     const output = await execCommand(`openclaw cron run ${req.params.id}`);
     res.json({ ok: true, output });
@@ -499,6 +508,7 @@ app.post('/api/cron/jobs/:id/run', async (req, res) => {
 
 // PATCH /api/cron/jobs/:id — enable/disable toggle
 app.patch('/api/cron/jobs/:id', async (req, res) => {
+  if (!validateCronId(req.params.id)) { return res.status(400).json({ error: "Invalid cron job ID" }); }
   try {
     const { enabled } = req.body as { enabled: boolean };
     const cmd = enabled ? 'enable' : 'disable';

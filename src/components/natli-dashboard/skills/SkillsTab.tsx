@@ -161,10 +161,10 @@ export function SkillsTab() {
       {/* ── KPI Strip ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {kpis.map(kpi => (
-          <Card key={kpi.label} className="border-[#023F59]/20">
+          <Card key={kpi.label} className="border-primary/20">
             <CardContent className="p-3">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
-              <p className={`text-2xl font-bold text-[#107DAC] ${kpi.accent}`}>{kpi.value}</p>
+              <p className={`text-2xl font-bold text-lepos-cyan-text ${kpi.accent}`}>{kpi.value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{kpi.sub}</p>
             </CardContent>
           </Card>
@@ -174,8 +174,8 @@ export function SkillsTab() {
       {/* ── Header: title + New Skill ─────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
-          <BookOpen className="w-4 h-4 text-[#107DAC]" />
-          <span className="text-base font-semibold text-[#21262A]">Skill Browser</span>
+          <BookOpen className="w-4 h-4 text-lepos-cyan-text" />
+          <span className="text-base font-semibold text-foreground">Skill Browser</span>
         </div>
         <div className="flex items-center gap-2">
           {lastRefreshed && !refreshing && (
@@ -188,12 +188,12 @@ export function SkillsTab() {
             size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="gap-1.5 border-[#023F59]/25 text-[#023F59] hover:bg-[#023F59]/5"
+            className="gap-1.5 border-primary/25 text-[#023F59] hover:bg-primary/5"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing…' : 'Refresh'}
           </Button>
-          <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-[#023F59] text-white hover:bg-[#022F44] flex items-center gap-1.5">
+          <Button onClick={() => setShowAddModal(true)} size="sm" className="bg-primary text-white hover:bg-[#022F44] flex items-center gap-1.5">
             <Plus className="w-4 h-4" />
             New Skill
           </Button>
@@ -202,11 +202,11 @@ export function SkillsTab() {
 
       {/* ── Skill Browser ──────────────────────────────────────────── */}
       <div className="mt-3">
-          <div className="flex gap-0 h-[680px] border border-[#023F59]/20 rounded-lg overflow-hidden">
+          <div className="flex gap-0 h-[680px] border border-primary/20 rounded-lg overflow-hidden">
 
             {/* Left panel — independent scroll */}
             <div
-              className="flex-shrink-0 flex flex-col gap-3 p-3 border-r border-[#023F59]/20 overflow-hidden"
+              className="flex-shrink-0 flex flex-col gap-3 p-3 border-r border-primary/20 overflow-hidden"
               style={{ width: leftWidth }}
             >
               {/* Search */}
@@ -220,7 +220,7 @@ export function SkillsTab() {
                 <div className="flex gap-1">
                   {(['all', 'custom', 'system'] as const).map(t => (
                     <button key={t} onClick={() => setSelectedType(t)}
-                      className={`flex-1 text-xs py-1 px-2 rounded-md font-medium transition-colors ${selectedType === t ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                      className={`flex-1 text-xs py-1 px-2 rounded-md font-medium transition-colors ${selectedType === t ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                       {t.charAt(0).toUpperCase() + t.slice(1)}
                     </button>
                   ))}
@@ -228,7 +228,7 @@ export function SkillsTab() {
                 <div className="flex gap-1">
                   {([{ key: 'all', label: 'All' }, { key: 'ready', label: '✓ Ready' }, { key: 'needs-setup', label: '⚠ Setup' }] as const).map(s => (
                     <button key={s.key} onClick={() => setSelectedStatus(s.key)}
-                      className={`flex-1 text-xs py-1 px-2 rounded-md font-medium transition-colors ${selectedStatus === s.key ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                      className={`flex-1 text-xs py-1 px-2 rounded-md font-medium transition-colors ${selectedStatus === s.key ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                       {s.label}
                     </button>
                   ))}
@@ -236,7 +236,7 @@ export function SkillsTab() {
                 <div className="flex flex-wrap gap-1">
                   {(['All', ...SKILL_CATEGORIES] as const).map(cat => (
                     <button key={cat} onClick={() => setSelectedCategory(cat as SkillCategory | 'All')}
-                      className={`text-xs py-0.5 px-2 rounded-full font-medium transition-colors ${selectedCategory === cat ? 'bg-[#023F59] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                      className={`text-xs py-0.5 px-2 rounded-full font-medium transition-colors ${selectedCategory === cat ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                       {cat === 'All' ? 'All' : cat === 'Infrastructure & Platform' ? 'Infra' : cat.split(' ')[0]}
                     </button>
                   ))}
@@ -261,21 +261,21 @@ export function SkillsTab() {
             {/* ── Drag Handle ─────────────────────────────────────── */}
             <div
               onMouseDown={onDragStart}
-              className="w-1.5 flex-shrink-0 cursor-col-resize bg-transparent hover:bg-[#31D7DB]/40 active:bg-[#31D7DB]/60 transition-colors group relative"
+              className="w-1.5 flex-shrink-0 cursor-col-resize bg-transparent hover:bg-secondary/40 active:bg-secondary/60 transition-colors group relative"
               title="Drag to resize"
             >
-              <div className="absolute inset-y-0 left-0 w-px bg-[#023F59]/20 group-hover:bg-[#31D7DB]/60 transition-colors" />
+              <div className="absolute inset-y-0 left-0 w-px bg-primary/20 group-hover:bg-secondary/60 transition-colors" />
             </div>
 
             {/* ── Right Detail Panel ───────────────────────────────── */}
             <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
               {selectedSkill ? (
                 <>
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#023F59]/10 bg-[#023F59]/3">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-primary/10 bg-primary/3">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-xl">{selectedSkill.emoji}</span>
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-sm truncate text-[#21262A]">{selectedSkill.name}</h3>
+                        <h3 className="font-semibold text-sm truncate text-foreground">{selectedSkill.name}</h3>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${STATUS_COLORS[selectedSkill.status]}`}>{STATUS_LABELS[selectedSkill.status]}</span>
                           <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[selectedSkill.category]}`}>{selectedSkill.category}</span>
@@ -285,10 +285,10 @@ export function SkillsTab() {
                       </div>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
-                      <Button variant={detailMode === 'view' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('view')} className={detailMode === 'view' ? 'bg-[#023F59] text-white' : ''}>
+                      <Button variant={detailMode === 'view' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('view')} className={detailMode === 'view' ? 'bg-primary text-white' : ''}>
                         <BookOpen className="w-3.5 h-3.5 mr-1" />View
                       </Button>
-                      <Button variant={detailMode === 'edit' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('edit')} className={detailMode === 'edit' ? 'bg-[#023F59] text-white' : ''}>
+                      <Button variant={detailMode === 'edit' ? 'default' : 'outline'} size="sm" onClick={() => setDetailMode('edit')} className={detailMode === 'edit' ? 'bg-primary text-white' : ''}>
                         <PenLine className="w-3.5 h-3.5 mr-1" />Edit
                       </Button>
                     </div>

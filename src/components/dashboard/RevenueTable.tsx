@@ -99,25 +99,25 @@ export function RevenueTable({ onDrillDown }: RevenueTableProps) {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b">
-              <TableHead className="w-[200px] cursor-pointer pl-[21px] text-[#21262A]" onClick={() => handleSort('name')}>
+              <TableHead className="w-[200px] cursor-pointer pl-[21px] text-foreground" onClick={() => handleSort('name')}>
                 <div className="flex items-center space-x-1 hover:text-foreground transition-colors">
                   <span>Name</span>
                   {renderSortIcon('name')}
                 </div>
               </TableHead>
-              <TableHead className="text-right cursor-pointer text-[#21262A]" onClick={() => handleSort('amount')}>
+              <TableHead className="text-right cursor-pointer text-foreground" onClick={() => handleSort('amount')}>
                 <div className="flex items-center justify-end space-x-1 hover:text-foreground transition-colors">
                   <span>Amount (Curr / LP / Chg%)</span>
                   {renderSortIcon('amount')}
                 </div>
               </TableHead>
-              <TableHead className="text-center cursor-pointer text-[#21262A]" onClick={() => handleSort('percent')}>
+              <TableHead className="text-center cursor-pointer text-foreground" onClick={() => handleSort('percent')}>
                 <div className="flex items-center justify-center space-x-1 hover:text-foreground transition-colors">
                   <span>% to Total (Curr / LP / Chg)</span>
                   {renderSortIcon('percent')}
                 </div>
               </TableHead>
-              <TableHead className="text-center cursor-pointer pr-4 text-[#21262A]" onClick={() => handleSort('transactions')}>
+              <TableHead className="text-center cursor-pointer pr-4 text-foreground" onClick={() => handleSort('transactions')}>
                 <div className="flex items-center justify-center space-x-1 hover:text-foreground transition-colors">
                   <span>Transactions (Curr / LP / Chg%)</span>
                   {renderSortIcon('transactions')}

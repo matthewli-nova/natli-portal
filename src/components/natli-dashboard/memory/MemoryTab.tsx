@@ -84,7 +84,7 @@ function Toast({ message }: { message: string | null }) {
   if (!message) return null;
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-[#023F59] text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium">
+      <div className="bg-primary text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium">
         {message}
       </div>
     </div>
@@ -138,14 +138,14 @@ export function MemoryTab({ health }: MemoryTabProps) {
       )}
 
       {/* ─── [A] MEMORY.md Capacity Hero Card ─────────────────── */}
-      <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
+      <Card className="border-primary/25 shadow-sm overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-[#31D7DB] via-[#107DAC] to-[#023F59]" />
         <CardContent className="pt-5 pb-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
-              <Brain className="w-5 h-5 text-[#31D7DB]" />
+              <Brain className="w-5 h-5 text-secondary" />
               <div>
-                <span className="text-base font-bold text-[#21262A]">MEMORY.md</span>
+                <span className="text-base font-bold text-foreground">MEMORY.md</span>
                 <span className="text-xs text-muted-foreground ml-2">Hot Memory Layer</span>
               </div>
             </div>
@@ -155,7 +155,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{fmtNum(lines)} / {fmtNum(cap)} lines</span>
-              <span className="font-semibold text-[#21262A]">{status.pct}%</span>
+              <span className="font-semibold text-foreground">{status.pct}%</span>
             </div>
             <Progress
               value={cap ? (lines / cap) * 100 : 0}
@@ -166,7 +166,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
           <div className="flex gap-2 flex-wrap mt-4">
             <Badge className="bg-red-100 text-red-700 border-0 text-xs">P0: {health?.p0Sections ?? 0} sections</Badge>
             <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">P1: Active</Badge>
-            <Badge className="bg-[#107DAC]/15 text-[#107DAC] border-0 text-xs">P2: Temp</Badge>
+            <Badge className="bg-[#107DAC]/15 text-lepos-cyan-text border-0 text-xs">P2: Temp</Badge>
           </div>
 
           <p className="text-xs text-muted-foreground mt-3">
@@ -178,15 +178,15 @@ export function MemoryTab({ health }: MemoryTabProps) {
       {/* ─── [B] Three-Layer Memory System ────────────────────── */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Hot — MEMORY.md */}
-        <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
-          <div className="h-1.5 bg-[#31D7DB]" />
+        <Card className="border-primary/25 shadow-sm overflow-hidden">
+          <div className="h-1.5 bg-secondary" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
-              <Flame className="w-4 h-4 text-[#31D7DB]" />
-              <span className="text-sm font-bold text-[#21262A]">HOT</span>
+              <Flame className="w-4 h-4 text-secondary" />
+              <span className="text-sm font-bold text-foreground">HOT</span>
             </div>
             <p className="text-xs font-mono text-muted-foreground mb-3">MEMORY.md</p>
-            <p className="text-3xl font-bold text-[#107DAC] mb-1">{fmtNum(lines)}<span className="text-sm font-normal text-muted-foreground ml-1">lines</span></p>
+            <p className="text-3xl font-bold text-lepos-cyan-text mb-1">{fmtNum(lines)}<span className="text-sm font-normal text-muted-foreground ml-1">lines</span></p>
             <p className="text-xs text-muted-foreground leading-relaxed">Auto-loaded every session. Core context for all conversations.</p>
             <div className="mt-3">
               <Badge className={`${status.color} border-0 text-[10px] font-bold`}>{status.label}</Badge>
@@ -195,35 +195,35 @@ export function MemoryTab({ health }: MemoryTabProps) {
         </Card>
 
         {/* Daily Logs */}
-        <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
+        <Card className="border-primary/25 shadow-sm overflow-hidden">
           <div className="h-1.5 bg-[#107DAC]" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
-              <CalendarDays className="w-4 h-4 text-[#107DAC]" />
-              <span className="text-sm font-bold text-[#21262A]">DAILY LOGS</span>
+              <CalendarDays className="w-4 h-4 text-lepos-cyan-text" />
+              <span className="text-sm font-bold text-foreground">DAILY LOGS</span>
             </div>
             <p className="text-xs font-mono text-muted-foreground mb-3">memory/YYYY-MM-DD.md</p>
-            <p className="text-3xl font-bold text-[#107DAC] mb-1">{fmtNum(health?.memoryDailyLogs ?? 0)}<span className="text-sm font-normal text-muted-foreground ml-1">files</span></p>
+            <p className="text-3xl font-bold text-lepos-cyan-text mb-1">{fmtNum(health?.memoryDailyLogs ?? 0)}<span className="text-sm font-normal text-muted-foreground ml-1">files</span></p>
             <p className="text-xs text-muted-foreground leading-relaxed">Raw session notes & events. Today + yesterday always loaded.</p>
             <div className="mt-3">
-              <Badge className="bg-[#107DAC]/10 text-[#107DAC] border-0 text-[10px] font-bold">ACTIVE</Badge>
+              <Badge className="bg-[#107DAC]/10 text-lepos-cyan-text border-0 text-[10px] font-bold">ACTIVE</Badge>
             </div>
           </CardContent>
         </Card>
 
         {/* Archive */}
-        <Card className="border-[#023F59]/25 shadow-sm overflow-hidden">
-          <div className="h-1.5 bg-[#023F59]" />
+        <Card className="border-primary/25 shadow-sm overflow-hidden">
+          <div className="h-1.5 bg-primary" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
               <Archive className="w-4 h-4 text-[#023F59]" />
-              <span className="text-sm font-bold text-[#21262A]">ARCHIVE</span>
+              <span className="text-sm font-bold text-foreground">ARCHIVE</span>
             </div>
             <p className="text-xs font-mono text-muted-foreground mb-3">memory/archive/</p>
-            <p className="text-3xl font-bold text-[#107DAC] mb-1">{fmtNum(health?.memoryArchiveCount ?? 0)}<span className="text-sm font-normal text-muted-foreground ml-1">files</span></p>
+            <p className="text-3xl font-bold text-lepos-cyan-text mb-1">{fmtNum(health?.memoryArchiveCount ?? 0)}<span className="text-sm font-normal text-muted-foreground ml-1">files</span></p>
             <p className="text-xs text-muted-foreground leading-relaxed">Expired P1/P2 entries preserved. On-demand via memory_search.</p>
             <div className="mt-3">
-              <Badge className="bg-[#023F59]/10 text-[#023F59] border-0 text-[10px] font-bold">COLD STORAGE</Badge>
+              <Badge className="bg-primary/10 text-[#023F59] border-0 text-[10px] font-bold">COLD STORAGE</Badge>
             </div>
           </CardContent>
         </Card>
@@ -232,11 +232,11 @@ export function MemoryTab({ health }: MemoryTabProps) {
       {/* ─── [C] Knowledge Base + Search Engine ───────────────── */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Knowledge Base */}
-        <Card className="border-[#023F59]/25 shadow-sm">
+        <Card className="border-primary/25 shadow-sm">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-4">
-              <Database className="w-5 h-5 text-[#31D7DB]" />
-              <span className="text-sm font-bold text-[#21262A]">Knowledge Base</span>
+              <Database className="w-5 h-5 text-secondary" />
+              <span className="text-sm font-bold text-foreground">Knowledge Base</span>
               {health?.memoryDirty && (
                 <Badge className="bg-amber-100 text-amber-700 border-0 text-[10px] font-bold ml-auto">
                   Index outdated — reindex recommended
@@ -244,29 +244,29 @@ export function MemoryTab({ health }: MemoryTabProps) {
               )}
             </div>
             <div className="space-y-0">
-              <StatRow icon={<FileText className="w-3.5 h-3.5 text-[#107DAC]" />} label="Files indexed" value={fmtNum(health?.memoryFiles ?? 0)} />
-              <Separator className="my-2 bg-[#023F59]/10" />
-              <StatRow icon={<Hash className="w-3.5 h-3.5 text-[#107DAC]" />} label="Chunks" value={fmtNum(health?.memoryChunks ?? 0)} />
-              <Separator className="my-2 bg-[#023F59]/10" />
-              <StatRow icon={<Database className="w-3.5 h-3.5 text-[#107DAC]" />} label="Cache entries" value={fmtNum(health?.cacheEntries ?? 0)} />
-              <Separator className="my-2 bg-[#023F59]/10" />
-              <StatRow icon={<HardDrive className="w-3.5 h-3.5 text-[#107DAC]" />} label="Database size" value={`${health?.memoryDbSizeMb ?? 0} MB`} />
+              <StatRow icon={<FileText className="w-3.5 h-3.5 text-lepos-cyan-text" />} label="Files indexed" value={fmtNum(health?.memoryFiles ?? 0)} />
+              <Separator className="my-2 bg-primary/10" />
+              <StatRow icon={<Hash className="w-3.5 h-3.5 text-lepos-cyan-text" />} label="Chunks" value={fmtNum(health?.memoryChunks ?? 0)} />
+              <Separator className="my-2 bg-primary/10" />
+              <StatRow icon={<Database className="w-3.5 h-3.5 text-lepos-cyan-text" />} label="Cache entries" value={fmtNum(health?.cacheEntries ?? 0)} />
+              <Separator className="my-2 bg-primary/10" />
+              <StatRow icon={<HardDrive className="w-3.5 h-3.5 text-lepos-cyan-text" />} label="Database size" value={`${health?.memoryDbSizeMb ?? 0} MB`} />
             </div>
           </CardContent>
         </Card>
 
         {/* Search Engine */}
-        <Card className="border-[#023F59]/25 shadow-sm">
+        <Card className="border-primary/25 shadow-sm">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-4">
-              <Search className="w-5 h-5 text-[#31D7DB]" />
-              <span className="text-sm font-bold text-[#21262A]">Search Engine</span>
+              <Search className="w-5 h-5 text-secondary" />
+              <span className="text-sm font-bold text-foreground">Search Engine</span>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#21262A]">Vector Search</p>
+                  <p className="text-sm font-medium text-foreground">Vector Search</p>
                   <p className="text-xs text-muted-foreground">768-dim · nomic-embed-text</p>
                 </div>
                 <Badge className={`text-xs font-bold border-0 ${health?.vectorEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
@@ -276,7 +276,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#21262A]">Full-text Search</p>
+                  <p className="text-sm font-medium text-foreground">Full-text Search</p>
                   <p className="text-xs text-muted-foreground">FTS5 index</p>
                 </div>
                 <Badge className={`text-xs font-bold border-0 ${health?.ftsEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
@@ -284,12 +284,12 @@ export function MemoryTab({ health }: MemoryTabProps) {
                 </Badge>
               </div>
 
-              <Separator className="bg-[#023F59]/10" />
+              <Separator className="bg-primary/10" />
 
               <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-[#107DAC]" />
-                <span className="text-sm text-[#21262A]">Last sync: </span>
-                <span className="text-sm font-mono text-[#107DAC]">{formatSyncTime(health?.lastMemorySyncTime)}</span>
+                <Clock className="w-3.5 h-3.5 text-lepos-cyan-text" />
+                <span className="text-sm text-foreground">Last sync: </span>
+                <span className="text-sm font-mono text-lepos-cyan-text">{formatSyncTime(health?.lastMemorySyncTime)}</span>
               </div>
 
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -301,12 +301,12 @@ export function MemoryTab({ health }: MemoryTabProps) {
       </div>
 
       {/* ─── [D] Quick Actions ────────────────────────────────── */}
-      <Card className="border-[#023F59]/25 shadow-sm">
+      <Card className="border-primary/25 shadow-sm">
         <CardContent className="pt-4 pb-4">
           <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
-              className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white text-sm"
+              className="border-primary/30 hover:bg-primary hover:text-white text-sm"
               onClick={handleJanitor}
               disabled={actionLoading === 'janitor'}
             >
@@ -317,7 +317,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
             </Button>
             <Button
               variant="outline"
-              className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white text-sm"
+              className="border-primary/30 hover:bg-primary hover:text-white text-sm"
               onClick={handleReindex}
               disabled={actionLoading === 'reindex'}
             >
@@ -326,7 +326,7 @@ export function MemoryTab({ health }: MemoryTabProps) {
             </Button>
             <Button
               variant="outline"
-              className="border-[#023F59]/30 hover:bg-[#023F59] hover:text-white text-sm"
+              className="border-primary/30 hover:bg-primary hover:text-white text-sm"
               onClick={handleOpenMemory}
             >
               <FileCode className="w-4 h-4 mr-1.5" />
@@ -348,7 +348,7 @@ function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         {icon}
         <span className="text-sm text-muted-foreground">{label}</span>
       </div>
-      <span className="text-sm font-semibold text-[#21262A]">{value}</span>
+      <span className="text-sm font-semibold text-foreground">{value}</span>
     </div>
   );
 }
@@ -427,16 +427,16 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
       <div className="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#023F59]/10 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-primary/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <Brain className="w-5 h-5 text-[#107DAC]" />
+            <Brain className="w-5 h-5 text-lepos-cyan-text" />
             <div>
-              <p className="font-semibold text-[#21262A] text-sm">MEMORY.md {editing && <span className="text-amber-500 text-xs font-normal ml-1">— Editing</span>}</p>
+              <p className="font-semibold text-foreground text-sm">MEMORY.md {editing && <span className="text-amber-500 text-xs font-normal ml-1">— Editing</span>}</p>
               <p className="text-[10px] text-muted-foreground font-mono">/Users/natlee/.openclaw/workspace/MEMORY.md</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <Badge className={`border-0 text-xs ${lines >= 145 ? 'bg-red-100 text-red-700' : 'bg-[#023F59]/10 text-[#023F59]'}`}>
+            <Badge className={`border-0 text-xs ${lines >= 145 ? 'bg-red-100 text-red-700' : 'bg-primary/10 text-[#023F59]'}`}>
               {lines} lines
             </Badge>
             {savedLines !== null && (
@@ -444,20 +444,20 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
             )}
             {!editing && (
               <button onClick={handleCopy} disabled={!content}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-[#107DAC] px-2 py-1 rounded hover:bg-[#023F59]/5 transition-colors disabled:opacity-40">
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-lepos-cyan-text px-2 py-1 rounded hover:bg-primary/5 transition-colors disabled:opacity-40">
                 {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? 'Copied' : 'Copy'}
               </button>
             )}
             {!editing && content && (
               <button onClick={handleEdit}
-                className="flex items-center gap-1 text-xs text-[#107DAC] hover:text-[#023F59] px-2 py-1 rounded hover:bg-[#023F59]/5 transition-colors font-medium">
+                className="flex items-center gap-1 text-xs text-lepos-cyan-text hover:text-[#023F59] px-2 py-1 rounded hover:bg-primary/5 transition-colors font-medium">
                 <FileCode className="w-3.5 h-3.5" />
                 Edit
               </button>
             )}
             {!editing && (
-              <button onClick={onClose} className="p-1.5 rounded hover:bg-[#023F59]/5 text-muted-foreground hover:text-[#21262A] transition-colors">
+              <button onClick={onClose} className="p-1.5 rounded hover:bg-primary/5 text-muted-foreground hover:text-foreground transition-colors">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -476,7 +476,7 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
           {loading && (
             <div className="space-y-2 animate-pulse">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="h-3 bg-[#023F59]/5 rounded" style={{ width: `${60 + (i * 7) % 35}%` }} />
+                <div key={i} className="h-3 bg-primary/5 rounded" style={{ width: `${60 + (i * 7) % 35}%` }} />
               ))}
             </div>
           )}
@@ -485,24 +485,24 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
             <textarea
               value={editContent}
               onChange={e => setEditContent(e.target.value)}
-              className="w-full h-full min-h-[500px] text-xs font-mono text-[#21262A] leading-relaxed resize-none border border-[#023F59]/20 rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-[#107DAC] bg-[#023F59]/[0.02]"
+              className="w-full h-full min-h-[500px] text-xs font-mono text-foreground leading-relaxed resize-none border border-primary/20 rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-[#107DAC] bg-primary/[0.02]"
               spellCheck={false}
             />
           )}
           {!loading && !error && !editing && content && (
-            <pre className="text-xs font-mono text-[#21262A] leading-relaxed whitespace-pre-wrap break-words">{content}</pre>
+            <pre className="text-xs font-mono text-foreground leading-relaxed whitespace-pre-wrap break-words">{content}</pre>
           )}
         </div>
 
         {/* Edit footer */}
         {editing && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-[#023F59]/10 shrink-0 bg-[#023F59]/[0.02]">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-primary/10 shrink-0 bg-primary/[0.02]">
             <p className="text-[10px] text-muted-foreground">⚠ A backup (.bak) is created before saving.</p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancel} className="border-[#023F59]/20" disabled={saving}>
+              <Button variant="outline" size="sm" onClick={handleCancel} className="border-primary/20" disabled={saving}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-[#023F59] text-white hover:bg-[#022F44]">
+              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-primary text-white hover:bg-[#022F44]">
                 {saving ? <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
                 {saving ? 'Saving…' : 'Save Changes'}
               </Button>
