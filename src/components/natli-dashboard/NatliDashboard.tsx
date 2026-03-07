@@ -23,10 +23,7 @@ import {
   RefreshCw,
   Server,
   Timer,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
-  ListTodo,
   Brain,
   FileText,
   Power,
@@ -699,20 +696,7 @@ function LiveSkillTracker() {
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-function formatUptime(startTimeStr: string): string {
-  try {
-    const start = new Date(startTimeStr);
-    if (isNaN(start.getTime())) return '—';
-    const diff = Date.now() - start.getTime();
-    const hours = Math.floor(diff / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days}d ${hours % 24}h`;
-    }
-    return `${hours}h ${mins}m`;
-  } catch { return '—'; }
-}
+import { formatUptime } from '../../lib/formatters';
 
 function formatTimeAgo(iso: string): string {
   try {
@@ -721,134 +705,6 @@ function formatTimeAgo(iso: string): string {
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     return `${Math.floor(diff / 3600000)}h ago`;
   } catch { return '—'; }
-}
-
-// ─── Sub-Components ──────────────────────────────────────────
-
-function KPICard({ title, value, icon, description }: {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-  description: string;
-}) {
-  return (
-    <Card className="border-[#023F59]/25 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium text-[#21262A]">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-[#107DAC]">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ServiceStatusRow({ name, status, port }: {
-  name: string;
-  status: 'online' | 'offline' | 'unknown';
-  port?: number;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Server className="w-3.5 h-3.5 text-[#31D7DB]" />
-        <span className="text-sm">{name}</span>
-        {port && <span className="text-xs text-muted-foreground">:{port}</span>}
-      </div>
-      <StatusDot status={status} />
-    </div>
-  );
-}
-
-function StatusDot({ status }: { status: 'online' | 'offline' | 'unknown' }) {
-  if (status === 'online') return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-  if (status === 'offline') return <XCircle className="w-4 h-4 text-red-500" />;
-  return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
-}
-
-function TaskTab({ tasks }: { tasks: ClickUpTask[] }) {
-  const [filter, setFilter] = useState('all');
-
-  const filtered = tasks.filter(t => {
-    if (filter === 'all') return true;
-    const s = t.status?.status?.toLowerCase() ?? '';
-    if (filter === 'todo') return s === 'to do' || s === 'open';
-    if (filter === 'in_progress') return s.includes('progress');
-    if (filter === 'done') return s === 'complete' || s === 'closed' || s === 'done';
-    if (filter === 'overdue') {
-      return t.due_date && new Date(parseInt(t.due_date)) < new Date();
-    }
-    return true;
-  });
-
-  const filterOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'todo', label: 'To Do' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'done', label: 'Done' },
-    { value: 'overdue', label: 'Overdue' },
-  ];
-
-  return (
-    <>
-      <div className="flex gap-2 flex-wrap">
-        {filterOptions.map(f => (
-          <Button
-            key={f.value}
-            variant={filter === f.value ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter(f.value)}
-            className={filter === f.value ? 'bg-[#023F59] hover:bg-[#022F44] text-white' : 'border-[#023F59]/30 hover:bg-[#023F59]/10'}
-          >
-            {f.label}
-          </Button>
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <Card className="border-[#023F59]/25 shadow-sm">
-          <CardContent className="py-8 text-center text-muted-foreground text-sm">
-            No tasks found
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map(task => (
-            <Card key={task.id} className="border-[#023F59]/20 hover:border-[#31D7DB]/50 transition-colors cursor-pointer">
-              <CardContent className="pt-4 pb-3 space-y-2">
-                <p className="font-medium text-sm leading-tight line-clamp-2 text-[#21262A]">{task.name}</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge
-                    className={
-                      task.status?.status?.toLowerCase().includes('progress')
-                        ? 'bg-[#31D7DB]/20 text-[#107DAC] border-0'
-                        : task.status?.status?.toLowerCase() === 'complete' || task.status?.status?.toLowerCase() === 'closed'
-                        ? 'bg-emerald-100 text-emerald-700 border-0'
-                        : 'bg-gray-100 text-gray-600 border-0'
-                    }
-                  >
-                    {task.status?.status || 'Unknown'}
-                  </Badge>
-                  {task.priority?.priority && (
-                    <Badge variant="outline" className="text-xs border-[#023F59]/20">
-                      {task.priority.priority}
-                    </Badge>
-                  )}
-                </div>
-                {task.due_date && (
-                  <p className="text-xs text-muted-foreground">
-                    Due: {new Date(parseInt(task.due_date)).toLocaleDateString()}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </>
-  );
 }
 
 function DashboardSkeleton() {

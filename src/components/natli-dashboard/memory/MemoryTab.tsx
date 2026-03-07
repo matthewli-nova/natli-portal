@@ -42,6 +42,8 @@ interface MemoryTabProps {
     memoryDbSizeMb: number;
     lastMemorySyncTime: string;
     p0Sections: number;
+    p1Sections: number;
+    p2Sections: number;
   } | null;
 }
 

@@ -1,3 +1,4 @@
+// MOCK DATA — Replace with real API calls before production use
 // Payment KPI Data
 export const PaymentKPIData = [
   {
