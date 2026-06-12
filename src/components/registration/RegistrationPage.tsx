@@ -177,15 +177,10 @@ export function RegistrationPage() {
 
     setIsSubmitting(true)
 
-    // Simulate API call
+    // Simulate API call — TODO: wire up real confirmation page navigation
     setTimeout(() => {
-      setIsSubmitting(false)
-      // TODO: Navigate to confirmation page
-        eventTicket: selectedEventTicket,
-        subEventTickets: Array.from(selectedSubEventTickets),
-        formData,
-        bringAlongGuests,
-      })
+      setIsSubmitting(false);
+      // TODO: Navigate to confirmation page with { eventTicket, subEventTickets, formData, bringAlongGuests }
     }, 2000)
   }
 

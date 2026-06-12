@@ -432,7 +432,7 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
             <Brain className="w-5 h-5 text-lepos-cyan-text" />
             <div>
               <p className="font-semibold text-foreground text-sm">MEMORY.md {editing && <span className="text-amber-500 text-xs font-normal ml-1">— Editing</span>}</p>
-              <p className="text-[10px] text-muted-foreground font-mono">/Users/natlee/.openclaw/workspace/MEMORY.md</p>
+              <p className="text-[10px] text-muted-foreground font-mono">/Users/natlee/.hermes/memories/MEMORY.md</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">

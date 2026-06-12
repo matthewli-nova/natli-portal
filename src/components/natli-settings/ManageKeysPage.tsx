@@ -139,7 +139,7 @@ function KeyCard({
           {entry.managed ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
-              Configured via OpenClaw auth system
+              Configured via Hermes Claw auth system
             </div>
           ) : editing ? (
             <div className="flex items-center gap-2 mt-2">
@@ -333,7 +333,7 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
             <div>
               <h2 className="text-lg font-semibold text-foreground">API Keys</h2>
               <p className="text-sm text-muted-foreground">
-                Manage API keys for AI model providers. Keys are stored securely in your OpenClaw config.
+                Manage API keys for AI model providers. Keys are stored securely in your Hermes Claw config.
               </p>
             </div>
           </div>

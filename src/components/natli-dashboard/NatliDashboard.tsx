@@ -12,6 +12,7 @@ import { useSSEContext } from '../../lib/sse-context';
 const LazyNatliSchedulerPage = lazy(() => import('../natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
 const LazySessionsTab = lazy(() => import('./sessions/SessionsTab').then(m => ({ default: m.SessionsTab })));
 const LazyModelTab = lazy(() => import('./model/ModelTab').then(m => ({ default: m.ModelTab })));
+const LazyWikiTab = lazy(() => import('./wiki/WikiTab').then(m => ({ default: m.WikiTab })));
 import { MemoryTab } from './memory/MemoryTab';
 
 import {
@@ -250,6 +251,7 @@ export function NatliDashboard() {
           <TabsTrigger value="model"    className="shrink-0 data-[state=active]:bg-primary data-[state=active]:text-white text-sm px-4 py-1.5">Model</TabsTrigger>
           <TabsTrigger value="sessions" className="shrink-0 data-[state=active]:bg-primary data-[state=active]:text-white text-sm px-4 py-1.5">Session</TabsTrigger>
           <TabsTrigger value="memory"   className="shrink-0 data-[state=active]:bg-primary data-[state=active]:text-white text-sm px-4 py-1.5">Memory</TabsTrigger>
+          <TabsTrigger value="wiki"     className="shrink-0 data-[state=active]:bg-primary data-[state=active]:text-white text-sm px-4 py-1.5">Wiki</TabsTrigger>
           <TabsTrigger value="schedule" className="shrink-0 data-[state=active]:bg-primary data-[state=active]:text-white text-sm px-4 py-1.5">Schedule</TabsTrigger>
           <TabsTrigger value="skill"    className="shrink-0 data-[state=active]:bg-primary data-[state=active]:text-white text-sm px-4 py-1.5">Skill</TabsTrigger>
 
@@ -274,11 +276,11 @@ export function NatliDashboard() {
         {/* ─── System Tab ────────────────────────────────────── */}
         <TabsContent value="system" className="space-y-6">
 
-          {/* ── SECTION 1: OpenClaw Health ─────────────────── */}
+          {/* ── SECTION 1: Hermes Claw Health ─────────────────── */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-l-4 border-[#31D7DB] pl-3">
               <span className="text-lg font-bold text-foreground">
-                {health?.gatewayReachable ? '🟢' : '🔴'} OpenClaw Health
+                {health?.gatewayReachable ? '🟢' : '🔴'} Hermes Claw Health
               </span>
             </div>
 
@@ -361,7 +363,7 @@ export function NatliDashboard() {
                     {[
                       { label: 'Gateway :18789', ok: health?.gatewayReachable },
                       { label: 'Ollama :11434', ok: health?.services?.ollama, sub: health?.ollamaModel },
-                      { label: 'OpenClaw', ok: health?.services?.openclaw, sub: 'gateway service' },
+                      { label: 'Hermes Claw', ok: health?.services?.openclaw, sub: 'gateway service' },
                     ].map(({ label, ok, sub }) => (
                       <div key={label} className="flex items-center justify-between text-sm">
                         <div>
@@ -525,6 +527,15 @@ export function NatliDashboard() {
         <TabsContent value="memory" className="space-y-4">
           <ErrorBoundary label="Memory">
             <MemoryTab health={health} />
+          </ErrorBoundary>
+        </TabsContent>
+
+        {/* ─── Wiki Tab ────────────────────────────────────── */}
+        <TabsContent value="wiki" className="space-y-4">
+          <ErrorBoundary label="Wiki">
+            <Suspense fallback={<div className="text-muted-foreground text-sm p-8 text-center">Loading Wiki…</div>}>
+              <LazyWikiTab />
+            </Suspense>
           </ErrorBoundary>
         </TabsContent>
 

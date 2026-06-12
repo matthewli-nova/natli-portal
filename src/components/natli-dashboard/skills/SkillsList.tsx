@@ -78,7 +78,9 @@ function SkillListRow({
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-sm font-medium truncate">{skill.name}</span>
             {skill.usageCount && skill.usageCount > 20 && (
-              <Zap className="w-3 h-3 text-amber-500 flex-shrink-0" title="High usage" />
+              <span title="High usage" className="inline-flex flex-shrink-0">
+                <Zap className="w-3 h-3 text-amber-500" />
+              </span>
             )}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
@@ -86,7 +88,7 @@ function SkillListRow({
             <span className={`text-xs px-1.5 py-0 rounded-full font-medium ${
               isSelected
                 ? 'bg-white/20 text-white'
-                : CATEGORY_COLORS[skill.category]
+                : CATEGORY_COLORS[skill.category] ?? 'bg-gray-100 text-gray-700'
             }`}>
               {skill.category === 'Infrastructure & Platform' ? 'Infra' : skill.category.split(' ')[0]}
             </span>
@@ -140,7 +142,7 @@ function SkillGridCard({
       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
         isSelected
           ? 'bg-white/20 text-white'
-          : CATEGORY_COLORS[skill.category]
+          : CATEGORY_COLORS[skill.category] ?? 'bg-gray-100 text-gray-700'
       }`}>
         {skill.category === 'Infrastructure & Platform' ? 'Infra' : skill.category.split(' ')[0]}
       </span>

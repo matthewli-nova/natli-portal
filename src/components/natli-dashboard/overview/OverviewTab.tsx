@@ -33,6 +33,15 @@ import { formatTokens, formatUptime } from '../../../lib/formatters';
 import { timeUntil, relativeTime, estimateCost } from '../../../lib/portal-utils';
 
 // ─── View All Link ───────────────────────────────────────────
+function formatJobName(name?: string): string {
+  return (name || '')
+    .replace(/openclaw/gi, 'Hermes Claw')
+    .replace(/_/g, ' ');
+}
+
+function truncateLabel(label: string, max = 20): string {
+  return label.slice(0, max) + (label.length > max ? '…' : '');
+}
 
 function ViewAllLink({ onClick, label = 'View All →', href }: { onClick?: () => void; label?: string; href?: string }) {
   if (href) {
@@ -184,7 +193,7 @@ function KPIStrip({
       icon: <Timer className="w-4 h-4 text-lepos-cyan-text" />,
       label: 'Next Cron',
       value: nextCron ? timeUntil(nextCron.state.nextRunAtMs!) : 'None scheduled',
-      subtitle: nextCron ? nextCron.name.slice(0, 20) + (nextCron.name.length > 20 ? '…' : '') : 'No crons pending',
+      subtitle: nextCron ? truncateLabel(formatJobName(nextCron.name)) : 'No crons pending',
       badgeColor: 'bg-gray-100 text-gray-600',
       badge: null,
     },
@@ -322,7 +331,7 @@ function CronHealthCard({
           <div className="space-y-2">
             {nextFiring.map(c => (
               <div key={c.id} className="flex items-center justify-between py-1.5 border-b border-primary/5 last:border-0">
-                <span className="truncate text-foreground text-sm flex-1 min-w-0 mr-2">{c.name}</span>
+                <span className="truncate text-foreground text-sm flex-1 min-w-0 mr-2">{formatJobName(c.name)}</span>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs text-lepos-cyan-text font-medium">
                     {timeUntil(c.state.nextRunAtMs!)}

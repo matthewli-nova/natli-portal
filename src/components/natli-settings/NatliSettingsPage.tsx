@@ -401,7 +401,7 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
           <div className="flex items-center justify-between pt-4 border-t border-primary/10">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Check className="w-3 h-3 text-secondary" />
-              <span>Changes saved to openclaw.json</span>
+              <span>Changes saved to Hermes Claw config</span>
             </div>
             <Button
               onClick={handleSaveClick}
@@ -440,7 +440,7 @@ function AIModelDetailPage({ onBack }: { onBack: () => void }) {
                     <span className="font-semibold text-lepos-cyan-text">{fallback1 && fallback1 !== 'none' ? resolveLabel(fallback1) : '(none)'}</span>
                   </li>
                 </ul>
-                <p className="text-amber-600 font-medium">⚠ The OpenClaw server will restart automatically. Active sessions may be interrupted.</p>
+                <p className="text-amber-600 font-medium">⚠ The Hermes Claw server will restart automatically. Active sessions may be interrupted.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

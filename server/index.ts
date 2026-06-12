@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { exec, spawn } from 'child_process';
@@ -14,9 +15,15 @@ app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
 app.use(express.json());
 
 const PORTAL_TOKEN = process.env.PORTAL_TOKEN;
+
+function isLoopbackRequest(req: express.Request): boolean {
+  const remote = req.socket.remoteAddress ?? req.ip ?? '';
+  return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote) || remote === 'localhost';
+}
+
 if (PORTAL_TOKEN) {
   app.use((req, res, next) => {
-    const skip = req.path === '/api/health' || req.path.startsWith('/api/sse');
+    const skip = req.path === '/api/health' || req.path.startsWith('/api/sse') || isLoopbackRequest(req);
     if (skip) return next();
     const auth = req.headers.authorization;
     if (!auth || auth !== `Bearer ${PORTAL_TOKEN}`) {
@@ -41,6 +48,8 @@ const HOME = os.homedir();
 const OPENCLAW_DIR = path.join(HOME, '.openclaw');
 const WORKSPACE = process.env.WORKSPACE || path.join(OPENCLAW_DIR, 'workspace');
 const OPENCLAW_CONFIG_PATH = path.join(OPENCLAW_DIR, 'openclaw.json');
+const WIKI_ROOT_FOLDERS = ['NOVA', 'vbiz', 'Lepōs', 'Nat', 'Personal Development'] as const;
+const WIKI_DIR = path.join(WORKSPACE, 'wiki');
 
 // ─── File Upload Config ──────────────────────────────────────────────────────
 const UPLOAD_DIR = path.join(WORKSPACE, 'uploads', 'chat');
@@ -1185,24 +1194,44 @@ const MODEL_PRICING: Record<string, { input: number; output: number; free?: bool
   'gemini-3-pro-preview':         { input: 1.25,  output: 10.0 },
   'gemini-2.5-pro':               { input: 1.25,  output: 10.0 },
   'gemini-2.5-flash':             { input: 0.15,  output: 0.60 },
+  'gemini-3.1-flash-lite-preview':{ input: 0.10,  output: 0.40 },
+  'gemini-3-flash-preview':       { input: 0.10,  output: 0.40 },
   'deepseek-r1':                  { input: 0.55,  output: 2.19 },
+  'deepseek-r1-0528:free':        { input: 0, output: 0, free: true },
   'grok-4':                       { input: 3.0,   output: 15.0 },
   'grok-3':                       { input: 3.0,   output: 9.0  },
+  'grok-4.1-fast':                { input: 3.0,   output: 15.0 },
   'kimi-latest':                  { input: 0.14,  output: 0.56 },
   'kimi-k2-thinking-turbo':       { input: 0.14,  output: 0.56 },
-  'minimax-m2.5':                 { input: 0.20,  output: 1.10 },
+  'minimax-m2.5':                 { input: 0.27,  output: 0.95 },  // Updated Mar 2026
   'minimax-m1':                   { input: 0.30,  output: 1.10 },
+  'qwen3.5-plus-02-15':           { input: 0.26,  output: 1.04 },  // PRIMARY web research
+  'qwen3.5-35b-a3b':              { input: 0.30,  output: 1.20 },
+  'qwen3.5-flash-02-23':          { input: 0.15,  output: 0.60 },
+  'qwen3.5-397b-a17b':            { input: 0.70,  output: 2.80 },
   'qwen3-coder:free':             { input: 0, output: 0, free: true },
   'llama-3.3-70b-instruct:free':  { input: 0, output: 0, free: true },
   'gemma-3-27b-it:free':          { input: 0, output: 0, free: true },
+  'gpt-5.3-chat':                 { input: 5.0,   output: 15.0 },
+  'gpt-oss-120b:free':            { input: 0, output: 0, free: true },
+  'gpt-oss-20b:free':             { input: 0, output: 0, free: true },
+  'step-3.5-flash:free':          { input: 0, output: 0, free: true },
+  'arcee-ai/trinity-mini:free':   { input: 0, output: 0, free: true },
+  'nemotron-nano-12b-2-vl:free':  { input: 0, output: 0, free: true },
+  'glm-4.5-air:free':             { input: 0, output: 0, free: true },
 };
 
 function getModelPrice(modelId: string): { input: number; output: number; free?: boolean } {
-  // Strip provider prefix (e.g. 'google/gemini-2.5-pro' → 'gemini-2.5-pro')
-  const short = modelId.includes('/') ? modelId.split('/').slice(1).join('/') : modelId;
+  // Strip provider prefix(es) - handle both 'provider/model' and 'provider/subpath/model'
+  let short = modelId;
+  if (modelId.includes('/')) {
+    const parts = modelId.split('/');
+    short = parts[parts.length - 1];  // Get just the model name at the end
+  }
   if (MODEL_PRICING[short]) return MODEL_PRICING[short];
   if (MODEL_PRICING[modelId]) return MODEL_PRICING[modelId];
-  return { input: 3.0, output: 15.0 };
+  // Default to a reasonable price if not found
+  return { input: 0.30, output: 1.20 };
 }
 
 function estimateModelCost(tokens: number, modelId: string): number {
@@ -1213,11 +1242,18 @@ function estimateModelCost(tokens: number, modelId: string): number {
 function getContextTokens(modelId: string): number {
   const lower = modelId.toLowerCase();
   if (lower.includes('claude')) return 200000;
-  if (lower.includes('gemini-2.5') || lower.includes('gemini-3')) return 1048576;
-  if (lower.includes('kimi')) return 131072;
+  if (lower.includes('gemini-2.5') || lower.includes('gemini-3')) return 1048576;  // 1M
+  if (lower.includes('gemini-3.1')) return 1048576;
+  if (lower.includes('kimi')) return 262144;  // 262K (updated Mar 2026)
   if (lower.includes('grok-4')) return 256000;
   if (lower.includes('grok-3')) return 131072;
   if (lower.includes('deepseek-r1')) return 163840;
+  if (lower.includes('qwen3.5') && lower.includes('plus')) return 1048576;  // 1M for Qwen3.5 Plus
+  if (lower.includes('qwen3.5')) return 131072;
+  if (lower.includes('minimax-m2.5')) return 204800;  // ~200K (updated Mar 2026)
+  if (lower.includes('minimax')) return 131072;
+  if (lower.includes('gpt-5')) return 131072;
+  if (lower.includes('gpt-oss')) return 131072;
   return 131072;
 }
 
@@ -1484,6 +1520,292 @@ app.get('/api/files/content', async (req, res) => {
     }
     const content = await fs.readFile(resolved, 'utf-8');
     res.json({ path: resolved, content, size: stats.size });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WIKI API
+// ─────────────────────────────────────────────────────────────────────────────
+
+type WikiNode = {
+  name: string;
+  path: string;
+  type: 'directory' | 'file';
+  children?: WikiNode[];
+  size?: number;
+  modifiedAt?: string;
+};
+
+const WIKI_SOURCE_FILES = [
+  path.join(WORKSPACE, 'MEMORY.md'),
+  path.join(WORKSPACE, 'USER.md'),
+  path.join(WORKSPACE, 'SOUL.md'),
+  path.join(WORKSPACE, 'AGENTS.md'),
+  path.join(WORKSPACE, 'strategy', 'USER.md'),
+  path.join(WORKSPACE, 'strategy', 'SOUL.md'),
+  path.join(WORKSPACE, 'strategy', 'AGENTS.md'),
+];
+
+const WIKI_SEED_CONFIG: Record<string, { title: string; keywords: string[]; sourceLimit: number }> = {
+  NOVA: {
+    title: 'NOVA',
+    keywords: ['nova', 'agent', 'openclaw', 'model', 'gateway', 'memory', 'workspace', 'scheduler', 'session'],
+    sourceLimit: 18,
+  },
+  vbiz: {
+    title: 'vbiz',
+    keywords: ['vbiz', 'business', 'strategy', 'client', 'sales', 'revenue', 'crm', 'workflow', 'operation'],
+    sourceLimit: 18,
+  },
+  Lepōs: {
+    title: 'Lepōs',
+    keywords: ['lepos', 'lepōs', 'event', 'ticket', 'registration', 'invitation', 'venue', 'module', 'b2b'],
+    sourceLimit: 18,
+  },
+  Nat: {
+    title: 'Nat',
+    keywords: ['nat', 'natlee', 'nat lee', 'user', 'preference', 'portal', 'personal', 'identity'],
+    sourceLimit: 18,
+  },
+  'Personal Development': {
+    title: 'Personal Development',
+    keywords: ['personal development', 'development', 'habit', 'review', 'reflection', 'goal', 'learning', 'self', 'daily'],
+    sourceLimit: 18,
+  },
+};
+
+function wikiSafePath(inputPath: string): string {
+  const resolved = path.resolve(inputPath);
+  const root = path.resolve(WIKI_DIR);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+    throw new Error('Path must stay inside workspace wiki directory');
+  }
+  if (path.extname(resolved) && path.extname(resolved).toLowerCase() !== '.md') {
+    throw new Error('Only markdown files are supported');
+  }
+  return resolved;
+}
+
+function normaliseSourceLine(line: string): string {
+  return line
+    .replace(/\s+/g, ' ')
+    .replace(/^[-*]\s+/, '')
+    .trim();
+}
+
+async function readSourceLines(filePath: string, maxLines = 240): Promise<string[]> {
+  try {
+    const stat = await fs.stat(filePath);
+    if (!stat.isFile() || stat.size > 512 * 1024) return [];
+    const content = await fs.readFile(filePath, 'utf-8');
+    return content
+      .split('\n')
+      .slice(0, maxLines)
+      .map(normaliseSourceLine)
+      .filter(line => line && !line.startsWith('<!--'));
+  } catch {
+    return [];
+  }
+}
+
+async function getDailyMemoryFiles(): Promise<string[]> {
+  try {
+    const memoryDir = path.join(WORKSPACE, 'memory');
+    const entries = await fs.readdir(memoryDir, { withFileTypes: true });
+    return entries
+      .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+      .map(entry => path.join(memoryDir, entry.name))
+      .sort()
+      .reverse()
+      .slice(0, 40);
+  } catch {
+    return [];
+  }
+}
+
+async function collectWikiSeedLines(folder: string): Promise<Array<{ source: string; line: string }>> {
+  const config = WIKI_SEED_CONFIG[folder];
+  const keywords = config.keywords.map(keyword => keyword.toLowerCase());
+  const sourceFiles = [...WIKI_SOURCE_FILES, ...(await getDailyMemoryFiles())];
+  const matches: Array<{ source: string; line: string }> = [];
+  const seen = new Set<string>();
+
+  for (const sourcePath of sourceFiles) {
+    const lines = await readSourceLines(sourcePath);
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      if (!keywords.some(keyword => lower.includes(keyword))) continue;
+      const compact = line.slice(0, 260);
+      const key = `${path.basename(sourcePath)}:${compact}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      matches.push({ source: path.relative(WORKSPACE, sourcePath), line: compact });
+      if (matches.length >= config.sourceLimit) return matches;
+    }
+  }
+
+  return matches;
+}
+
+function seedPageContent(folder: string, matches: Array<{ source: string; line: string }>): string {
+  const sourceList = Array.from(new Set(matches.map(match => match.source)));
+  const bullets = matches.length
+    ? matches.map(match => `- ${match.line} _(source: ${match.source})_`).join('\n')
+    : '- No matching source notes were found yet. Add grounded notes here as the wiki evolves.';
+
+  return [
+    `# ${WIKI_SEED_CONFIG[folder].title}`,
+    '',
+    'Seeded from local workspace knowledge. This page is live markdown on disk and can be edited from the portal.',
+    '',
+    '## Source-backed notes',
+    '',
+    bullets,
+    '',
+    '## Source files checked',
+    '',
+    sourceList.length ? sourceList.map(source => `- ${source}`).join('\n') : '- Root memory and daily memory files',
+    '',
+  ].join('\n');
+}
+
+async function bootstrapWiki(): Promise<string[]> {
+  const created: string[] = [];
+  await fs.mkdir(WIKI_DIR, { recursive: true });
+
+  for (const folder of WIKI_ROOT_FOLDERS) {
+    const folderPath = path.join(WIKI_DIR, folder);
+    try {
+      await fs.access(folderPath);
+    } catch {
+      await fs.mkdir(folderPath, { recursive: true });
+      created.push(path.relative(WIKI_DIR, folderPath));
+    }
+
+    const overviewPath = path.join(folderPath, 'Overview.md');
+    try {
+      await fs.access(overviewPath);
+    } catch {
+      const matches = await collectWikiSeedLines(folder);
+      await fs.writeFile(overviewPath, seedPageContent(folder, matches), 'utf-8');
+      created.push(path.relative(WIKI_DIR, overviewPath));
+    }
+
+    const inboxPath = path.join(folderPath, 'Working Notes.md');
+    try {
+      await fs.access(inboxPath);
+    } catch {
+      await fs.writeFile(inboxPath, [
+        `# ${folder} Working Notes`,
+        '',
+        'Use this live page for new wiki notes before splitting them into more specific pages.',
+        '',
+      ].join('\n'), 'utf-8');
+      created.push(path.relative(WIKI_DIR, inboxPath));
+    }
+  }
+
+  return created;
+}
+
+async function readWikiTree(dir: string): Promise<WikiNode[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const nodes: WikiNode[] = [];
+
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    if (entry.name.startsWith('.')) continue;
+    const entryPath = path.join(dir, entry.name);
+    const stat = await fs.stat(entryPath);
+
+    if (entry.isDirectory()) {
+      nodes.push({
+        name: entry.name,
+        path: entryPath,
+        type: 'directory',
+        modifiedAt: stat.mtime.toISOString(),
+        children: await readWikiTree(entryPath),
+      });
+    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+      nodes.push({
+        name: entry.name,
+        path: entryPath,
+        type: 'file',
+        size: stat.size,
+        modifiedAt: stat.mtime.toISOString(),
+      });
+    }
+  }
+
+  return nodes;
+}
+
+app.post('/api/wiki/bootstrap', async (_req, res) => {
+  try {
+    const created = await bootstrapWiki();
+    res.json({ ok: true, root: WIKI_DIR, folders: WIKI_ROOT_FOLDERS, created });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.get('/api/wiki/tree', async (_req, res) => {
+  try {
+    await bootstrapWiki();
+    const children = await readWikiTree(WIKI_DIR);
+    const rootFolders = WIKI_ROOT_FOLDERS.map(folder => children.find(node => node.name === folder)).filter(Boolean) as WikiNode[];
+    res.json({ root: WIKI_DIR, folders: WIKI_ROOT_FOLDERS, tree: rootFolders, seeded: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.get('/api/wiki/file', async (req, res) => {
+  try {
+    const requestedPath = req.query.path as string;
+    if (!requestedPath) {
+      res.status(400).json({ error: 'path query parameter required' });
+      return;
+    }
+    const filePath = wikiSafePath(requestedPath);
+    const stat = await fs.stat(filePath);
+    if (!stat.isFile()) {
+      res.status(400).json({ error: 'Requested wiki path is not a file' });
+      return;
+    }
+    if (stat.size > 512 * 1024) {
+      res.status(413).json({ error: 'Wiki file too large (max 512KB)' });
+      return;
+    }
+    const content = await fs.readFile(filePath, 'utf-8');
+    res.json({ path: filePath, name: path.basename(filePath), content, size: stat.size, modifiedAt: stat.mtime.toISOString() });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.put('/api/wiki/file', async (req, res) => {
+  try {
+    const requestedPath = req.body?.path as string;
+    const content = req.body?.content as string;
+    if (!requestedPath || typeof content !== 'string') {
+      res.status(400).json({ error: 'path and content are required' });
+      return;
+    }
+    if (Buffer.byteLength(content, 'utf-8') > 512 * 1024) {
+      res.status(413).json({ error: 'Wiki file too large (max 512KB)' });
+      return;
+    }
+    const filePath = wikiSafePath(requestedPath);
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, content, 'utf-8');
+    const stat = await fs.stat(filePath);
+    res.json({ path: filePath, name: path.basename(filePath), content, size: stat.size, modifiedAt: stat.mtime.toISOString() });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     res.status(500).json({ error: message });

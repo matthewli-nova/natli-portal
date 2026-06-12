@@ -179,6 +179,12 @@ function formatModelShort(model?: string): string {
   ).join(' ');
 }
 
+function formatJobName(name?: string): string {
+  return (name || '')
+    .replace(/openclaw/gi, 'Hermes Claw')
+    .replace(/_/g, ' ');
+}
+
 // ─── Job Categorization ─────────────────────────────────────
 
 interface JobGroup {
@@ -341,12 +347,12 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
               title="System Status"
               value={failedJobs.length === 0 ? '✅ All OK' : `🔴 ${failedJobs.length} Failed`}
               icon={failedJobs.length === 0 ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
-              sub={failedJobs.length === 0 ? 'No errors' : failedJobs.map(j => j.name).join(', ')}
+              sub={failedJobs.length === 0 ? 'No errors' : failedJobs.map(j => formatJobName(j.name)).join(', ')}
               variant={failedJobs.length > 0 ? 'error' : 'success'}
             />
             <StatusCard
               title="Last Failure"
-              value={lastFailure ? lastFailure.name.replace(/_/g, ' ') : 'None'}
+              value={lastFailure ? formatJobName(lastFailure.name) : 'None'}
               icon={lastFailure ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
               sub={lastFailure?.state.lastRunAtMs ? formatRelativeTime(lastFailure.state.lastRunAtMs) : 'No recent failures'}
               variant={lastFailure ? 'error' : 'success'}
@@ -359,7 +365,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
       {failedJobs.length > 0 && !alertDismissed && (
         <div className="flex items-center gap-3 bg-amber-50 border border-primary/20 rounded-lg px-4 py-3">
           <span className="text-amber-700 font-semibold text-sm flex-1">
-            ⚠ {failedJobs.length} job{failedJobs.length > 1 ? 's' : ''} failed · {failedJobs[0].name} · {failedJobs[0].state.lastRunAtMs ? formatRelativeTime(failedJobs[0].state.lastRunAtMs) : ''}
+            ⚠ {failedJobs.length} job{failedJobs.length > 1 ? 's' : ''} failed · {formatJobName(failedJobs[0].name)} · {failedJobs[0].state.lastRunAtMs ? formatRelativeTime(failedJobs[0].state.lastRunAtMs) : ''}
           </span>
           <Button
             variant="ghost"
@@ -716,7 +722,7 @@ function NextFiringCard({ job, now, onRunNow, running }: {
             {job.scheduleDescription}
           </Badge>
         </div>
-        <p className="font-semibold text-foreground text-sm truncate">{job.name.replace(/_/g, ' ')}</p>
+        <p className="font-semibold text-foreground text-sm truncate">{formatJobName(job.name)}</p>
         <p className="text-2xl font-bold text-lepos-cyan-text mt-1">{formatCountdown(Math.max(0, countdown))}</p>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-1">
           <span>{job.sessionTarget}</span>
@@ -769,7 +775,7 @@ function JobRow({ job, now, tokenData, onRunNow, onToggle, onViewLogs, onEdit, r
       <td className="py-2 pr-3">{statusPill()}</td>
       <td className="py-2 pr-3">
         <div className="flex items-center gap-1.5">
-          <span className="font-medium text-foreground">{job.name.replace(/_/g, ' ')}</span>
+          <span className="font-medium text-foreground">{formatJobName(job.name)}</span>
           <Tooltip>
             <TooltipTrigger asChild>
               <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-lepos-cyan-text cursor-help shrink-0" />
@@ -913,7 +919,7 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-primary/10 bg-[#022F44]">
           <div className="min-w-0">
-            <p className="font-semibold text-white truncate">{job?.name.replace(/_/g, ' ') || jobId}</p>
+            <p className="font-semibold text-white truncate">{formatJobName(job?.name) || formatJobName(jobId)}</p>
             <p className="text-xs text-white/60">{job?.scheduleDescription}</p>
           </div>
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-white/70 hover:text-white hover:bg-white/10" onClick={onClose}>
@@ -1094,7 +1100,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-primary/10">
           <h2 className="font-semibold text-foreground">
-            {isEdit ? `Edit: ${job?.name?.replace(/_/g, ' ')}` : 'Add New Cron Job'}
+            {isEdit ? `Edit: ${formatJobName(job?.name)}` : 'Add New Cron Job'}
           </h2>
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
             <X className="w-4 h-4" />
@@ -1283,7 +1289,7 @@ export function CronSummaryCard({ onNavigateToScheduler }: { onNavigateToSchedul
           {nextFiring.slice(0, 3).map(job => (
             <p key={job.id} className="text-xs text-muted-foreground">
               <span className="text-lepos-cyan-text font-medium">Next:</span>{' '}
-              {job.name.replace(/_/g, ' ')}{' '}
+              {formatJobName(job.name)}{' '}
               <span className="text-lepos-cyan-text">
                 in {formatCountdown(Math.max(0, (job.state.nextRunAtMs || 0) - now))}
               </span>
@@ -1293,7 +1299,7 @@ export function CronSummaryCard({ onNavigateToScheduler }: { onNavigateToSchedul
         {lastRun && (
           <p className="text-xs text-muted-foreground">
             <span className="font-medium">Last:</span>{' '}
-            {lastRun.name.replace(/_/g, ' ')} · {formatRelativeTime(lastRun.state.lastRunAtMs!)}{' '}
+            {formatJobName(lastRun.name)} · {formatRelativeTime(lastRun.state.lastRunAtMs!)}{' '}
             {lastRun.state.lastStatus === 'ok' ? '✅' : '❌'}
           </p>
         )}

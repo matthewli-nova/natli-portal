@@ -1,17 +1,6 @@
-import { CreateEventForm } from './components/events/CreateEventForm';
-import { EventDetailPage } from './components/events/EventDetailPage';
-import { Dashboard } from './components/dashboard/Dashboard';
-import { EventsList } from './components/events/EventsList';
-import { InvitationManager } from './components/invitations/InvitationManager';
-import { RegistrationLinkManager } from './components/registration-links/RegistrationLinkManager';
-import { NatliSettingsPage } from './components/natli-settings/NatliSettingsPage';
-import { NatliDashboard } from './components/natli-dashboard/NatliDashboard';
-import { NatliSkillsPage } from './components/natli-skills/NatliSkillsPage';
-import { NatliSchedulerPage } from './components/natli-scheduler/NatliSchedulerPage';
-import { ModelTab } from './components/natli-dashboard/model/ModelTab';
 import { AppSidebar } from './components/AppSidebar';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import {
   SidebarProvider,
   SidebarInset,
@@ -31,6 +20,22 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { type B2BEvent } from './components/data/b2b-events';
 import { menuItems, natliMenuItems, workMenuItems } from './lib/menu-data';
+
+const Dashboard = lazy(() => import('./components/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
+const CreateEventForm = lazy(() => import('./components/events/CreateEventForm').then(m => ({ default: m.CreateEventForm })));
+const EventDetailPage = lazy(() => import('./components/events/EventDetailPage').then(m => ({ default: m.EventDetailPage })));
+const EventsList = lazy(() => import('./components/events/EventsList').then(m => ({ default: m.EventsList })));
+const InvitationManager = lazy(() => import('./components/invitations/InvitationManager').then(m => ({ default: m.InvitationManager })));
+const RegistrationLinkManager = lazy(() => import('./components/registration-links/RegistrationLinkManager').then(m => ({ default: m.RegistrationLinkManager })));
+const NatliDashboard = lazy(() => import('./components/natli-dashboard/NatliDashboard').then(m => ({ default: m.NatliDashboard })));
+const NatliSettingsPage = lazy(() => import('./components/natli-settings/NatliSettingsPage').then(m => ({ default: m.NatliSettingsPage })));
+const NatliSkillsPage = lazy(() => import('./components/natli-skills/NatliSkillsPage').then(m => ({ default: m.NatliSkillsPage })));
+const NatliSchedulerPage = lazy(() => import('./components/natli-scheduler/NatliSchedulerPage').then(m => ({ default: m.NatliSchedulerPage })));
+const ModelTab = lazy(() => import('./components/natli-dashboard/model/ModelTab').then(m => ({ default: m.ModelTab })));
+
+function PageLoader() {
+  return <div className="py-10 text-sm text-muted-foreground">Loading…</div>;
+}
 
 // ─── Theme Hook ──────────────────────────────────────────────
 function useTheme() {
@@ -167,60 +172,62 @@ function AppShell() {
                 actions={null}
               />
               <div className="grid grid-cols-1 w-full min-w-0">
-                {platform === 'natli' && activeItem === 'natli-dashboard' ? (
-                  <NatliDashboard />
-                ) : platform === 'natli' && activeItem === 'natli-settings' ? (
-                  <NatliSettingsPage />
-                ) : platform === 'natli' && activeItem === 'natli-skills' ? (
-                  <NatliSkillsPage />
-                ) : platform === 'natli' && activeItem === 'natli-scheduler' ? (
-                  <NatliSchedulerPage />
-                ) : platform === 'natli' && activeItem === 'natli-model' ? (
-                  <ModelTab />
-                ) : platform === 'natli' ? (
-                  <PagePlaceholder />
-                ) : platform === 'work' ? (
-                  <PagePlaceholder message="Work platform — coming soon" />
-                ) : activeItem === 'dashboard' ? (
-                  <Dashboard />
-                ) : activeItem === 'invitations' ? (
-                  <InvitationManager />
-                ) : activeItem === 'registration-links' ? (
-                  <RegistrationLinkManager />
-                ) : activeItem === 'events' || activeItem === 'events-list' ? (
-                  selectedEvent ? (
-                    <EventDetailPage
-                      event={selectedEvent}
-                      onBack={() => setSelectedEvent(null)}
-                      onUpdate={(updatedEvent) => {
-                        setSelectedEvent(updatedEvent);
-                        toast.success("Event updated successfully");
-                      }}
-                    />
-                  ) : showEventForm ? (
-                    <CreateEventForm
-                      onCancel={() => setShowEventForm(false)}
-                      onSubmit={() => {
-                        setShowEventForm(false);
-                        setSelectedEvent(null);
-                        toast.success("Event created successfully");
-                      }}
-                    />
+                <Suspense fallback={<PageLoader />}>
+                  {platform === 'natli' && activeItem === 'natli-dashboard' ? (
+                    <NatliDashboard />
+                  ) : platform === 'natli' && activeItem === 'natli-settings' ? (
+                    <NatliSettingsPage />
+                  ) : platform === 'natli' && activeItem === 'natli-skills' ? (
+                    <NatliSkillsPage />
+                  ) : platform === 'natli' && activeItem === 'natli-scheduler' ? (
+                    <NatliSchedulerPage />
+                  ) : platform === 'natli' && activeItem === 'natli-model' ? (
+                    <ModelTab />
+                  ) : platform === 'natli' ? (
+                    <PagePlaceholder />
+                  ) : platform === 'work' ? (
+                    <PagePlaceholder message="Work platform — coming soon" />
+                  ) : activeItem === 'dashboard' ? (
+                    <Dashboard />
+                  ) : activeItem === 'invitations' ? (
+                    <InvitationManager />
+                  ) : activeItem === 'registration-links' ? (
+                    <RegistrationLinkManager />
+                  ) : activeItem === 'events' || activeItem === 'events-list' ? (
+                    selectedEvent ? (
+                      <EventDetailPage
+                        event={selectedEvent}
+                        onBack={() => setSelectedEvent(null)}
+                        onUpdate={(updatedEvent) => {
+                          setSelectedEvent(updatedEvent);
+                          toast.success("Event updated successfully");
+                        }}
+                      />
+                    ) : showEventForm ? (
+                      <CreateEventForm
+                        onCancel={() => setShowEventForm(false)}
+                        onSubmit={() => {
+                          setShowEventForm(false);
+                          setSelectedEvent(null);
+                          toast.success("Event created successfully");
+                        }}
+                      />
+                    ) : (
+                      <EventsList
+                        onCreateEvent={() => {
+                          setShowEventForm(true);
+                          setSelectedEvent(null);
+                        }}
+                        onEventClick={(event) => {
+                          setSelectedEvent(event);
+                          setShowEventForm(false);
+                        }}
+                      />
+                    )
                   ) : (
-                    <EventsList
-                      onCreateEvent={() => {
-                        setShowEventForm(true);
-                        setSelectedEvent(null);
-                      }}
-                      onEventClick={(event) => {
-                        setSelectedEvent(event);
-                        setShowEventForm(false);
-                      }}
-                    />
-                  )
-                ) : (
-                  <PagePlaceholder />
-                )}
+                    <PagePlaceholder />
+                  )}
+                </Suspense>
               </div>
             </div>
         </main>

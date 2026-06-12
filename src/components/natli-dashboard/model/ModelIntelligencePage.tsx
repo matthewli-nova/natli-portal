@@ -2,7 +2,7 @@ import { Card, CardContent } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import {
   Brain, MessageSquare, Code2, Zap, FileSearch,
-  Image, PenLine, Bot, Languages, ArrowRight,
+  Image, PenLine, Bot, Languages, ArrowRight, Search,
 } from 'lucide-react';
 import {
   CATEGORY_LEADERS, QUICK_REF, SETUP_RECS,
@@ -14,7 +14,7 @@ import {
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Brain, MessageSquare, Code2, Zap, FileSearch,
-  Image, PenLine, Bot, Languages,
+  Image, PenLine, Bot, Languages, Search,
 };
 
 function CategoryIcon({ name, className }: { name: string; className?: string }) {
@@ -210,7 +210,7 @@ export function ModelIntelligencePage() {
       {/* Footer */}
       <div className="text-xs text-muted-foreground space-y-0.5 pt-2 border-t border-primary/10">
         <p>Last updated: March 2026</p>
-        <p>Source: Internal model evaluation based on OpenClaw usage</p>
+        <p>Source: Internal model evaluation based on Hermes Claw usage</p>
         <p className="font-mono text-[10px]">Update model-intelligence-data.ts to refresh</p>
       </div>
     </div>

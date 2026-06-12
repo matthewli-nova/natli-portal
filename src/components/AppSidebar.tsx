@@ -116,7 +116,7 @@ export function AppSidebar({
                 className="w-full h-[31px] flex items-center gap-2"
               >
                 <img
-                  src="https://avatars.slack-edge.com/2026-02-01/10412965046197_5784d6adc887705ae15e_512.png"
+                  src="/assets/nat-lee-avatar.png"
                   alt="Nat Lee"
                   className="h-[31px] w-[31px] rounded-md object-cover"
                 />
@@ -139,7 +139,7 @@ export function AppSidebar({
                 className="w-full h-[31px] flex justify-center items-center relative"
               >
                 <img
-                  src="https://avatars.slack-edge.com/2026-02-01/10412965046197_5784d6adc887705ae15e_512.png"
+                  src="/assets/nat-lee-avatar.png"
                   alt="Nat Lee"
                   className="h-[31px] w-[31px] rounded-md object-cover"
                 />

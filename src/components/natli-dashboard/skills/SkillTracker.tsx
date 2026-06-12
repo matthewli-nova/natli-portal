@@ -126,8 +126,8 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
                 <div key={skill.id} className="flex items-center gap-2 py-1.5 border-b border-primary/8 last:border-0">
                   <span className="text-sm">{skill.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{skill.name}</p>
-                    <p className="text-xs text-muted-foreground">{skill.category}</p>
+                    <p className="text-sm font-medium truncate">{skill.name || skill.id}</p>
+                    <p className="text-xs text-muted-foreground truncate">{skill.category || skill.path}</p>
                   </div>
                   <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
                     {formatDateTime(skill.addedDate)}
@@ -148,7 +148,7 @@ export function SkillTracker({ stats, skills }: SkillTrackerProps) {
               {categoryBreakdown.map(cat => (
                 <div key={cat.name}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className={`px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[cat.name as SkillCategory]}`}>
+                    <span className={`px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[cat.name as SkillCategory] ?? 'bg-gray-100 text-gray-700'}`}>
                       {cat.name}
                     </span>
                     <span className="text-muted-foreground">{cat.count} skills · {cat.readyCount} ready</span>
@@ -257,7 +257,7 @@ function getProviderBreakdown(skills: Skill[]) {
     { name: 'Google Workspace', emoji: '🔵', color: '#4285F4', match: s => s.id.startsWith('gws-') || s.name.toLowerCase().startsWith('gws') },
     { name: 'Apify',            emoji: '🕷️', color: '#FF7900', match: s => s.id.startsWith('apify') || s.name.toLowerCase().includes('apify') },
     { name: 'Custom',           emoji: '🧩', color: '#31D7DB', match: s => s.type === 'custom' && !s.id.startsWith('gws-') && !s.id.startsWith('apify') },
-    { name: 'OpenClaw Built-in',emoji: '🦞', color: '#023F59', match: s => s.type === 'system' && !s.id.startsWith('gws-') && !s.id.startsWith('apify') },
+    { name: 'Hermes Claw Built-in',emoji: '🦞', color: '#023F59', match: s => s.type === 'system' && !s.id.startsWith('gws-') && !s.id.startsWith('apify') },
   ];
 
   return providers

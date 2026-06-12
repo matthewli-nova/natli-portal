@@ -100,6 +100,8 @@ export function getModelShortName(modelId: string): string {
     'gemini-3-pro-preview': 'Gemini 3 Pro',
     'gemini-3-pro': 'Gemini 3 Pro',
     'deepseek-r1': 'DeepSeek R1',
+    'deepseek-v4-pro': 'DeepSeek V4 Pro',
+    'deepseek-v4-flash': 'DeepSeek V4 Flash',
     'grok-4': 'Grok 4',
     'grok-3': 'Grok 3',
     'kimi-latest': 'Kimi Latest',
@@ -153,23 +155,21 @@ function LetterBadge({
 interface ModelIconProps {
   modelId: string;
   size?: 'xs' | 'sm' | 'md';
+  showLabel?: boolean;
 }
 
-export function ModelIcon({ modelId, size = 'sm' }: ModelIconProps) {
-  const provider = detectProvider(modelId);
+function SvgBadge({
+  path,
+  hex,
+  modelId,
+  size,
+}: { path: string; hex: string; label: string; modelId: string; size: 'xs' | 'sm' | 'md' }) {
   const dim = size === 'xs' ? 14 : size === 'md' ? 28 : 20;
   const wrapSize = size === 'xs' ? 'w-4 h-4' : size === 'md' ? 'w-7 h-7' : 'w-5 h-5';
-
-  if (provider.key === 'default') {
-    return <LetterBadge modelId={modelId} size={size} hex={provider.hex} label={provider.label} />;
-  }
-
-  const iconData = PATHS[provider.key];
-
   return (
     <span
       className={`${wrapSize} rounded-full flex items-center justify-center shrink-0`}
-      style={{ background: provider.hex }}
+      style={{ background: hex }}
       title={modelId}
     >
       <svg
@@ -179,8 +179,26 @@ export function ModelIcon({ modelId, size = 'sm' }: ModelIconProps) {
         fill="white"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path d={iconData.path} />
+        <path d={path} />
       </svg>
+    </span>
+  );
+}
+
+export function ModelIcon({ modelId, size = 'sm', showLabel = false }: ModelIconProps) {
+  const provider = detectProvider(modelId);
+  const icon = provider.key === 'default'
+    ? <LetterBadge modelId={modelId} size={size} hex={provider.hex} label={provider.label} />
+    : <SvgBadge path={PATHS[provider.key].path} hex={provider.hex} label={provider.label} modelId={modelId} size={size} />;
+
+  if (!showLabel) return icon;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 min-w-0" title={modelId}>
+      {icon}
+      <span className="truncate text-xs font-medium text-muted-foreground max-w-28">
+        {getModelShortName(modelId)}
+      </span>
     </span>
   );
 }
