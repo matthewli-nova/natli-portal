@@ -2,12 +2,13 @@
 // Browses the Hermes Claw workspace via /api/files and previews text content
 // via /api/files/content (server restricts access to the workspace dir).
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import {
   FolderOpen, Folder, FileText, FileCode2, FileSpreadsheet, FileJson, File as FileIcon,
-  ChevronRight, Home, RefreshCw, Search, Copy, Check, Loader2, ArrowUp, Download,
+  ChevronRight, Home, RefreshCw, Search, Copy, Check, Loader2, ArrowUp, Download, Link2,
 } from 'lucide-react';
 import { PortalPage, StatCard, EmptyState } from '../../../lib/portal-ui';
+import { SegmentedControl } from '../../ui/segmented-control';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { cn } from '../../ui/utils';
@@ -49,6 +50,7 @@ export function DocumentsPage() {
   const [fileLoading, setFileLoading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'rendered' | 'raw'>('rendered');
 
   const loadDir = useCallback(async (path?: string) => {
     setLoading(true);
@@ -118,6 +120,14 @@ export function DocumentsPage() {
     toast.success(`Downloaded ${selected.name}`);
   };
 
+  const copyPath = async () => {
+    if (!currentPath) return;
+    try {
+      await navigator.clipboard.writeText(currentPath);
+      toast.success('Path copied');
+    } catch { toast.error('Copy failed'); }
+  };
+
   // Breadcrumb segments relative to the workspace root
   const crumbs = useMemo(() => {
     if (!rootPath || !currentPath) return [];
@@ -177,10 +187,15 @@ export function DocumentsPage() {
             </button>
           </span>
         ))}
-        <div className="relative ml-auto w-full sm:w-56">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter this folder…"
-            className="h-8 border-primary/20 pl-8 text-sm focus-visible:ring-secondary/30" />
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={copyPath} className="h-8 shrink-0 px-2 text-xs text-muted-foreground hover:text-lepos-cyan-text" title="Copy current folder path">
+            <Link2 className="mr-1 h-3.5 w-3.5" /> Copy path
+          </Button>
+          <div className="relative w-full sm:w-56">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter this folder…"
+              className="h-8 border-primary/20 pl-8 text-sm focus-visible:ring-secondary/30" />
+          </div>
         </div>
       </div>
 
@@ -237,7 +252,15 @@ export function DocumentsPage() {
                   <span className="truncate text-sm font-semibold text-foreground">{selected.name}</span>
                   {fileSize > 0 && <span className="shrink-0 text-xs text-muted-foreground">· {formatBytes(fileSize)}</span>}
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {/\.md$/i.test(selected.name) && content && (
+                    <SegmentedControl
+                      value={previewMode}
+                      onChange={(v) => setPreviewMode(v as 'rendered' | 'raw')}
+                      options={[{ value: 'rendered', label: 'Rendered' }, { value: 'raw', label: 'Raw' }]}
+                      className="w-[150px]"
+                    />
+                  )}
                   <Button variant="ghost" size="sm" onClick={copyContent} disabled={!content} className="h-7 text-xs">
                     {copied ? <Check className="mr-1 h-3.5 w-3.5 text-emerald-500" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
                     {copied ? 'Copied' : 'Copy'}
@@ -253,6 +276,8 @@ export function DocumentsPage() {
                   <div className="flex items-center justify-center py-16 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
                 ) : fileError ? (
                   <EmptyState icon={Download} title="Preview unavailable" description={fileError} className="border-0 bg-transparent" />
+                ) : /\.md$/i.test(selected.name) && previewMode === 'rendered' ? (
+                  <MarkdownView content={content} />
                 ) : (
                   <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/90">{content}</pre>
                 )}
@@ -263,4 +288,89 @@ export function DocumentsPage() {
       </div>
     </PortalPage>
   );
+}
+
+// ─── Lightweight Markdown renderer (safe, element-based) ─────
+function renderInline(text: string, kp: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  let last = 0; let m: RegExpExecArray | null; let i = 0;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith('`')) {
+      nodes.push(<code key={`${kp}-${i}`} className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">{tok.slice(1, -1)}</code>);
+    } else if (tok.startsWith('**')) {
+      nodes.push(<strong key={`${kp}-${i}`} className="font-semibold text-foreground">{tok.slice(2, -2)}</strong>);
+    } else if (tok.startsWith('*')) {
+      nodes.push(<em key={`${kp}-${i}`}>{tok.slice(1, -1)}</em>);
+    } else {
+      const mm = /\[([^\]]+)\]\(([^)]+)\)/.exec(tok);
+      if (mm) nodes.push(<a key={`${kp}-${i}`} href={mm[2]} target="_blank" rel="noreferrer" className="text-lepos-cyan-text underline">{mm[1]}</a>);
+    }
+    last = m.index + tok.length; i++;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+function MarkdownView({ content }: { content: string }) {
+  const lines = content.split('\n');
+  const blocks: ReactNode[] = [];
+  let i = 0; let key = 0;
+  const headingSize = ['text-xl', 'text-lg', 'text-base', 'text-sm', 'text-sm', 'text-xs'];
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.trim().startsWith('```')) {
+      const buf: string[] = []; i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) { buf.push(lines[i]); i++; }
+      i++;
+      blocks.push(<pre key={key++} className="my-2 overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs scroll-slim">{buf.join('\n')}</pre>);
+      continue;
+    }
+    const h = /^(#{1,6})\s+(.*)$/.exec(line);
+    if (h) {
+      const level = h[1].length;
+      blocks.push(<div key={key++} className={cn('mb-1 mt-3 font-bold text-foreground', headingSize[level - 1])}>{renderInline(h[2], `h${key}`)}</div>);
+      i++; continue;
+    }
+    if (/^(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) { blocks.push(<hr key={key++} className="my-3 border-border" />); i++; continue; }
+    if (line.trim().startsWith('>')) {
+      const buf: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith('>')) { buf.push(lines[i].replace(/^\s*>\s?/, '')); i++; }
+      blocks.push(<blockquote key={key++} className="my-2 border-l-2 border-secondary/50 pl-3 text-sm text-muted-foreground">{renderInline(buf.join(' '), `bq${key}`)}</blockquote>);
+      continue;
+    }
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items: ReactNode[] = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+        items.push(<li key={items.length}>{renderInline(lines[i].replace(/^\s*[-*]\s+/, ''), `li${key}-${items.length}`)}</li>);
+        i++;
+      }
+      blocks.push(<ul key={key++} className="my-2 list-disc space-y-0.5 pl-5 text-sm text-foreground/90">{items}</ul>);
+      continue;
+    }
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items: ReactNode[] = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        items.push(<li key={items.length}>{renderInline(lines[i].replace(/^\s*\d+\.\s+/, ''), `ol${key}-${items.length}`)}</li>);
+        i++;
+      }
+      blocks.push(<ol key={key++} className="my-2 list-decimal space-y-0.5 pl-5 text-sm text-foreground/90">{items}</ol>);
+      continue;
+    }
+    if (line.trim() === '') { i++; continue; }
+
+    const buf: string[] = [];
+    while (
+      i < lines.length && lines[i].trim() !== '' &&
+      !/^(#{1,6}\s|\s*[-*]\s|\s*\d+\.\s|>|```)/.test(lines[i]) &&
+      !/^(-{3,}|\*{3,}|_{3,})\s*$/.test(lines[i])
+    ) { buf.push(lines[i]); i++; }
+    if (buf.length) blocks.push(<p key={key++} className="my-1.5 text-sm leading-relaxed text-foreground/90">{renderInline(buf.join(' '), `p${key}`)}</p>);
+  }
+
+  return <div className="max-w-none">{blocks}</div>;
 }

@@ -508,9 +508,9 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
         <div className="grid gap-6">
           {/* KPI Strip */}
           <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-            <KPICard title="Total Tokens" value={formatTokens(stats.tokenStats.total)} />
+            <KPICard title="Total Tokens" value={formatTokens(stats.tokenStats.total)} spark={history.map(d => d.total)} />
             <KPICard title="Total Sessions" value={String(stats.tokenStats.byModel.reduce((s, m) => s + m.sessions, 0))} />
-            <KPICard title="Est. Cost" value={formatCost(stats.tokenStats.totalCostEstimate)} />
+            <KPICard title="Est. Cost" value={formatCost(stats.tokenStats.totalCostEstimate)} spark={history.map(d => d.total)} />
             <KPICard title="Primary Model" value={getModelShortName(stats.availableModels.find(m => m.isPrimary)?.id || 'None')} />
           </div>
 
@@ -660,12 +660,32 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
   );
 }
 
-function KPICard({ title, value }: { title: string; value: string }) {
+function Sparkline({ data }: { data: number[] }) {
+  if (!data || data.length < 2) return null;
+  const w = 100, h = 26;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="mt-2 h-6 w-full">
+      <polygon points={`0,${h} ${pts.join(' ')} ${w},${h}`} fill="var(--lepos-cyan)" opacity="0.12" />
+      <polyline points={pts.join(' ')} fill="none" stroke="var(--lepos-cyan)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+function KPICard({ title, value, spark }: { title: string; value: string; spark?: number[] }) {
   return (
     <Card className="border-primary/20 bg-background hover:border-primary/40 transition-colors shadow-sm">
       <CardContent className="p-4">
         <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{title}</div>
         <div className="text-2xl font-bold text-primary mt-1">{value}</div>
+        {spark && spark.length > 1 && <Sparkline data={spark} />}
       </CardContent>
     </Card>
   );

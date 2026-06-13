@@ -910,11 +910,11 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/20 z-40" />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="fixed right-0 top-0 bottom-0 w-[420px] max-w-[90vw] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200"
+        className="fixed right-0 top-0 bottom-0 w-[420px] max-w-[90vw] bg-card shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-primary/10 bg-[#022F44]">
@@ -931,8 +931,8 @@ function LogDrawer({ jobId, job, onClose, onRunNow, running }: {
         {!loadingRuns && runs.length > 0 && (
           <div className={`mx-5 mt-4 mb-1 rounded-lg border px-4 py-3 ${
             runs[0].status === 'ok'
-              ? 'bg-emerald-50 border-emerald-200'
-              : 'bg-red-50 border-red-200'
+              ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30'
+              : 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30'
           }`}>
             <div className="flex items-center gap-2 mb-2">
               {runs[0].status === 'ok' ? (
@@ -1095,8 +1095,8 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
   const isEdit = mode === 'edit';
 
   return (
-    <div ref={overlayRef} className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div ref={overlayRef} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto scroll-slim">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-primary/10">
           <h2 className="font-semibold text-foreground">
@@ -1180,7 +1180,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
             <select
               value={model}
               onChange={e => setModel(e.target.value)}
-              className="w-full text-sm border border-primary/20 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-[#107DAC]"
+              className="w-full text-sm border border-primary/20 rounded-md px-3 py-2 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-[#107DAC]"
             >
               {MODEL_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -1203,7 +1203,7 @@ function JobFormModal({ mode, job, onClose, onSaved }: {
           </div>
 
           {error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            <p className="text-xs text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-md px-3 py-2">
               ⚠ {error}
             </p>
           )}
