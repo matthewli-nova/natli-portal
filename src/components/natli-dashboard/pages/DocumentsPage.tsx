@@ -106,6 +106,18 @@ export function DocumentsPage() {
     } catch { toast.error('Copy failed'); }
   };
 
+  const downloadFile = () => {
+    if (!selected) return;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = selected.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded ${selected.name}`);
+  };
+
   // Breadcrumb segments relative to the workspace root
   const crumbs = useMemo(() => {
     if (!rootPath || !currentPath) return [];
@@ -225,10 +237,16 @@ export function DocumentsPage() {
                   <span className="truncate text-sm font-semibold text-foreground">{selected.name}</span>
                   {fileSize > 0 && <span className="shrink-0 text-xs text-muted-foreground">· {formatBytes(fileSize)}</span>}
                 </div>
-                <Button variant="ghost" size="sm" onClick={copyContent} disabled={!content} className="h-7 text-xs">
-                  {copied ? <Check className="mr-1 h-3.5 w-3.5 text-emerald-500" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
-                  {copied ? 'Copied' : 'Copy'}
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={copyContent} disabled={!content} className="h-7 text-xs">
+                    {copied ? <Check className="mr-1 h-3.5 w-3.5 text-emerald-500" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={downloadFile} disabled={!content} className="h-7 text-xs">
+                    <Download className="mr-1 h-3.5 w-3.5" />
+                    Download
+                  </Button>
+                </div>
               </div>
               <div className="flex-1 overflow-auto scroll-slim p-4">
                 {fileLoading ? (

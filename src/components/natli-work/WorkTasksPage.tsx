@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ListTodo, RefreshCw, Loader2, CircleDot, CheckCircle2,
-  Clock, AlertTriangle, User,
+  Clock, AlertTriangle, User, X, ExternalLink, Flag, Calendar, AlignLeft,
 } from 'lucide-react';
 import { PortalPage, StatCard, EmptyState } from '../../lib/portal-ui';
 import { SegmentedControl } from '../ui/segmented-control';
@@ -32,17 +32,24 @@ function dueInfo(due?: string | null): { label: string; overdue: boolean } | nul
   return { label, overdue };
 }
 
+function fmtFullDate(ms?: string | number | null): string {
+  if (!ms) return '—';
+  const n = Number(ms);
+  if (!n || Number.isNaN(n)) return '—';
+  return new Date(n).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 function initials(name?: string) {
   if (!name) return '?';
   return name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 }
 
-function TaskCard({ task }: { task: ClickUpTask }) {
+function TaskCard({ task, onClick }: { task: ClickUpTask; onClick?: () => void }) {
   const due = dueInfo(task.due_date);
   const color = task.status?.color || '#94a3b8';
   const prio = task.priority?.color;
   return (
-    <div className="card-modern space-y-2 p-3">
+    <div onClick={onClick} className="card-modern cursor-pointer space-y-2 p-3">
       <div className="flex items-start gap-2">
         {prio && <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: prio }} title={task.priority?.priority} />}
         <p className="text-sm font-medium leading-snug text-foreground">{task.name}</p>
@@ -65,6 +72,86 @@ function TaskCard({ task }: { task: ClickUpTask }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Task detail slide-over ──────────────────────────────────
+function TaskDetailDrawer({ task, onClose }: { task: ClickUpTask | null; onClose: () => void }) {
+  const open = !!task;
+  const description = task ? (String(task.description || task.text_content || '').trim()) : '';
+  const color = task?.status?.color || '#94a3b8';
+  const url = task ? (task.url as string | undefined) : undefined;
+  const due = dueInfo(task?.due_date);
+  return (
+    <>
+      <div
+        className={cn('fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity', open ? 'opacity-100' : 'pointer-events-none opacity-0')}
+        onClick={onClose}
+      />
+      <div className={cn(
+        'fixed right-0 top-0 z-50 flex h-screen w-[460px] max-w-[92vw] flex-col bg-card shadow-2xl transition-transform duration-300 ease-out',
+        open ? 'translate-x-0' : 'translate-x-full',
+      )}>
+        {task && (
+          <>
+            <div className="flex items-start justify-between gap-3 border-b border-border bg-gradient-to-br from-primary/[0.06] to-secondary/[0.06] px-5 py-4">
+              <div className="min-w-0">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: `${color}1f`, color }}>
+                  <CircleDot className="h-3 w-3" /> {task.status?.status ?? 'unknown'}
+                </span>
+                <h3 className="mt-2 text-base font-bold leading-snug text-foreground">{task.name}</h3>
+              </div>
+              <button onClick={onClose} className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto scroll-slim px-5 py-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <DetailRow icon={Flag} label="Priority" value={task.priority?.priority ?? 'none'} dot={task.priority?.color} />
+                <DetailRow icon={User} label="Assignee" value={task.assignees?.[0]?.username ?? 'Unassigned'} />
+                <DetailRow icon={Calendar} label="Due" value={due ? fmtFullDate(task.due_date) : 'No due date'} danger={due?.overdue} />
+                <DetailRow icon={Clock} label="Created" value={fmtFullDate(task.date_created)} />
+              </div>
+
+              <div>
+                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <AlignLeft className="h-3.5 w-3.5" /> Description
+                </p>
+                {description ? (
+                  <p className="whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/30 p-3 text-sm text-foreground/90">{description}</p>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-border bg-muted/20 p-3 text-sm text-muted-foreground">No description provided.</p>
+                )}
+              </div>
+            </div>
+
+            {url && (
+              <div className="border-t border-border px-5 py-3">
+                <a href={url} target="_blank" rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-lepos-cyan-text hover:underline">
+                  <ExternalLink className="h-4 w-4" /> Open in ClickUp
+                </a>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+function DetailRow({ icon: Icon, label, value, dot, danger }: {
+  icon: typeof Flag; label: string; value: string; dot?: string; danger?: boolean;
+}) {
+  return (
+    <div>
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Icon className="h-3.5 w-3.5" /> {label}</p>
+      <p className={cn('mt-0.5 flex items-center gap-1.5 font-medium', danger ? 'text-rose-500' : 'text-foreground')}>
+        {dot && <span className="h-2 w-2 rounded-full" style={{ background: dot }} />}
+        {value}
+      </p>
     </div>
   );
 }
@@ -119,6 +206,8 @@ export function WorkTasksPage() {
     });
   }, [tasks]);
 
+  const [selected, setSelected] = useState<ClickUpTask | null>(null);
+
   return (
     <PortalPage
       icon={ListTodo}
@@ -164,7 +253,7 @@ export function WorkTasksPage() {
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">{col.tasks.length}</span>
               </div>
               <div className="space-y-2">
-                {col.tasks.map((t) => <TaskCard key={t.id} task={t} />)}
+                {col.tasks.map((t) => <TaskCard key={t.id} task={t} onClick={() => setSelected(t)} />)}
               </div>
             </div>
           ))}
@@ -185,7 +274,7 @@ export function WorkTasksPage() {
                 const due = dueInfo(t.due_date);
                 const color = t.status?.color || '#94a3b8';
                 return (
-                  <tr key={t.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/[0.06]">
+                  <tr key={t.id} onClick={() => setSelected(t)} className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-secondary/[0.06]">
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         {t.priority?.color && <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: t.priority.color }} />}
@@ -212,6 +301,8 @@ export function WorkTasksPage() {
           </table>
         </div>
       )}
+
+      <TaskDetailDrawer task={selected} onClose={() => setSelected(null)} />
     </PortalPage>
   );
 }
