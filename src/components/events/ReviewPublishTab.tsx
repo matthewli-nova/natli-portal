@@ -570,7 +570,7 @@ export function ReviewPublishTab({
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
               {sessions.length} session{sessions.length !== 1 ? "s" : ""} across{" "}
-              {new Set(sessions.map(s => s.schedules[0]?.date.toDateString())).size} date{new Set(sessions.map(s => s.schedules[0]?.date.toDateString())).size !== 1 ? "s" : ""}
+              {new Set(sessions.map(s => s.schedules?.[0]?.date.toDateString())).size} date{new Set(sessions.map(s => s.schedules?.[0]?.date.toDateString())).size !== 1 ? "s" : ""}
             </div>
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full">
@@ -585,7 +585,7 @@ export function ReviewPublishTab({
                 </thead>
                 <tbody>
                   {sessions.map((session, index) => {
-                    const schedule = session.schedules[0]
+                    const schedule = session.schedules?.[0]
                     return (
                       <tr key={session.id} className={cn("border-b last:border-b-0", index % 2 === 0 && "bg-muted/10")}>
                         <td className="p-3 text-sm font-medium">{session.nameEn}</td>

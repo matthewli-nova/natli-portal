@@ -28,6 +28,12 @@ export interface Session {
   locationEn?: string
   locationZhHant?: string
   locationZhHans?: string
+  // Optional fields used by access-mapping / review views
+  nameEn?: string
+  accessType?: string
+  capacity?: number
+  parentSessionId?: string
+  schedules?: Array<{ date: Date; startTime: string; endTime: string }>
 }
 
 export interface SubEvent {

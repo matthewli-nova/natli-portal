@@ -2,6 +2,7 @@ import svgPaths from "../imports/svg-3a9zpy0fpa";
 
 interface LeposIconProps {
   className?: string;
+  size?: string | number;
 }
 
 /**

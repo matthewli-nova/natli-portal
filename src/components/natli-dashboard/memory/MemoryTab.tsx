@@ -216,14 +216,14 @@ export function MemoryTab({ health }: MemoryTabProps) {
           <div className="h-1.5 bg-primary" />
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
-              <Archive className="w-4 h-4 text-[#023F59]" />
+              <Archive className="w-4 h-4 text-[#023F59] dark:text-[#A5F3FC]" />
               <span className="text-sm font-bold text-foreground">ARCHIVE</span>
             </div>
             <p className="text-xs font-mono text-muted-foreground mb-3">memory/archive/</p>
             <p className="text-3xl font-bold text-lepos-cyan-text mb-1">{fmtNum(health?.memoryArchiveCount ?? 0)}<span className="text-sm font-normal text-muted-foreground ml-1">files</span></p>
             <p className="text-xs text-muted-foreground leading-relaxed">Expired P1/P2 entries preserved. On-demand via memory_search.</p>
             <div className="mt-3">
-              <Badge className="bg-primary/10 text-[#023F59] border-0 text-[10px] font-bold">COLD STORAGE</Badge>
+              <Badge className="bg-primary/10 text-[#023F59] dark:text-[#A5F3FC] border-0 text-[10px] font-bold">COLD STORAGE</Badge>
             </div>
           </CardContent>
         </Card>
@@ -436,7 +436,7 @@ function MemoryFileDrawer({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <Badge className={`border-0 text-xs ${lines >= 145 ? 'bg-red-100 text-red-700' : 'bg-primary/10 text-[#023F59]'}`}>
+            <Badge className={`border-0 text-xs ${lines >= 145 ? 'bg-red-100 text-red-700' : 'bg-primary/10 text-[#023F59] dark:text-[#A5F3FC]'}`}>
               {lines} lines
             </Badge>
             {savedLines !== null && (

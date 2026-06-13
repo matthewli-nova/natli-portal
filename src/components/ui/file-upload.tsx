@@ -9,10 +9,12 @@ interface FileUploadProps {
   className?: string
   value?: string // URL of uploaded file
   onFileChange?: (file: File | null, preview: string | null) => void
+  onFileSelect?: (file: File | null) => void
+  preview?: string | null
   accept?: string
   maxSize?: number // in bytes
   label?: string
-  aspectRatio?: "square" | "landscape"
+  aspectRatio?: "square" | "landscape" | "wide"
 }
 
 export function FileUpload({

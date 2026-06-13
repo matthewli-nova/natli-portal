@@ -8,12 +8,13 @@ import {
 import { Label } from "./label";
 
 export interface FilterSelectProps {
-  label: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   options: string[];
   placeholder?: string;
   className?: string;
+  variant?: string;
 }
 
 export function FilterSelect({

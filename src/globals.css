@@ -77,26 +77,33 @@
 }
 
 .dark {
-  --background: var(--lepos-dark);
-  --foreground: #ffffff;
-  --card: var(--gray-800);
-  --card-foreground: #ffffff;
-  --popover: var(--gray-800);
-  --popover-foreground: #ffffff;
-  --primary: var(--lepos-dark);
+  /* Rich layered navy surfaces (modern "mission control" dark) */
+  --navy-900: #0a1420;
+  --navy-850: #0f1923;
+  --navy-800: #131f2b;
+  --navy-700: #1a2c3a;
+  --navy-600: #243a4b;
+
+  --background: #0a1420;
+  --foreground: #eef4f8;
+  --card: #111d29;
+  --card-foreground: #eef4f8;
+  --popover: #131f2b;
+  --popover-foreground: #eef4f8;
+  --primary: #0e5d7e;
   --primary-foreground: #ffffff;
   --secondary: var(--lepos-cyan);
-  --secondary-foreground: var(--lepos-dark);
-  --muted: var(--gray-700);
-  --muted-foreground: var(--gray-400);
-  --accent: var(--lepos-cyan-subtle);
-  --accent-foreground: var(--lepos-cyan);
-  --destructive: #dc2626;
+  --secondary-foreground: #04222f;
+  --muted: #16242f;
+  --muted-foreground: #8aa0b2;
+  --accent: #13323f;
+  --accent-foreground: var(--lepos-cyan-light);
+  --destructive: #f0524d;
   --destructive-foreground: #ffffff;
-  --border: var(--gray-700);
-  --input: var(--gray-700);
-  --input-background: var(--gray-800);
-  --switch-background: var(--gray-600);
+  --border: rgba(148, 184, 209, 0.12);
+  --input: rgba(148, 184, 209, 0.10);
+  --input-background: #16242f;
+  --switch-background: #2a3f4f;
   --ring: var(--lepos-cyan);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -107,15 +114,15 @@
   --chart-3: var(--gray-400);
   --chart-4: var(--gray-500);
   --chart-5: var(--gray-600);
-  --sidebar: var(--gray-800);
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: var(--lepos-dark);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--lepos-cyan);
-  --sidebar-accent-foreground: var(--lepos-dark);
-  --sidebar-border: var(--gray-700);
+  --sidebar: #0f1923;
+  --sidebar-foreground: rgba(238, 244, 248, 0.85);
+  --sidebar-primary: var(--lepos-cyan);
+  --sidebar-primary-foreground: #04222f;
+  --sidebar-accent: #1a2d3d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(148, 184, 209, 0.10);
   --sidebar-ring: var(--lepos-cyan);
-  
+
   --lepos-cyan-subtle: #0E7490; /* NEW - Stronger teal for dark mode subtle backgrounds */
   
   --success: #059669;
@@ -355,6 +362,122 @@ html {
     background: linear-gradient(135deg, var(--lepos-cyan-light), var(--lepos-cyan));
     opacity: 0.1;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Modern technology design layer — Hermes Claw portal
+   Glass surfaces, layered elevation, gradient accents, motion
+   ───────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Ambient page background — subtle radial wash behind content */
+  .app-bg {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(900px circle at 12% -8%, color-mix(in srgb, var(--lepos-cyan) 9%, transparent), transparent 45%),
+      radial-gradient(1100px circle at 105% 0%, color-mix(in srgb, var(--lepos-cyan-text) 8%, transparent), transparent 42%);
+    background-attachment: fixed;
+  }
+  .dark .app-bg {
+    background-image:
+      radial-gradient(900px circle at 10% -10%, rgba(49, 215, 219, 0.10), transparent 45%),
+      radial-gradient(1200px circle at 110% -5%, rgba(16, 125, 172, 0.14), transparent 45%);
+  }
+
+  /* Frosted glass panel */
+  .glass {
+    background: color-mix(in srgb, var(--card) 78%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--border);
+  }
+  .glass-header {
+    background: color-mix(in srgb, var(--background) 72%, transparent);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  /* Elevation scale */
+  .elevation-1 { box-shadow: 0 1px 2px rgba(2, 32, 47, 0.06), 0 1px 3px rgba(2, 32, 47, 0.04); }
+  .elevation-2 { box-shadow: 0 4px 12px -2px rgba(2, 32, 47, 0.10), 0 2px 6px -2px rgba(2, 32, 47, 0.06); }
+  .elevation-3 { box-shadow: 0 18px 40px -12px rgba(2, 32, 47, 0.20), 0 8px 16px -8px rgba(2, 32, 47, 0.10); }
+  .dark .elevation-1 { box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+  .dark .elevation-2 { box-shadow: 0 6px 18px -4px rgba(0,0,0,0.55); }
+  .dark .elevation-3 { box-shadow: 0 22px 48px -14px rgba(0,0,0,0.7); }
+
+  /* Modern interactive card */
+  .card-modern {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .card-modern:hover {
+    border-color: color-mix(in srgb, var(--lepos-cyan) 45%, var(--border));
+    box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--lepos-cyan) 35%, transparent);
+    transform: translateY(-2px);
+  }
+
+  /* Gradient accents */
+  .text-gradient-cyan {
+    background: linear-gradient(120deg, var(--lepos-cyan-text), var(--lepos-cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .dark .text-gradient-cyan {
+    background: linear-gradient(120deg, var(--lepos-cyan-light), var(--lepos-cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--lepos-cyan) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--lepos-cyan) 6%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Accent rail used on section headers */
+  .accent-rail {
+    background: linear-gradient(180deg, var(--lepos-cyan), var(--lepos-cyan-dark));
+    border-radius: 9999px;
+  }
+
+  /* Soft refined scrollbars */
+  .scroll-slim::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll-slim::-webkit-scrollbar-track { background: transparent; }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+    border-radius: 9999px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
+  }
+
+  .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-fade-in { animation: fadeIn 0.3s ease both; }
+  .live-dot { position: relative; }
+  .live-dot::after {
+    content: "";
+    position: absolute; inset: -3px;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+    opacity: 0.5;
+    animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ping {
+  75%, 100% { transform: scale(1.8); opacity: 0; }
 }
 
 /* Mobile-first responsive breakpoints */

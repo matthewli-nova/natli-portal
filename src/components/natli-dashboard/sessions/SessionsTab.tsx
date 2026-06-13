@@ -309,7 +309,7 @@ export function SessionsTab() {
             return (
               <div key={agent} className="flex items-center justify-between py-1.5 border-b border-primary/5 last:border-0">
                 <div className="flex items-center gap-2">
-                  <Icon className="w-4 h-4 text-[#023F59]" />
+                  <Icon className="w-4 h-4 text-[#023F59] dark:text-[#A5F3FC]" />
                   <span className="font-medium text-foreground capitalize">{agent}</span>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -382,9 +382,9 @@ function AgentBadge({ agent }: { agent: string }) {
   const colors: Record<string, string> = {
     main: 'bg-primary text-white',
     coder: 'bg-[#107DAC]/15 text-lepos-cyan-text',
-    designer: 'bg-secondary/15 text-[#023F59]',
-    marketing: 'bg-[#107DAC]/10 text-[#023F59]',
-    strategy: 'bg-secondary/20 text-[#023F59]',
+    designer: 'bg-secondary/15 text-[#023F59] dark:text-[#A5F3FC]',
+    marketing: 'bg-[#107DAC]/10 text-[#023F59] dark:text-[#A5F3FC]',
+    strategy: 'bg-secondary/20 text-[#023F59] dark:text-[#A5F3FC]',
   };
   return (
     <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${colors[agent] || 'bg-gray-100 text-gray-700'}`}>

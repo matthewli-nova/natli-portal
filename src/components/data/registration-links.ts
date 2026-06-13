@@ -22,6 +22,19 @@ export interface RegistrationLink {
     maxCompanions: number
     companionDetailsLevel: 'names-only' | 'full-details'
     prefillCompanionNames?: Array<{ firstName: string; lastName: string }>
+    fieldTypes?: {
+      firstName: string
+      lastName: string
+      email: string
+      salutation: string
+      title: string
+      organization: string
+      phone: string
+      wechatId: string
+      representativeType: string
+      referenceNo: string
+      tags: string
+    }
     
     // Field visibility
     visibleFields: {

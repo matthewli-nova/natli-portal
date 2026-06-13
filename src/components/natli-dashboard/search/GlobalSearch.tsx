@@ -172,7 +172,7 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
     if (results.length === 0) return null;
     return (
       <div key={label}>
-        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+        <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/50 border-b border-border">
           {label}
         </div>
         {results.map((result, i) => {
@@ -185,14 +185,14 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
               onClick={() => handleSelect(result)}
               onMouseEnter={() => setActiveIndex(globalIndex)}
             >
-              <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-sm">
+              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 text-sm">
                 {result.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{result.title}</p>
-                <p className="text-xs text-gray-400 truncate">{result.subtitle}</p>
+                <p className="text-sm font-medium text-foreground truncate">{result.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
               </div>
-              <span className="text-xs text-gray-300 shrink-0">{result.tabLabel}</span>
+              <span className="text-xs text-muted-foreground/70 shrink-0">{result.tabLabel}</span>
             </button>
           );
         })}
@@ -212,11 +212,11 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 text-sm text-muted-foreground bg-white hover:bg-gray-50 hover:border-primary/40 transition-all w-120"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 text-sm text-muted-foreground bg-card hover:bg-muted/50 hover:border-primary/40 transition-all w-120"
       >
         <Search className="w-3.5 h-3.5 shrink-0" />
         <span className="flex-1 text-left">Search anything...</span>
-        <kbd className="text-xs bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 font-mono">⌘K</kbd>
+        <kbd className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-mono">⌘K</kbd>
       </button>
 
       {/* Search Overlay */}
@@ -230,10 +230,10 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
             className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
               {/* Search Input */}
-              <div className="relative border-b border-gray-100">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="relative border-b border-border">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   ref={inputRef}
                   value={query}
@@ -246,7 +246,7 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
               {/* Results */}
               <div className="max-h-[420px] overflow-y-auto">
                 {!hasQuery && (
-                  <div className="px-4 py-3 text-center text-sm text-gray-400">
+                  <div className="px-4 py-3 text-center text-sm text-muted-foreground">
                     Start typing to search sessions, cron jobs, and memory...
                   </div>
                 )}
@@ -254,8 +254,8 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
                 {hasQuery && !hasResults && (
                   <div className="px-4 py-12 text-center">
                     <p className="text-3xl mb-3">🔍</p>
-                    <p className="text-sm font-medium text-gray-700">No results for &ldquo;{query}&rdquo;</p>
-                    <p className="text-xs text-gray-400 mt-1">Try searching for a session channel, job name, or memory topic</p>
+                    <p className="text-sm font-medium text-foreground">No results for &ldquo;{query}&rdquo;</p>
+                    <p className="text-xs text-muted-foreground mt-1">Try searching for a session channel, job name, or memory topic</p>
                   </div>
                 )}
 
@@ -269,10 +269,10 @@ export function GlobalSearch({ onNavigate, sessions, cronJobs }: GlobalSearchPro
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center gap-4 text-xs text-gray-400">
-                <span><kbd className="bg-white border border-gray-200 rounded px-1 font-mono">↑↓</kbd> Navigate</span>
-                <span><kbd className="bg-white border border-gray-200 rounded px-1 font-mono">↵</kbd> Open</span>
-                <span><kbd className="bg-white border border-gray-200 rounded px-1 font-mono">Esc</kbd> Close</span>
+              <div className="px-4 py-2.5 border-t border-border bg-muted/50 flex items-center gap-4 text-xs text-muted-foreground">
+                <span><kbd className="bg-card border border-border rounded px-1 font-mono">↑↓</kbd> Navigate</span>
+                <span><kbd className="bg-card border border-border rounded px-1 font-mono">↵</kbd> Open</span>
+                <span><kbd className="bg-card border border-border rounded px-1 font-mono">Esc</kbd> Close</span>
               </div>
             </div>
           </div>

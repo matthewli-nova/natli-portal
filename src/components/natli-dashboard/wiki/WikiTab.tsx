@@ -229,7 +229,7 @@ export function WikiTab() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between px-2 pb-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Files</p>
-              <Badge className="border-0 bg-primary/10 text-[#023F59] text-[10px]">{files.length}</Badge>
+              <Badge className="border-0 bg-primary/10 text-[#023F59] dark:text-[#A5F3FC] text-[10px]">{files.length}</Badge>
             </div>
             <div className="space-y-1 max-h-[560px] overflow-auto pr-1">
               {files.map(item => (
