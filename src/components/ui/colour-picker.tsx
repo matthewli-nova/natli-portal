@@ -9,6 +9,7 @@ interface ColourPickerProps {
   className?: string
   value?: string
   onValueChange?: (value: string) => void
+  onChange?: (value: string) => void
   label?: string
   defaultValue?: string
 }

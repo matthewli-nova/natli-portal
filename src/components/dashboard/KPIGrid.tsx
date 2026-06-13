@@ -39,12 +39,9 @@ export function KPIGrid() {
           );
         } else {
           // Item type
-          // @ts-ignore
-          const currentItem = kpi.current;
-          // @ts-ignore
-          const previousItem = kpi.previous;
-          
-          // @ts-ignore
+          const currentItem = kpi.current as { name: string; count: number };
+          const previousItem = kpi.previous as { name: string; count: number };
+
           change = calculateChange(currentItem.count, previousItem.count);
           
           return (

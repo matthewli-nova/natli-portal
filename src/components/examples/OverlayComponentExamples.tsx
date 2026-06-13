@@ -323,7 +323,7 @@ export function AlertDialogDropdownExamples() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction>Save & Continue</AlertDialogAction>
-                  <AlertDialogAction variant="outline">Discard Changes</AlertDialogAction>
+                  <AlertDialogAction>Discard Changes</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

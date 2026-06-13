@@ -51,7 +51,7 @@ export function AccessMappingMatrix({
     
     sessions.forEach((session) => {
       // Use the first schedule's date as the session date
-      const date = session.schedules[0]?.date || "No Date"
+      const date = session.schedules?.[0]?.date || "No Date"
       const dateKey = date instanceof Date ? date.toDateString() : date
       
       if (!grouped.has(dateKey)) {
@@ -236,7 +236,7 @@ export function AccessMappingMatrix({
                   
                   {/* Session Rows */}
                   {dateSessions.map((session) => {
-                    const schedule = session.schedules[0]
+                    const schedule = session.schedules?.[0]
                     const timeRange = schedule
                       ? `${schedule.startTime} – ${schedule.endTime}`
                       : "No time"

@@ -50,6 +50,10 @@ export interface B2BEvent {
   totalRegistered: number
   createdAt: Date
   updatedAt: Date
+  // Optional fields used by event detail / list views
+  schedulePublishedDate?: Date
+  sessionCount?: number
+  branding?: { logoUrl?: string; bannerUrl?: string; primaryColour?: string }
 }
 
 // Simplified event type for linking (used in registration wizard)

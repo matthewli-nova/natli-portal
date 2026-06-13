@@ -47,6 +47,7 @@ import { StaffTicketsTable, type StaffTicket } from "./StaffTicketsTable"
 import { AccessAreaMatrix } from "./AccessAreaMatrix"
 import { ReviewPublishTab } from "./ReviewPublishTab"
 import { type Session, mockSessions } from "../data/b2b-events"
+import { type Session as TableSession } from "./SessionsTable"
 
 interface EventFormData {
   nameEn: string
@@ -68,6 +69,8 @@ interface EventFormData {
   quota: string
   rsvpDeadline?: Date
   schedulePublishedDate?: Date
+  primaryColour?: string
+  secondaryColour?: string
   logo?: File | null
   logoPreview?: string | null
   banner?: File | null
