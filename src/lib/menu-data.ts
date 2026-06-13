@@ -1,5 +1,4 @@
 import {
-  Gauge,
   Box,
   Warehouse,
   CalendarFold,
@@ -7,118 +6,62 @@ import {
   Calculator,
   ChartNoAxesCombined,
   Settings,
-  Building2,
-  Bot,
-  Brain,
-  Search,
   ListTodo,
   Calendar,
   Clock,
   FolderOpen,
-  Wrench,
   Mail,
   Users,
   FileText,
   BarChart2,
   Briefcase,
+  LayoutDashboard,
+  Activity,
+  Coins,
+  KeyRound,
+  BrainCircuit,
+  Boxes,
+  type LucideIcon,
 } from 'lucide-react';
 
-export const natliMenuItems = [
-  {
-    id: 'natli-dashboard',
-    label: 'Dashboard',
-    icon: Gauge,
-  },
-  {
-    id: 'natli-office',
-    label: 'Office',
-    icon: Building2,
-  },
-  {
-    id: 'natli-model',
-    label: 'Model',
-    icon: Brain,
-  },
-  {
-    id: 'natli-agent',
-    label: 'Agent',
-    icon: Bot,
-  },
-  {
-    id: 'natli-skills',
-    label: 'Skills',
-    icon: Wrench,
-  },
-  {
-    id: 'natli-scheduler',
-    label: 'Scheduler',
-    icon: Clock,
-  },
-  {
-    id: 'natli-file',
-    label: 'File',
-    icon: FolderOpen,
-  },
-  {
-    id: 'natli-settings',
-    label: 'Setting',
-    icon: Settings,
-  },
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  group?: string;
+  badge?: string;
+}
+
+// ─── Hermes Claw (Agent) — dedicated management portals ──────
+export const natliMenuItems: MenuItem[] = [
+  { id: 'natli-dashboard', label: 'Overview',        icon: LayoutDashboard, group: 'Operate' },
+  { id: 'natli-sessions',  label: 'Sessions',        icon: Activity,        group: 'Operate' },
+  { id: 'natli-model',     label: 'Models & Tokens', icon: Coins,           group: 'Operate' },
+  { id: 'natli-scheduler', label: 'Scheduler',       icon: Clock,           group: 'Operate' },
+  { id: 'natli-skills',    label: 'Skills',          icon: Boxes,           group: 'Build' },
+  { id: 'natli-memory',    label: 'Memory & Wiki',   icon: BrainCircuit,    group: 'Build' },
+  { id: 'natli-documents', label: 'Documents',       icon: FolderOpen,      group: 'Build' },
+  { id: 'natli-api',       label: 'API Keys',        icon: KeyRound,        group: 'Configure' },
+  { id: 'natli-settings',  label: 'Settings',        icon: Settings,        group: 'Configure' },
 ];
 
-export const workMenuItems = [
-  {
-    id: 'work-dashboard',
-    label: 'Dashboard',
-    icon: Gauge,
-  },
-  {
-    id: 'work-tasks',
-    label: 'Tasks',
-    icon: ListTodo,
-  },
-  {
-    id: 'work-calendar',
-    label: 'Calendar',
-    icon: Calendar,
-  },
-  {
-    id: 'work-email',
-    label: 'Email',
-    icon: Mail,
-  },
-  {
-    id: 'work-contacts',
-    label: 'Contacts',
-    icon: Users,
-  },
-  {
-    id: 'work-documents',
-    label: 'Documents',
-    icon: FileText,
-  },
-  {
-    id: 'work-projects',
-    label: 'Projects',
-    icon: Briefcase,
-  },
-  {
-    id: 'work-reports',
-    label: 'Reports',
-    icon: BarChart2,
-  },
-  {
-    id: 'work-settings',
-    label: 'Settings',
-    icon: Settings,
-  },
+// ─── Work platform ───────────────────────────────────────────
+export const workMenuItems: MenuItem[] = [
+  { id: 'work-tasks',     label: 'Tasks',     icon: ListTodo,  group: 'Workspace' },
+  { id: 'work-calendar',  label: 'Calendar',  icon: Calendar,  group: 'Workspace', badge: 'Soon' },
+  { id: 'work-email',     label: 'Email',     icon: Mail,      group: 'Workspace', badge: 'Soon' },
+  { id: 'work-contacts',  label: 'Contacts',  icon: Users,     group: 'Workspace', badge: 'Soon' },
+  { id: 'work-documents', label: 'Documents', icon: FileText,  group: 'Workspace', badge: 'Soon' },
+  { id: 'work-projects',  label: 'Projects',  icon: Briefcase, group: 'Workspace', badge: 'Soon' },
+  { id: 'work-reports',   label: 'Reports',   icon: BarChart2, group: 'Workspace', badge: 'Soon' },
+  { id: 'work-settings',  label: 'Settings',  icon: Settings,  group: 'Workspace', badge: 'Soon' },
 ];
 
 export const menuItems = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: Gauge,
+    icon: LayoutDashboard,
   },
   {
     id: 'products',

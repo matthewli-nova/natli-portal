@@ -267,7 +267,7 @@ function KeyCard({
   );
 }
 
-export function ManageKeysPage({ onBack }: { onBack: () => void }) {
+export function ManageKeysPage({ onBack }: { onBack?: () => void }) {
   const [keys, setKeys] = useState<ProviderKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -315,14 +315,16 @@ export function ManageKeysPage({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <Button
-        variant="ghost"
-        onClick={onBack}
-        className="text-lepos-cyan-text hover:text-[#023F59] hover:bg-primary/5 -ml-2"
-      >
-        <ArrowLeft className="w-4 h-4 mr-1.5" />
-        Back to AI Model Config
-      </Button>
+      {onBack && (
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="text-lepos-cyan-text hover:text-[#023F59] hover:bg-primary/5 -ml-2"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to AI Model Config
+        </Button>
+      )}
 
       <Card className="border-[#31D7DB]/30 bg-gradient-to-br from-[#023F59]/5 to-transparent">
         <div className="p-6 space-y-1">

@@ -475,7 +475,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
                 className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all duration-200 ${
                   view === v.id
                     ? 'bg-primary text-white shadow-md'
-                    : 'text-[#023F59] hover:bg-primary/10'
+                    : 'text-[#023F59] dark:text-[#A5F3FC] hover:bg-primary/10'
                 }`}
               >
                 {v.label}
@@ -493,7 +493,7 @@ export function ModelTab({ mode }: { mode?: 'dashboard' | 'full' } = {}) {
               size="sm"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="gap-1.5 border-primary/25 text-[#023F59] h-8"
+              className="gap-1.5 border-primary/25 text-[#023F59] dark:text-[#A5F3FC] h-8"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'Syncing...' : 'Refresh'}

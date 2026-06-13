@@ -412,7 +412,7 @@ export function NatliSchedulerPage({ embedded = false }: { embedded?: boolean })
         <CardHeader className="pb-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-foreground">All Jobs</CardTitle>
-            <Badge className="bg-primary/10 text-[#023F59] border-0 text-xs">{jobs.length} total</Badge>
+            <Badge className="bg-primary/10 text-[#023F59] dark:text-[#A5F3FC] border-0 text-xs">{jobs.length} total</Badge>
           </div>
           <Tabs value={activeGroup} onValueChange={setActiveGroup} className="mt-3">
             <TabsList className="bg-primary/5 h-auto flex-wrap gap-0.5">

@@ -6,6 +6,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
+import { type ReactNode } from "react";
 import { useHeaderSlot } from "../lib/header-slot-context";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "./ui/button";
@@ -20,7 +21,7 @@ interface PortalHeaderProps {
 export function PortalHeader({ breadcrumbs, isDark, onToggleTheme }: PortalHeaderProps) {
   const { centerSlot, rightSlot } = useHeaderSlot();
 
-  const items = [];
+  const items: ReactNode[] = [];
   breadcrumbs.forEach((item, index) => {
     items.push(
       <BreadcrumbItem key={`item-${index}`}>
@@ -37,7 +38,7 @@ export function PortalHeader({ breadcrumbs, isDark, onToggleTheme }: PortalHeade
   });
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b bg-background px-4 xl:px-8">
+    <header className="glass-header sticky top-0 z-10 flex h-14 shrink-0 items-center border-b border-border px-4 xl:px-8">
       {/* Left — breadcrumbs */}
       <div className="flex-1 min-w-0">
         <Breadcrumb>
